@@ -114,7 +114,7 @@ android {
             resValue("mipmap", "floris_app_icon", "@mipmap/ic_app_icon_debug")
             resValue("mipmap", "floris_app_icon_round", "@mipmap/ic_app_icon_debug_round")
             resValue("drawable", "floris_app_icon_foreground", "@drawable/ic_app_icon_debug_foreground")
-            resValue("string", "floris_app_name", "FlorisBoard Debug")
+            resValue("string", "floris_app_name", "SendRight X Debug")
         }
 
         create("beta") {
@@ -128,7 +128,7 @@ android {
             resValue("mipmap", "floris_app_icon", "@mipmap/ic_app_icon_beta")
             resValue("mipmap", "floris_app_icon_round", "@mipmap/ic_app_icon_beta_round")
             resValue("drawable", "floris_app_icon_foreground", "@drawable/ic_app_icon_beta_foreground")
-            resValue("string", "floris_app_name", "FlorisBoard Beta")
+            resValue("string", "floris_app_name", "SendRight X Beta")
         }
 
         named("release") {
@@ -215,7 +215,7 @@ dependencies {
     implementation(project(":lib:color"))
     implementation(project(":lib:compose"))
     implementation(project(":lib:kotlin"))
-    implementation(project(":lib:native"))
+    //implementation(project(":lib:native"))
     implementation(project(":lib:snygg"))
 
     testImplementation(libs.kotlin.test.junit5)

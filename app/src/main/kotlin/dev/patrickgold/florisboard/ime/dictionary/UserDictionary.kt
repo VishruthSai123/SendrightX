@@ -228,7 +228,13 @@ abstract class FlorisUserDictionaryDatabase : RoomDatabase(), UserDictionaryData
     abstract override fun userDictionaryDao(): UserDictionaryDao
 
     override fun reset() {
-        TODO("Not yet implemented")
+        // Clear all entries from the user dictionary
+        try {
+            userDictionaryDao().deleteAll()
+        } catch (e: Exception) {
+            // Handle any errors during reset
+            throw RuntimeException("Failed to reset Floris user dictionary", e)
+        }
     }
 
     class Converters {
@@ -466,7 +472,14 @@ class SystemUserDictionaryDatabase(context: Context) : UserDictionaryDatabase {
     }
 
     override fun reset() {
-        TODO("Not yet implemented")
+        // Clear all entries from the system user dictionary (if we have write access)
+        try {
+            dao.deleteAll()
+        } catch (e: Exception) {
+            // System dictionary might be read-only, log the error but don't crash
+            // Handle any errors during reset
+            throw RuntimeException("Failed to reset system user dictionary", e)
+        }
     }
 }
 

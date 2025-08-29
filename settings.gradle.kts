@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-rootProject.name = "FlorisBoard"
+rootProject.name = "SendRight X"
 
 pluginManagement {
     repositories {
@@ -47,5 +47,5 @@ include(":lib:android")
 include(":lib:color")
 include(":lib:compose")
 include(":lib:kotlin")
-include(":lib:native")
+//include(":lib:native")
 include(":lib:snygg")

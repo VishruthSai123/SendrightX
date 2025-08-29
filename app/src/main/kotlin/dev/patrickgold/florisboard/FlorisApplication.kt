@@ -42,6 +42,7 @@ import dev.patrickgold.florisboard.lib.devtools.Flog
 import dev.patrickgold.florisboard.lib.devtools.LogTopic
 import dev.patrickgold.florisboard.lib.devtools.flogError
 import dev.patrickgold.florisboard.lib.ext.ExtensionManager
+
 import dev.patrickgold.jetpref.datastore.runtime.initAndroid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +50,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.florisboard.lib.kotlin.io.deleteContentsRecursively
 import org.florisboard.lib.kotlin.tryOrNull
-import org.florisboard.libnative.dummyAdd
+//import org.florisboard.libnative.dummyAdd
 import java.lang.ref.WeakReference
 
 /**
@@ -62,10 +63,14 @@ private var FlorisApplicationReference = WeakReference<FlorisApplication?>(null)
 class FlorisApplication : Application() {
     companion object {
         init {
-            try {
-                System.loadLibrary("fl_native")
-            } catch (_: Exception) {
-            }
+            // Native library loading disabled for builds without native module
+            // try {
+            //     System.loadLibrary("fl_native")
+            // } catch (_: UnsatisfiedLinkError) {
+            //     // Native library not available - this is expected when building without native module
+            // } catch (_: Exception) {
+            //     // Other errors loading the library
+            // }
         }
     }
 
@@ -96,7 +101,7 @@ class FlorisApplication : Application() {
             )
             CrashUtility.install(this)
             FlorisEmojiCompat.init(this)
-            flogError { "dummy result: ${dummyAdd(3,4)}" }
+            //flogError { "dummy result: ${dummyAdd(3,4)}" }
 
             if (!UserManagerCompat.isUserUnlocked(this)) {
                 cacheDir?.deleteContentsRecursively()

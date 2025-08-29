@@ -17,13 +17,9 @@
 package dev.patrickgold.florisboard.app.settings.advanced
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Adb
-import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.FormatColorFill
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Preview
-import androidx.compose.material.icons.filled.SettingsBackupRestore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
@@ -146,40 +142,10 @@ fun OtherScreen() = FlorisScreen {
                 }
             }
         )
-        SwitchPreference(
-            prefs.other.showAppIcon,
-            icon = Icons.Default.Preview,
-            title = stringRes(R.string.pref__other__show_app_icon__label),
-            summary = when {
-                AndroidVersion.ATLEAST_API29_Q -> stringRes(R.string.pref__other__show_app_icon__summary_atleast_q)
-                else -> null
-            },
-            enabledIf = { AndroidVersion.ATMOST_API28_P },
-        )
         Preference(
             icon = ImageVector.vectorResource(R.drawable.ic_keyboard_keys),
             title = stringRes(R.string.physical_keyboard__title),
             onClick = { navController.navigate(Routes.Settings.PhysicalKeyboard) },
         )
-        Preference(
-            icon = Icons.Default.Adb,
-            title = stringRes(R.string.devtools__title),
-            onClick = { navController.navigate(Routes.Devtools.Home) },
-        )
-
-        PreferenceGroup(title = stringRes(R.string.backup_and_restore__title)) {
-            Preference(
-                onClick = { navController.navigate(Routes.Settings.Backup) },
-                icon = Icons.Default.Archive,
-                title = stringRes(R.string.backup_and_restore__back_up__title),
-                summary = stringRes(R.string.backup_and_restore__back_up__summary),
-            )
-            Preference(
-                onClick = { navController.navigate(Routes.Settings.Restore) },
-                icon = Icons.Default.SettingsBackupRestore,
-                title = stringRes(R.string.backup_and_restore__restore__title),
-                summary = stringRes(R.string.backup_and_restore__restore__summary),
-            )
-        }
     }
 }

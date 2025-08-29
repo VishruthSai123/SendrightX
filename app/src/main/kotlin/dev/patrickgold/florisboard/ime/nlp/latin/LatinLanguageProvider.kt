@@ -24,6 +24,7 @@ import dev.patrickgold.florisboard.ime.nlp.SpellingProvider
 import dev.patrickgold.florisboard.ime.nlp.SpellingResult
 import dev.patrickgold.florisboard.ime.nlp.SuggestionCandidate
 import dev.patrickgold.florisboard.ime.nlp.SuggestionProvider
+import dev.patrickgold.florisboard.ime.nlp.WordSuggestionCandidate
 import dev.patrickgold.florisboard.lib.devtools.flogDebug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -87,15 +88,72 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         allowPossiblyOffensive: Boolean,
         isPrivateSession: Boolean,
     ): SpellingResult {
-        return when (word.lowercase()) {
-            // Use typo for typing errors
-            "typo" -> SpellingResult.typo(arrayOf("typo1", "typo2", "typo3"))
-            // Use grammar error if the algorithm can detect this. On Android 11 and lower grammar errors are visually
-            // marked as typos due to a lack of support
-            "gerror" -> SpellingResult.grammarError(arrayOf("grammar1", "grammar2", "grammar3"))
-            // Use valid word for valid input
-            else -> SpellingResult.validWord()
+        val wordLower = word.lowercase().trim()
+        
+        // Check if word exists in our dictionary
+        return wordData.withLock { wordData ->
+            when {
+                // Word exists in dictionary - it's valid
+                wordData.containsKey(wordLower) || wordData.containsKey(word) -> {
+                    SpellingResult.validWord()
+                }
+                // Check for common typos and provide corrections
+                wordLower.length > 2 -> {
+                    val suggestions = mutableListOf<String>()
+                    
+                    // Find similar words by edit distance
+                    wordData.keys.forEach { dictWord ->
+                        val distance = calculateEditDistance(wordLower, dictWord.lowercase())
+                        if (distance <= 2 && distance > 0) { // Allow up to 2 character differences
+                            suggestions.add(dictWord)
+                        }
+                    }
+                    
+                    // Sort suggestions by frequency and limit count
+                    val sortedSuggestions = suggestions
+                        .sortedByDescending { wordData[it] ?: 0 }
+                        .take(maxSuggestionCount)
+                        .toTypedArray()
+                    
+                    if (sortedSuggestions.isNotEmpty()) {
+                        SpellingResult.typo(sortedSuggestions)
+                    } else {
+                        SpellingResult.validWord() // No suggestions found, assume it's valid
+                    }
+                }
+                // Short words or empty - assume valid
+                else -> SpellingResult.validWord()
+            }
         }
+    }
+    
+    /**
+     * Calculate edit distance (Levenshtein distance) between two strings
+     */
+    private fun calculateEditDistance(s1: String, s2: String): Int {
+        val len1 = s1.length
+        val len2 = s2.length
+        
+        // Create a matrix to store the distances
+        val matrix = Array(len1 + 1) { IntArray(len2 + 1) }
+        
+        // Initialize first row and column
+        for (i in 0..len1) matrix[i][0] = i
+        for (j in 0..len2) matrix[0][j] = j
+        
+        // Fill the matrix
+        for (i in 1..len1) {
+            for (j in 1..len2) {
+                val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
+                matrix[i][j] = minOf(
+                    matrix[i - 1][j] + 1,      // deletion
+                    matrix[i][j - 1] + 1,      // insertion
+                    matrix[i - 1][j - 1] + cost // substitution
+                )
+            }
+        }
+        
+        return matrix[len1][len2]
     }
 
     override suspend fun suggest(
@@ -105,21 +163,75 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         allowPossiblyOffensive: Boolean,
         isPrivateSession: Boolean,
     ): List<SuggestionCandidate> {
-        return emptyList()
-        /*val word = content.composingText.ifBlank { "next" }
-        val suggestions = buildList {
-            for (n in 0 until maxCandidateCount) {
-                add(WordSuggestionCandidate(
-                    text = "$word$n",
-                    secondaryText = if (n % 2 == 1) "secondary" else null,
-                    confidence = 0.5,
-                    isEligibleForAutoCommit = false,//n == 0 && word.startsWith("auto"),
-                    // We set ourselves as the source provider so we can get notify events for our candidate
-                    sourceProvider = this@LatinLanguageProvider,
-                ))
+        val composingText = content.composingText.toString().lowercase().trim()
+        
+        // If there's no composing text, suggest most common words
+        if (composingText.isEmpty()) {
+            return wordData.withLock { wordData ->
+                wordData.entries
+                    .sortedByDescending { it.value }
+                    .take(maxCandidateCount.coerceAtMost(3))
+                    .map { (word, frequency) ->
+                        WordSuggestionCandidate(
+                            text = word,
+                            confidence = frequency / 255.0,
+                            isEligibleForAutoCommit = false,
+                            sourceProvider = this@LatinLanguageProvider,
+                        )
+                    }
             }
         }
-        return suggestions*/
+        
+        // Find words that start with the composing text
+        return wordData.withLock { wordData ->
+            val exactMatches = mutableListOf<WordSuggestionCandidate>()
+            val prefixMatches = mutableListOf<WordSuggestionCandidate>()
+            val fuzzyMatches = mutableListOf<WordSuggestionCandidate>()
+            
+            wordData.forEach { (word, frequency) ->
+                val wordLower = word.lowercase()
+                val confidence = frequency / 255.0
+                
+                when {
+                    // Exact match
+                    wordLower == composingText -> {
+                        exactMatches.add(WordSuggestionCandidate(
+                            text = word,
+                            confidence = confidence,
+                            isEligibleForAutoCommit = true,
+                            sourceProvider = this@LatinLanguageProvider,
+                        ))
+                    }
+                    // Prefix match
+                    wordLower.startsWith(composingText) -> {
+                        prefixMatches.add(WordSuggestionCandidate(
+                            text = word,
+                            confidence = confidence * 0.9, // Slightly lower confidence for prefix
+                            isEligibleForAutoCommit = false,
+                            sourceProvider = this@LatinLanguageProvider,
+                        ))
+                    }
+                    // Fuzzy match (contains the text)
+                    wordLower.contains(composingText) && composingText.length > 2 -> {
+                        fuzzyMatches.add(WordSuggestionCandidate(
+                            text = word,
+                            confidence = confidence * 0.7, // Lower confidence for fuzzy match
+                            isEligibleForAutoCommit = false,
+                            sourceProvider = this@LatinLanguageProvider,
+                        ))
+                    }
+                }
+            }
+            
+            // Sort by confidence and combine results
+            val allMatches = buildList {
+                addAll(exactMatches.sortedByDescending { it.confidence })
+                addAll(prefixMatches.sortedByDescending { it.confidence })
+                addAll(fuzzyMatches.sortedByDescending { it.confidence })
+            }
+            
+            allMatches.take(maxCandidateCount)
+        }
     }
 
     override suspend fun notifySuggestionAccepted(subtype: Subtype, candidate: SuggestionCandidate) {

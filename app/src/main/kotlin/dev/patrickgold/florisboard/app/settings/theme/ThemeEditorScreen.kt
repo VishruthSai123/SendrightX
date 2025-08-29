@@ -617,8 +617,6 @@ private fun ComponentMetaEditorDialog(
     val idValidation = rememberValidationResult(ExtensionValidation.ComponentId, id)
     var label by rememberSaveable { mutableStateOf(editor.label) }
     val labelValidation = rememberValidationResult(ExtensionValidation.ComponentLabel, label)
-    var authors by rememberSaveable { mutableStateOf(editor.authors.joinToString("\n")) }
-    val authorsValidation = rememberValidationResult(ExtensionValidation.ComponentAuthors, authors)
     var isNightTheme by rememberSaveable { mutableStateOf(editor.isNightTheme) }
     var stylesheetPath by rememberSaveable { mutableStateOf(editor.stylesheetPath) }
     val stylesheetPathValidation = rememberValidationResult(ExtensionValidation.ThemeComponentStylesheetPath, stylesheetPath)
@@ -629,7 +627,6 @@ private fun ComponentMetaEditorDialog(
         onConfirm = {
             val allFieldsValid = idValidation.isValid() &&
                 labelValidation.isValid() &&
-                authorsValidation.isValid() &&
                 stylesheetPathValidation.isValid()
             if (!allFieldsValid) {
                 showValidationErrors = true
@@ -639,7 +636,7 @@ private fun ComponentMetaEditorDialog(
                 workspace.update {
                     editor.id = id.trim()
                     editor.label = label.trim()
-                    editor.authors = authors.lines().map { it.trim() }.filter { it.isNotBlank() }
+                    editor.authors = emptyList()
                     editor.isNightTheme = isNightTheme
                     editor.stylesheetPath = stylesheetPath.trim()
                 }
@@ -667,13 +664,6 @@ private fun ComponentMetaEditorDialog(
                     singleLine = true,
                 )
                 Validation(showValidationErrors, labelValidation)
-            }
-            DialogProperty(text = stringRes(R.string.ext__meta__authors)) {
-                JetPrefTextField(
-                    value = authors,
-                    onValueChange = { authors = it },
-                )
-                Validation(showValidationErrors, authorsValidation)
             }
             JetPrefListItem(
                 modifier = Modifier.toggleable(isNightTheme) { isNightTheme = it },
