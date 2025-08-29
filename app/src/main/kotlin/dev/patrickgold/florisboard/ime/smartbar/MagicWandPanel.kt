@@ -255,7 +255,7 @@ private suspend fun handleMagicWandButtonClick(
             editorInstance.setSelection(0, totalTextLength)
             editorInstance.deleteSelectedText()
             editorInstance.commitText(transformedText)
-            context.showShortToast("✨ Text transformed!")
+            context.showShortToast("Text transformed!")
         }.onFailure { error ->
             context.showShortToast("❌ Error: ${error.message}")
         }

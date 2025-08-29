@@ -68,10 +68,10 @@ data class QuickActionArrangement(
         val Default = QuickActionArrangement(
             stickyAction = QuickAction.InsertKey(TextKeyData.MAGIC_WAND),
             dynamicActions = listOf(
+                QuickAction.InsertKey(TextKeyData.VOICE_INPUT),
                 QuickAction.InsertKey(TextKeyData.SETTINGS),
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD),
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
-                QuickAction.InsertKey(TextKeyData.TOGGLE_AUTOCORRECT),
                 QuickAction.InsertKey(TextKeyData.ARROW_UP),
                 QuickAction.InsertKey(TextKeyData.ARROW_DOWN),
                 QuickAction.InsertKey(TextKeyData.ARROW_LEFT),

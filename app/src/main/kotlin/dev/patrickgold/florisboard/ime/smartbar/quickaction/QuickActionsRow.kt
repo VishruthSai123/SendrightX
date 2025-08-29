@@ -70,7 +70,12 @@ fun QuickActionsRow(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val width = constraints.maxWidth.toDp()
         val height = constraints.maxHeight.toDp()
-        val numActionsToShow = ((width / height).toInt() - (if (showOverflowAction) 1 else 0)).coerceAtLeast(0)
+        // Force maximum of 4 dynamic actions to be shown directly on smartbar header
+        val maxDynamicActions = 4
+        val numActionsToShow = minOf(
+            ((width / height).toInt() - (if (showOverflowAction) 1 else 0)).coerceAtLeast(0),
+            maxDynamicActions
+        )
         val visibleActions = dynamicActions
             .subList(0, numActionsToShow.coerceAtMost(dynamicActions.size))
 

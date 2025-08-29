@@ -157,6 +157,10 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "correction__auto_capitalization",
             default = true,
         )
+        val autoCorrectEnabled = boolean(
+            key = "correction__auto_correct_enabled",
+            default = true,
+        )
         val autoSpacePunctuation = boolean(
             key = "correction__auto_space_punctuation",
             default = false,
@@ -477,7 +481,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hintedSymbolsEnabled = boolean(
             key = "keyboard__hinted_symbols_enabled",
-            default = true,
+            default = false,
         )
         val hintedSymbolsMode = enum(
             key = "keyboard__hinted_symbols_mode",
@@ -719,11 +723,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val enabled = boolean(
             key = "suggestion__enabled",
-            default = false,
+            default = true,
         )
         val displayMode = enum(
             key = "suggestion__display_mode",
-            default = CandidatesDisplayMode.DYNAMIC_SCROLLABLE,
+            default = CandidatesDisplayMode.CLASSIC,
         )
         val blockPossiblyOffensive = boolean(
             key = "suggestion__block_possibly_offensive",
@@ -748,12 +752,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val dayThemeId = custom(
             key = "theme__day_theme_id",
-            default = extCoreTheme("floris_day"),
+            default = extCoreTheme("right_day"),
             serializer = ExtensionComponentName.Serializer,
         )
         val nightThemeId = custom(
             key = "theme__night_theme_id",
-            default = extCoreTheme("floris_night"),
+            default = extCoreTheme("right_night"),
             serializer = ExtensionComponentName.Serializer,
         )
         val accentColor = custom(
