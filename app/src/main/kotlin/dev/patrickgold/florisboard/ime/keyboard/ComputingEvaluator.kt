@@ -288,6 +288,9 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
         KeyCode.TOGGLE_AUTOCORRECT -> {
             Icons.Default.FontDownload
         }
+        KeyCode.MAGIC_WAND -> {
+            this.context()?.vectorResource(R.drawable.ic_magic_wand)
+        }
         KeyCode.KANA_SWITCHER -> {
             if (evaluator.state.isKanaKata) {
                 this.context()?.vectorResource(R.drawable.ic_keyboard_kana_switcher_kata)

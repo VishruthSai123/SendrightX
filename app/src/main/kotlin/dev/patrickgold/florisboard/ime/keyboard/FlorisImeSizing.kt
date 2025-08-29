@@ -48,7 +48,7 @@ import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.isOrientationLandscape
 
 private val LocalKeyboardRowBaseHeight = staticCompositionLocalOf { 65.dp }
-private val LocalSmartbarHeight = staticCompositionLocalOf { 40.dp }
+private val LocalSmartbarHeight = staticCompositionLocalOf { 48.dp }
 
 object FlorisImeSizing {
     val keyboardRowBaseHeight: Dp
@@ -136,7 +136,7 @@ fun ProvideKeyboardRowBaseHeight(content: @Composable () -> Unit) {
             else -> heightFactorPortrait * (if (oneHandedMode) oneHandedModeScaleFactor else 1f)
         }
     }
-    val smartbarHeight = baseRowHeight * 0.753f
+    val smartbarHeight = baseRowHeight * 0.9f
 
     SideEffect {
         FlorisImeSizing.Static.keyboardRowBaseHeightPx = baseRowHeight.toInt()

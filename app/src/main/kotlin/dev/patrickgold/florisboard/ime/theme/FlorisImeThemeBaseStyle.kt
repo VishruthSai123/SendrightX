@@ -129,6 +129,7 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
     FlorisImeUi.SmartbarSharedActionsToggle.elementName {
         background = `var`("--surface")
         foreground = `var`("--on-surface")
+        fontSize = fontSize(20.sp)
         margin = padding(6.dp)
         shape = circleShape()
         shadowElevation = size(2.dp)
@@ -136,16 +137,26 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
     FlorisImeUi.SmartbarExtendedActionsToggle.elementName {
         background = rgbaColor(0, 0, 0, 0f)
         foreground = rgbaColor(144, 144, 144)
+        fontSize = fontSize(20.sp)
         margin = padding(6.dp)
         shape = circleShape()
     }
     FlorisImeUi.SmartbarActionKey.elementName {
         background = rgbaColor(0, 0, 0, 0f)
         foreground = rgbaColor(220, 220, 220)
+        fontSize = fontSize(20.sp)
         shape = `var`("--shape")
     }
     FlorisImeUi.SmartbarActionKey.elementName(selector = SnyggSelector.DISABLED) {
         foreground = `var`("--on-background-disabled")
+    }
+    FlorisImeUi.SmartbarActionKey.elementName(FlorisImeUi.Attr.Code to listOf(KeyCode.MAGIC_WAND)) {
+        background = `var`("--surface")
+        foreground = `var`("--on-surface")
+        fontSize = fontSize(20.sp)
+        margin = padding(6.dp)
+        shape = circleShape()
+        shadowElevation = size(2.dp)
     }
 
     FlorisImeUi.SmartbarActionsOverflow.elementName {
@@ -173,7 +184,7 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
         foreground = `var`("--on-background-disabled")
     }
     FlorisImeUi.SmartbarActionTileIcon.elementName {
-        fontSize = fontSize(24.sp)
+        fontSize = fontSize(28.sp)
         margin = padding(0.dp, 0.dp, 0.dp, 8.dp)
     }
 

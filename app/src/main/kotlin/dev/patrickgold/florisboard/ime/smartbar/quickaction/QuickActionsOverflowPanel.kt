@@ -57,7 +57,12 @@ fun QuickActionsOverflowPanel() {
         }
     }
     val visibleActions = remember(actionArrangement, dynamicActionsCountToShow) {
-        actionArrangement.dynamicActions.takeLast(dynamicActionsCountToShow)
+        buildList {
+            // Add dynamic actions that don't fit in the smartbar
+            addAll(actionArrangement.dynamicActions.takeLast(dynamicActionsCountToShow))
+            // Add all hidden actions
+            addAll(actionArrangement.hiddenActions)
+        }
     }
 
     SnyggBox(
