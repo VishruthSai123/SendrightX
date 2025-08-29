@@ -16,6 +16,7 @@
 
 package dev.patrickgold.florisboard.ime.smartbar
 
+import dev.patrickgold.florisboard.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -26,7 +27,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object GeminiApiService {
-    private const val API_KEY = "AIzaSyAy2qdSXZR8l_M3-a7iptbqQSNmTP-fprA"
+    private val API_KEY = BuildConfig.GEMINI_API_KEY
     private const val ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     private var lastRequestTime = 0L
     private const val MIN_REQUEST_INTERVAL = 1000L // 1 second between requests
@@ -60,6 +61,11 @@ object GeminiApiService {
     
     suspend fun transformText(inputText: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
         try {
+            // Validate API key
+            if (API_KEY.isBlank()) {
+                return@withContext Result.failure(Exception("Gemini API key not configured. Please add GEMINI_API_KEY to local.properties"))
+            }
+            
             // Rate limiting: ensure minimum interval between requests
             val currentTime = System.currentTimeMillis()
             val timeSinceLastRequest = currentTime - lastRequestTime
