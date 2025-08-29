@@ -113,6 +113,7 @@ android {
 
     buildTypes {
         named("debug") {
+            applicationIdSuffix = ".debug"
             versionNameSuffix = "+${getGitCommitHash(short = true)}"
 
             isDebuggable = true
@@ -124,7 +125,7 @@ android {
             resValue("mipmap", "floris_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "floris_app_icon_round", "@mipmap/ic_launcher_round")
             resValue("drawable", "floris_app_icon_foreground", "@drawable/ic_launcher_background")
-            resValue("string", "floris_app_name", "SendRight X")
+            resValue("string", "floris_app_name", "SendRight X Debug")
         }
 
         create("beta") {
