@@ -34,6 +34,7 @@ import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
 import dev.patrickgold.florisboard.ime.smartbar.IncognitoDisplayMode
 import dev.patrickgold.florisboard.ime.smartbar.InlineSuggestionsStyleCache
+import dev.patrickgold.florisboard.ime.smartbar.MagicWandPanel
 import dev.patrickgold.florisboard.ime.smartbar.Smartbar
 import dev.patrickgold.florisboard.ime.smartbar.quickaction.QuickActionsOverflowPanel
 import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyboardLayout
@@ -65,6 +66,8 @@ fun TextInputLayout(
             Smartbar()
             if (state.isActionsOverflowVisible) {
                 QuickActionsOverflowPanel()
+            } else if (state.isMagicWandPanelVisible) {
+                MagicWandPanel()
             } else {
                 Box {
                     val incognitoDisplayMode by prefs.keyboard.incognitoDisplayMode.observeAsState()

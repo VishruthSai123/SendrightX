@@ -617,12 +617,140 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
 
     /**
      * Handles a [KeyCode.MAGIC_WAND] event.
+     * Toggles the magic wand panel with customizable buttons.
      */
     private fun handleMagicWand() {
+        activeState.isMagicWandPanelVisible = !activeState.isMagicWandPanelVisible
+        
+        if (activeState.isMagicWandPanelVisible) {
+            // Hide other panels when showing magic wand panel
+            activeState.isActionsOverflowVisible = false
+            activeState.isActionsEditorVisible = false
+        }
+    }
+
+    /**
+     * Handles magic wand button actions
+     */
+    fun handleMagicWandButton(buttonIndex: Int) {
         lastToastReference.get()?.cancel()
-        lastToastReference = WeakReference(
-            appContext.showLongToastSync("Magic wand functionality coming soon!")
-        )
+        
+        when (buttonIndex) {
+            1 -> handleMagicWandButton1()
+            2 -> handleMagicWandButton2()
+            3 -> handleMagicWandButton3()
+            4 -> handleMagicWandButton4()
+            5 -> handleMagicWandButton5()
+            6 -> handleMagicWandButton6()
+            7 -> handleMagicWandButton7()
+            8 -> handleMagicWandButton8()
+            else -> {
+                lastToastReference = WeakReference(
+                    appContext.showLongToastSync("✨ Button $buttonIndex pressed!")
+                )
+            }
+        }
+    }
+
+    private fun handleMagicWandButton1() {
+        // Smart Text Case Toggle
+        val selectedText = editorInstance.getSelectedText()
+        if (!selectedText.isNullOrEmpty()) {
+            val transformed = when {
+                selectedText.all { it.isUpperCase() || !it.isLetter() } -> selectedText.split(" ").joinToString(" ") { 
+                    it.lowercase().replaceFirstChar { char -> char.uppercase() } 
+                }
+                else -> selectedText.uppercase()
+            }
+            editorInstance.deleteSelectedText()
+            editorInstance.commitText(transformed)
+            lastToastReference = WeakReference(appContext.showLongToastSync("✨ Text case transformed"))
+        } else {
+            lastToastReference = WeakReference(appContext.showLongToastSync("✨ Select text to transform case"))
+        }
+    }
+
+    private fun handleMagicWandButton2() {
+        // Quick Email Template
+        val emailTemplate = "Hello,\n\nI hope this email finds you well.\n\nBest regards,\n"
+        editorInstance.commitText(emailTemplate)
+        lastToastReference = WeakReference(appContext.showLongToastSync("✨ Email template inserted"))
+    }
+
+    private fun handleMagicWandButton3() {
+        // Smart Date/Time Insertion
+        val currentDateTime = java.time.LocalDateTime.now()
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' hh:mm a")
+        val dateTimeString = currentDateTime.format(formatter)
+        editorInstance.commitText(dateTimeString)
+        lastToastReference = WeakReference(appContext.showLongToastSync("✨ Current date/time inserted"))
+    }
+
+    private fun handleMagicWandButton4() {
+        // Quick Symbols Panel
+        val symbols = "• → ← ↑ ↓ ★ ♥ ✓ ✗ © ® ™ § ¶ "
+        editorInstance.commitText(symbols)
+        lastToastReference = WeakReference(appContext.showLongToastSync("✨ Symbol set inserted"))
+    }
+
+    private fun handleMagicWandButton5() {
+        // Text Cleanup
+        val selectedText = editorInstance.getSelectedText()
+        if (!selectedText.isNullOrEmpty()) {
+            val cleaned = selectedText.trim().replace("\\s+".toRegex(), " ")
+            editorInstance.deleteSelectedText()
+            editorInstance.commitText(cleaned)
+            lastToastReference = WeakReference(appContext.showLongToastSync("✨ Text cleaned"))
+        } else {
+            lastToastReference = WeakReference(appContext.showLongToastSync("✨ Select text to clean"))
+        }
+    }
+
+    private fun handleMagicWandButton6() {
+        // Quick Phone Number Format
+        val selectedText = editorInstance.getSelectedText()
+        if (!selectedText.isNullOrEmpty() && selectedText.matches("\\d{10}".toRegex())) {
+            val formatted = "${selectedText.substring(0, 3)}-${selectedText.substring(3, 6)}-${selectedText.substring(6)}"
+            editorInstance.deleteSelectedText()
+            editorInstance.commitText(formatted)
+            lastToastReference = WeakReference(appContext.showLongToastSync("✨ Phone number formatted"))
+        } else {
+            lastToastReference = WeakReference(appContext.showLongToastSync("✨ Select 10-digit number to format"))
+        }
+    }
+
+    private fun handleMagicWandButton7() {
+        // Smart URL Completion
+        val currentWord = editorInstance.getCurrentWord()
+        when {
+            currentWord.startsWith("www.") && !currentWord.contains("://") -> {
+                editorInstance.selectCurrentWord()
+                editorInstance.deleteSelectedText()
+                editorInstance.commitText("https://$currentWord")
+                lastToastReference = WeakReference(appContext.showLongToastSync("✨ URL protocol added"))
+            }
+            currentWord.contains("@") && !currentWord.contains(".") -> {
+                editorInstance.selectCurrentWord()
+                editorInstance.deleteSelectedText()
+                editorInstance.commitText("$currentWord.com")
+                lastToastReference = WeakReference(appContext.showLongToastSync("✨ Domain completed"))
+            }
+            else -> {
+                lastToastReference = WeakReference(appContext.showLongToastSync("✨ Position cursor on URL/email to enhance"))
+            }
+        }
+    }
+
+    private fun handleMagicWandButton8() {
+        // Text Reverser
+        val selectedText = editorInstance.getSelectedText()
+        if (!selectedText.isNullOrEmpty()) {
+            editorInstance.deleteSelectedText()
+            editorInstance.commitText(selectedText.reversed())
+            lastToastReference = WeakReference(appContext.showLongToastSync("✨ Text reversed"))
+        } else {
+            lastToastReference = WeakReference(appContext.showLongToastSync("✨ Select text to reverse"))
+        }
     }
 
     /**

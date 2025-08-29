@@ -657,4 +657,87 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
             state.set(0)
         }
     }
+
+    // Magic Wand Helper Methods
+    
+    /**
+     * Gets the current word under the cursor
+     */
+    fun getCurrentWord(): String {
+        val content = activeContent
+        val textBeforeCursor = content.getTextBeforeCursor(50)
+        val textAfterCursor = content.getTextAfterCursor(50)
+        
+        // Find word boundaries
+        val beforeMatch = "\\S*$".toRegex().find(textBeforeCursor)
+        val afterMatch = "^\\S*".toRegex().find(textAfterCursor)
+        
+        val wordBefore = beforeMatch?.value ?: ""
+        val wordAfter = afterMatch?.value ?: ""
+        
+        return wordBefore + wordAfter
+    }
+    
+    /**
+     * Gets the current line under the cursor
+     */
+    fun getCurrentLine(): String {
+        val content = activeContent
+        val textBeforeCursor = content.getTextBeforeCursor(200)
+        val textAfterCursor = content.getTextAfterCursor(200)
+        
+        // Find line boundaries
+        val beforeLines = textBeforeCursor.split('\n')
+        val afterLines = textAfterCursor.split('\n')
+        
+        val lineBefore = if (beforeLines.isNotEmpty()) beforeLines.last() else ""
+        val lineAfter = if (afterLines.isNotEmpty()) afterLines.first() else ""
+        
+        return lineBefore + lineAfter
+    }
+    
+    /**
+     * Selects the current word under the cursor
+     */
+    fun selectCurrentWord() {
+        val content = activeContent
+        val textBeforeCursor = content.getTextBeforeCursor(50)
+        val textAfterCursor = content.getTextAfterCursor(50)
+        
+        // Find word boundaries
+        val beforeMatch = "\\S*$".toRegex().find(textBeforeCursor)
+        val afterMatch = "^\\S*".toRegex().find(textAfterCursor)
+        
+        val wordStartOffset = beforeMatch?.value?.length ?: 0
+        val wordEndOffset = afterMatch?.value?.length ?: 0
+        
+        if (wordStartOffset > 0 || wordEndOffset > 0) {
+            setSelection(
+                content.selection.start - wordStartOffset,
+                content.selection.end + wordEndOffset
+            )
+        }
+    }
+    
+    /**
+     * Gets the currently selected text, or null if no selection
+     */
+    fun getSelectedText(): String? {
+        val selection = activeContent.selection
+        return if (selection.isSelectionMode) {
+            activeContent.selectedText
+        } else {
+            null
+        }
+    }
+    
+    /**
+     * Deletes the currently selected text
+     */
+    fun deleteSelectedText() {
+        val selection = activeContent.selection
+        if (selection.isSelectionMode) {
+            commitText("")
+        }
+    }
 }
