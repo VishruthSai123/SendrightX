@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-rootProject.name = "SendRight X"
+rootProject.name = "SendRight"
 
 pluginManagement {
     repositories {

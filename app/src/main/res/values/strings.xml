@@ -1,5 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name">SendRight X</string>
+    <string name="app_name">SendRight</string>
+    <string name="sendright_app_name">SendRight</string>
+    <string name="floris_app_name">SendRight</string>
 
     <string name="key__phone_pause" comment="Label for the Pause key in the telephone keyboard layout">Pause</string>
     <string name="key__phone_wait" comment="Label for the Wait key in the telephone keyboard layout">Wait</string>
@@ -120,8 +122,8 @@
     <string name="settings__system_default" comment="General string which is used when a preference has the system default value set">System default</string>
 
     <string name="settings__home__title" comment="Title of the Home screen">Welcome to {app_name}</string>
-    <string name="settings__home__ime_not_enabled" comment="Error message shown in Home fragment when SendRight X is not enabled in the system">SendRight X is not enabled in the system and thus won\'t be available as an input method in the input picker. Click here to resolve this issue.</string>
-    <string name="settings__home__ime_not_selected" comment="Warning message shown in Home fragment when SendRight X is not selected as the default keyboard">SendRight X is not selected as the default input method. Click here to resolve this issue.</string>
+    <string name="settings__home__ime_not_enabled" comment="Error message shown in Home fragment when SendRight is not enabled in the system">SendRight is not enabled in the system and thus won\'t be available as an input method in the input picker. Click here to resolve this issue.</string>
+    <string name="settings__home__ime_not_selected" comment="Warning message shown in Home fragment when SendRight is not selected as the default keyboard">SendRight is not selected as the default input method. Click here to resolve this issue.</string>
 
     <string name="settings__localization__title" comment="Title of languages and Layout screen">Languages &amp; Layouts</string>
     <string name="settings__localization__display_language_names_in__label" comment="Label of Display language names in preference">Display language names in</string>
@@ -171,7 +173,7 @@
         Accent color (Material You themes)
     </string>
     <string name="settings__theme_manager__title_manage" comment="Title of the theme manager screen for managing installed and custom themes">Manage installed themes</string>
-    <string name="pref__theme__source_assets" comment="Label for the theme source field">SendRight X App Assets</string>
+    <string name="pref__theme__source_assets" comment="Label for the theme source field">SendRight App Assets</string>
     <string name="pref__theme__source_internal" comment="Label for the theme source field">Internal Storage</string>
     <string name="pref__theme__source_external" comment="Label for the theme source field">External Provider</string>
 
@@ -568,7 +570,7 @@
 
     <!-- About UI strings -->
     <string name="about__title" comment="Title of About activity">About</string>
-    <string name="about__app_icon_content_description" comment="Content description of app icon in About">App icon of SendRight X</string>
+    <string name="about__app_icon_content_description" comment="Content description of app icon in About">App icon of SendRight</string>
     <string name="about__view_licenses" comment="Label of View licenses button in About">Open source licenses</string>
     <string name="about__view_privacy_policy" comment="Label of View privacy policy button in About">Privacy policy</string>
     <string name="about__view_source_code" comment="Label of View source code button in About">Source code</string>
@@ -585,11 +587,29 @@
     <string name="about__privacy_policy__title" comment="Preference title">Privacy policy</string>
     <string name="about__privacy_policy__summary" comment="Preference summary">The privacy policy for this project</string>
     <string name="about__project_license__title" comment="Preference title">Project license</string>
-    <string name="about__project_license__summary" comment="Preference summary">SendRight X is licensed under {license_name}</string>
+    <string name="about__project_license__summary" comment="Preference summary">SendRight is licensed under {license_name}</string>
     <string name="about__project_license__error_license_text_failed" comment="Error text for license text loading failure">Error: Failed to load license text.\n-&gt; Reason: {error_message}</string>
     <string name="about__project_license__error_reason_asset_manager_null" comment="Error text if asset manager is null">Asset manager reference is null</string>
     <string name="about__third_party_licenses__title" comment="Preference title">Third-party licenses</string>
     <string name="about__third_party_licenses__summary" comment="Preference summary">Licenses of the third-party libraries included in this app</string>
+    <string name="about__built_upon_florisboard__title" comment="Preference title">Built upon FlorisBoard</string>
+    <string name="about__built_upon_florisboard__summary" comment="Preference summary">SendRight is built upon the excellent FlorisBoard keyboard by Patrick Zedler and The FlorisBoard Contributors, licensed under Apache 2.0.</string>
+
+    <!-- Report & Feedback UI strings -->
+    <string name="report_feedback__title" comment="Title of Report and Feedback screen">Report &amp; Feedback</string>
+    <string name="report_feedback__info_title" comment="Info card title">Help Us Improve SendRight</string>
+    <string name="report_feedback__info_description" comment="Info card description">Your feedback helps us make SendRight better. Report bugs, request features, or share your thoughts with our development team.</string>
+    <string name="report_feedback__type_label" comment="Report type dropdown label">Report Type</string>
+    <string name="report_feedback__description_label" comment="Description field label">Description</string>
+    <string name="report_feedback__description_hint" comment="Description field hint">Please describe the issue or feedback in detail...</string>
+    <string name="report_feedback__steps_label" comment="Steps to reproduce label">Steps to Reproduce</string>
+    <string name="report_feedback__steps_hint" comment="Steps to reproduce hint">1. Open the app\n2. Navigate to...\n3. Tap on...</string>
+    <string name="report_feedback__device_info_title" comment="Device info card title">Device Information</string>
+    <string name="report_feedback__device_info_description" comment="Device info description">The following information will be included in your report to help us diagnose issues:</string>
+    <string name="report_feedback__send_button" comment="Send report button text">Send Report</string>
+    <string name="report_feedback__ai_content_notice_title" comment="AI content issue notice title">AI Content Policy Compliance</string>
+    <string name="report_feedback__ai_content_notice_description" comment="AI content issue notice description">This report will be reviewed for compliance with Google Play policies regarding AI-generated content. Please provide specific details about the content issue.</string>
+    <string name="pref__support__group_title" comment="Support group title">Support</string>
 
     <!-- Setup UI strings -->
     <string name="setup__title" comment="Title of Setup">Welcome!</string>
@@ -607,7 +627,7 @@
 
     <string name="setup__grant_notification_permission__title">Permit Crash Report Notifications</string>
     <string name="setup__grant_notification_permission__description">As of Android 13+, apps must ask for permission to
-        send notifications. In SendRight X, this is only used to open a crash report screen in the event of a crash.
+        send notifications. In SendRight, this is only used to open a crash report screen in the event of a crash.
         This permission can be changed at any time in the system settings.
     </string>
     <string name="setup__grant_notification_permission__btn">Grant Permission</string>
@@ -658,7 +678,7 @@
     <string name="backup_and_restore__restore__failure">Failed to restore data: {error_message}</string>
 
     <!-- Crash Dialog strings -->
-    <string name="crash_dialog__title" comment="Title of crash dialog">SendRight X error report</string>
+    <string name="crash_dialog__title" comment="Title of crash dialog">SendRight error report</string>
     <string name="crash_dialog__description" comment="Description of crash dialog">Sorry for the inconvenience, but SendRight X has crashed due to an unexpected error.</string>
     <string name="crash_dialog__report_instructions" comment="Issue tracker report instructions for the crash dialog. The %s placeholder is the name of the crash report template and always in English/LTR.">If you wish to report this error, first check out the issue tracker on GitHub if your crash has not already been reported.\nIf it hasn\'t, copy the generated crash log and open a new issue. Use the \"%s\" template and fill out the description, the steps to reproduce, and paste the generated crash log at the end. This helps in making SendRight X better and more stable for everyone. Thank you!</string>
     <string name="crash_dialog__bug_report_template" comment="Name of the template to use in the GitHub issue tracker (is always in English)" translatable="false">Crash report</string>

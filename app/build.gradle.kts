@@ -47,7 +47,7 @@ val projectVersionNameSuffix = projectVersionName.substringAfter("-", "").let { 
 }
 
 android {
-    namespace = "dev.patrickgold.florisboard"
+    namespace = "com.vishruth.sendright"
     compileSdk = projectCompileSdk.toInt()
     buildToolsVersion = tools.versions.buildTools.get()
     ndkVersion = tools.versions.ndk.get()
@@ -77,7 +77,7 @@ android {
 
         buildConfigField("String", "BUILD_COMMIT_HASH", "\"${getGitCommitHash()}\"")
         buildConfigField("String", "FLADDONS_API_VERSION", "\"v~draft2\"")
-        buildConfigField("String", "FLADDONS_STORE_URL", "\"beta.addons.florisboard.org\"")
+        buildConfigField("String", "FLADDONS_STORE_URL", "\"beta.addons.sendrightx.org\"")
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -99,7 +99,7 @@ android {
 
     bundle {
         language {
-            // We disable language split because FlorisBoard does not use
+            // We disable language split because SendRightX does not use
             // runtime Google Play Service APIs and thus cannot dynamically
             // request to download the language resources for a specific locale.
             enableSplit = false
@@ -122,10 +122,15 @@ android {
             // Add Gemini API key to BuildConfig
             buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
 
-            resValue("mipmap", "floris_app_icon", "@mipmap/ic_launcher")
-            resValue("mipmap", "floris_app_icon_round", "@mipmap/ic_launcher_round")
-            resValue("drawable", "floris_app_icon_foreground", "@drawable/ic_launcher_background")
-            resValue("string", "floris_app_name", "SendRight X Debug")
+            resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
+            resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
+            resValue("mipmap", "sendright_app_icon_foreground", "@mipmap/ic_launcher_foreground")
+            resValue("string", "sendright_app_name", "SendRight")
+            
+            // Add test-specific resources to prevent Android Test build failures
+            resValue("mipmap", "ic_launcher", "@android:drawable/sym_def_app_icon")
+            resValue("mipmap", "ic_launcher_round", "@android:drawable/sym_def_app_icon")
+            resValue("mipmap", "ic_launcher_foreground", "@android:drawable/sym_def_app_icon")
         }
 
         create("beta") {
@@ -139,10 +144,10 @@ android {
             // Add Gemini API key to BuildConfig
             buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
 
-            resValue("mipmap", "floris_app_icon", "@mipmap/ic_launcher")
-            resValue("mipmap", "floris_app_icon_round", "@mipmap/ic_launcher_round")
-            resValue("drawable", "floris_app_icon_foreground", "@drawable/ic_launcher_background")
-            resValue("string", "floris_app_name", "SendRight X Beta")
+            resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
+            resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
+            resValue("mipmap", "sendright_app_icon_foreground", "@mipmap/ic_launcher_foreground")
+            resValue("string", "sendright_app_name", "SendRight Beta")
         }
 
         named("release") {
@@ -155,10 +160,10 @@ android {
             // Add Gemini API key to BuildConfig
             buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
 
-            resValue("mipmap", "floris_app_icon", "@mipmap/ic_launcher")
-            resValue("mipmap", "floris_app_icon_round", "@mipmap/ic_launcher_round")
-            resValue("drawable", "floris_app_icon_foreground", "@drawable/ic_launcher_background")
-            resValue("string", "floris_app_name", "@string/app_name")
+            resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
+            resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
+            resValue("mipmap", "sendright_app_icon_foreground", "@mipmap/ic_launcher_foreground")
+            resValue("string", "sendright_app_name", "@string/app_name")
         }
 
         create("benchmark") {

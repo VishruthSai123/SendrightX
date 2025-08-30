@@ -9,6 +9,16 @@
     <string name="florisboard__internal_key_codes_url" translatable="false"></string>
     <string name="florisboard__character_key_codes_url" translatable="false">https://unicode-table.com/en</string>
 
+    <string name="sendrightx__repo_url" translatable="false">https://github.com/VishruthSai123/SendrightX</string>
+    <string name="sendrightx__issue_tracker_url" translatable="false">https://github.com/VishruthSai123/SendrightX/issues</string>
+    <string name="sendrightx__privacy_policy_url" translatable="false">https://github.com/VishruthSai123/SendrightX/blob/main/PRIVACY_POLICY.md</string>
+    <string name="sendrightx__changelog_url" translatable="false">https://github.com/VishruthSai123/SendrightX/releases/tag/v%s</string>
+    <string name="sendrightx__commit_by_hash_url" translatable="false">https://github.com/VishruthSai123/SendrightX/commit/%s</string>
+    <string name="sendrightx__spell_checker_wiki_url" translatable="false">https://github.com/VishruthSai123/SendrightX/wiki/Spell-checking</string>
+    <string name="sendrightx__theme_editor_wiki_url" translatable="false">https://github.com/VishruthSai123/SendrightX/wiki/theme-editor</string>
+    <string name="sendrightx__internal_key_codes_url" translatable="false">https://github.com/VishruthSai123/SendrightX/wiki/internal-key-codes</string>
+    <string name="sendrightx__character_key_codes_url" translatable="false">https://unicode-table.com/en</string>
+
     <string name="general__system_string_placeholder" translatable="false">%s</string>
     <string name="general__empty_string" translatable="false"/>
     <string name="general__invalid_fatal" translatable="false">!! invalid !!</string>

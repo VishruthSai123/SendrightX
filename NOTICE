@@ -1,0 +1,42 @@
+SendRight X Keyboard
+Copyright 2025 VishruthSai123
+
+This project is based on FlorisBoard (https://github.com/florisboard/florisboard),
+created by Patrick Zedler and The FlorisBoard Contributors,
+licensed under the Apache License 2.0.
+
+Original FlorisBoard Copyright:
+Copyright 2021-2025 The FlorisBoard Contributors
+Original Author: Patrick Zedler (patrick@florisboard.org)
+
+MODIFICATIONS MADE TO ORIGINAL FLORISBOARD:
+- Added AI-powered Magic Wand functionality with Gemini API integration
+- Enhanced UI with SendRight branding and custom theming
+- Implemented auto-close behavior for Magic Wand panel
+- Added custom application namespace (com.vishruth.sendright)
+- Integrated network permissions for AI API communication
+- Modified build configuration for SendRight distribution
+- Added custom launcher icons and application identity
+
+For a complete list of changes, see the project's git history at:
+https://github.com/VishruthSai123/florisboard
+
+The original FlorisBoard project can be found at:
+https://github.com/florisboard/florisboard
+
+Both the original FlorisBoard and this derivative work (SendRight) are
+licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+THIRD-PARTY COMPONENTS:
+This project incorporates components from FlorisBoard and other open-source projects.
+See the "Third-party licenses" section in the app's About screen for a complete list.

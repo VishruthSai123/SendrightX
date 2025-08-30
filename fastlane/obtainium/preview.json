@@ -1,6 +1,6 @@
 {
-  "id": "dev.patrickgold.florisboard.beta",
-  "url": "https://github.com/florisboard/florisboard",
+  "id": "com.vishruth.sendright.beta",
+  "url": "https://github.com/VishruthSai123/SendrightX",
   "author": "florisboard",
   "name": "FlorisBoard Preview",
   "additionalSettings": "{\"includePrereleases\":true,\"fallbackToOlderReleases\":true,\"apkFilterRegEx\":\"preview\"}"

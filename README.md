@@ -1,11 +1,17 @@
 <img align="left" width="80" height="80"
 src=".github/repo_icon.png" alt="App icon">
 
-# FlorisBoard [![Crowdin](https://badges.crowdin.net/florisboard/localized.svg)](https://crowdin.florisboard.org) [![Matrix badge](https://img.shields.io/badge/chat-%23florisboard%3amatrix.org-blue)](https://matrix.to/#/#florisboard:matrix.org) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md) [![FlorisBoard CI](https://github.com/florisboard/florisboard/actions/workflows/android.yml/badge.svg?event=push)](https://github.com/florisboard/florisboard/actions/workflows/android.yml)
+# SendRight Keyboard (Based on FlorisBoard)
 
-**FlorisBoard** is a free and open-source keyboard for Android 8.0+
-devices. It aims at being modern, user-friendly and customizable while
-fully respecting your privacy. Currently in early-beta state.
+> **Note**: This repository contains SendRight, an AI-enhanced Android keyboard based on the original FlorisBoard project by Patrick Zedler and The FlorisBoard Contributors. The original FlorisBoard project can be found at: https://github.com/florisboard/florisboard
+
+[![Crowdin](https://badges.crowdin.net/florisboard/localized.svg)](https://crowdin.florisboard.org) [![Matrix badge](https://img.shields.io/badge/chat-%23florisboard%3amatrix.org-blue)](https://matrix.to/#/#florisboard:matrix.org) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md) [![FlorisBoard CI](https://github.com/florisboard/florisboard/actions/workflows/android.yml/badge.svg?event=push)](https://github.com/florisboard/florisboard/actions/workflows/android.yml)
+
+**SendRight** is an AI-enhanced Android keyboard based on **FlorisBoard**. It includes all the features of FlorisBoard plus additional AI-powered functionality including Magic Wand text processing, Gemini API integration, and enhanced user experience improvements.
+
+## Attribution
+
+This project is based on [FlorisBoard](https://github.com/florisboard/florisboard) by Patrick Zedler and The FlorisBoard Contributors, licensed under the Apache License 2.0.
 
 <table>
 <tr>

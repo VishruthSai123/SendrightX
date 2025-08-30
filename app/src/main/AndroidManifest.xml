@@ -11,9 +11,9 @@
     <!-- Permission needed to create notifications on devices running Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <!-- Android 11+ only: Define that FlorisBoard requests to see all apps that
+    <!-- Android 11+ only: Define that SendRight X requests to see all apps that
           ship with an IME or Spell Check service. This is used to guide the user
-          in the Settings Ui why FlorisBoard may not be working.
+          in the Settings Ui why SendRight X may not be working.
      -->
     <queries>
         <intent>
@@ -24,26 +24,21 @@
         </intent>
     </queries>
 
-    <application
-        android:name="dev.patrickgold.florisboard.FlorisApplication"
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/backup_rules"
-        android:fullBackupContent="@xml/backup_rules"
+        <application
+        android:name=".SendRightApplication"
+        android:allowBackup="false"
+        android:requestLegacyExternalStorage="true"
+        android:theme="@style/SendRightAppTheme.Splash"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/floris_app_name"
-        android:enableOnBackInvokedCallback="true"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/FlorisAppTheme"
-        tools:targetApi="tiramisu">
+        android:roundIcon="@mipmap/ic_launcher_round">
 
         <!-- Allow app to be profiled for benchmarking and baseline profile generation -->
         <profileable android:shell="true"/>
 
         <!-- IME service -->
         <service
-            android:name="dev.patrickgold.florisboard.FlorisImeService"
-            android:label="@string/floris_app_name"
+            android:name="com.vishruth.sendright.FlorisImeService"
+            android:label="@string/sendright_app_name"
             android:permission="android.permission.BIND_INPUT_METHOD"
             android:directBootAware="true"
             android:exported="true">
@@ -55,8 +50,8 @@
 
         <!-- Spellchecker service -->
         <service
-            android:name="dev.patrickgold.florisboard.FlorisSpellCheckerService"
-            android:label="@string/floris_app_name"
+            android:name="com.vishruth.sendright.FlorisSpellCheckerService"
+            android:label="@string/sendright_app_name"
             android:permission="android.permission.BIND_TEXT_SERVICE"
             android:exported="true">
             <intent-filter>
@@ -67,44 +62,43 @@
 
         <!-- Main App Activity -->
         <activity
-            android:name="dev.patrickgold.florisboard.app.FlorisAppActivity"
-            android:icon="@mipmap/ic_launcher"
-            android:label="@string/settings__title"
+            android:name="com.vishruth.sendright.app.FlorisAppActivity"
+            android:icon="@mipmap/sendright_app_icon"
             android:launchMode="singleTask"
-            android:roundIcon="@mipmap/ic_launcher_round"
+            android:roundIcon="@mipmap/sendright_app_icon_round"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/FlorisAppTheme.Splash"
+            android:theme="@style/SendRightAppTheme.Splash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="ui" android:host="florisboard" android:pathPrefix="/" />
+                <data android:scheme="ui" android:host="sendrightx" android:pathPrefix="/" />
             </intent-filter>
             <intent-filter android:label="Import Extension">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:scheme="content"/>
-                <data android:mimeType="application/vnd.florisboard.extension+zip"/>
+                <data android:mimeType="application/vnd.sendrightx.extension+zip"/>
                 <data android:mimeType="application/octet-stream"/><!-- Firefox looking at you :eyes: -->
             </intent-filter>
             <intent-filter android:label="Import Extension">
                 <action android:name="android.intent.action.SEND"/>
                 <category android:name="android.intent.category.DEFAULT"/>
-                <data android:mimeType="application/vnd.florisboard.extension+zip"/>
+                <data android:mimeType="application/vnd.sendrightx.extension+zip"/>
                 <data android:mimeType="application/octet-stream"/><!-- Firefox looking at you :eyes: -->
             </intent-filter>
         </activity>
 
         <!-- Using an activity alias to disable/enable the app icon in the launcher -->
         <activity-alias
-            android:name="dev.patrickgold.florisboard.SettingsLauncherAlias"
-            android:icon="@mipmap/ic_launcher"
-            android:label="@string/floris_app_name"
+            android:name="com.vishruth.sendright.SettingsLauncherAlias"
+            android:icon="@mipmap/sendright_app_icon"
+            android:label="@string/sendright_app_name"
             android:launchMode="singleTask"
-            android:roundIcon="@mipmap/ic_launcher_round"
-            android:targetActivity="dev.patrickgold.florisboard.app.FlorisAppActivity"
-            android:theme="@style/FlorisAppTheme.Splash"
+            android:roundIcon="@mipmap/sendright_app_icon_round"
+            android:targetActivity="com.vishruth.sendright.app.FlorisAppActivity"
+            android:theme="@style/SendRightAppTheme.Splash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -114,16 +108,16 @@
 
         <!-- Crash Dialog Activity -->
         <activity
-            android:name="dev.patrickgold.florisboard.lib.crashutility.CrashDialogActivity"
-            android:icon="@mipmap/ic_launcher"
+            android:name="com.vishruth.sendright.lib.crashutility.CrashDialogActivity"
+            android:icon="@mipmap/sendright_app_icon"
             android:label="@string/crash_dialog__title"
             android:configChanges="orientation|screenSize"
             android:theme="@style/CrashDialogTheme"/>
 
         <!-- Copy to Clipboard Activity -->
         <activity
-            android:name="dev.patrickgold.florisboard.ime.clipboard.FlorisCopyToClipboardActivity"
-            android:theme="@style/FlorisAppTheme.Transparent"
+            android:name="com.vishruth.sendright.ime.clipboard.FlorisCopyToClipboardActivity"
+            android:theme="@style/SendRightAppTheme.Transparent"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SEND"/>
@@ -134,7 +128,7 @@
 
         <!-- Clipboard Media File Provider -->
         <provider
-            android:name="dev.patrickgold.florisboard.ime.clipboard.provider.ClipboardMediaProvider"
+            android:name="com.vishruth.sendright.ime.clipboard.provider.ClipboardMediaProvider"
             android:authorities="${applicationId}.provider.clipboard"
             android:grantUriPermissions="true"
             android:exported="false">

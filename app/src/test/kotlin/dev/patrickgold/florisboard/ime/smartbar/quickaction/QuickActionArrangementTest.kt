@@ -16,7 +16,9 @@
 
 package dev.patrickgold.florisboard.ime.smartbar.quickaction
 
-import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyData
+import com.vishruth.sendright.ime.smartbar.quickaction.QuickAction
+import com.vishruth.sendright.ime.smartbar.quickaction.QuickActionArrangement
+import com.vishruth.sendright.ime.text.keyboard.TextKeyData
 import org.junit.jupiter.api.assertAll
 import kotlin.test.Test
 import kotlin.test.assertEquals
