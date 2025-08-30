@@ -3,16 +3,16 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="36"
-    android:viewportHeight="36">
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     
     <!-- Green rounded rectangle background with gradient -->
     <path
-        android:pathData="M17.595,4A13.595,13.595 0,0 1,31.19 17.595A13.595,13.595 0,0 1,17.595 31.19A13.595,13.595 0,0 1,4 17.595A13.595,13.595 0,0 1,17.595 4Z">
+        android:pathData="M12,2C17.523,2 22,6.477 22,12C22,17.523 17.523,22 12,22C6.477,22 2,17.523 2,12C2,6.477 6.477,2 12,2Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startY="4"
-                android:endY="31.19"
+                android:startY="2"
+                android:endY="22"
                 android:startColor="#25D366"
                 android:endColor="#217745"
                 android:type="linear"/>
@@ -21,12 +21,12 @@
     
     <!-- Back to keyboard arrow icon -->
     <path
-        android:pathData="M26,11L22,15L24,15L24,21L16,21L16,19L14,19L14,23L26,23L26,17L28,17L26,11Z"
+        android:pathData="M18,8L14,12L16,12L16,16L10,16L10,14L8,14L8,18L18,18L18,14L20,14L18,8Z"
         android:fillColor="@android:color/white"/>
     
     <!-- Small keyboard indicator lines -->
     <path
-        android:pathData="M12,13L20,13M12,15L18,15M12,17L16,17"
+        android:pathData="M6,10L12,10M6,12L10,12M6,14L8,14"
         android:strokeColor="@android:color/white"
         android:strokeWidth="1"
         android:strokeLineCap="round"/>
