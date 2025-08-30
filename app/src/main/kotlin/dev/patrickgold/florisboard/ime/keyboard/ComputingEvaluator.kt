@@ -289,7 +289,11 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
             Icons.Default.FontDownload
         }
         KeyCode.MAGIC_WAND -> {
-            this.context()?.vectorResource(R.drawable.ic_magic_wand)
+            if (evaluator.state.isMagicWandPanelVisible) {
+                this.context()?.vectorResource(R.drawable.ic_magic_wand_close)
+            } else {
+                this.context()?.vectorResource(R.drawable.ic_magic_wand)
+            }
         }
         KeyCode.KANA_SWITCHER -> {
             if (evaluator.state.isKanaKata) {

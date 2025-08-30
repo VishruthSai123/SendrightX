@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="36"
     android:viewportHeight="36">
     
-    <!-- Background with gradient -->
+    <!-- Green rounded rectangle background with gradient -->
     <path
-        android:pathData="M17.595,4.579H17.595A13.595,13.595 0,0 1,31.191 18.174V18.174A13.595,13.595 0,0 1,17.595 31.769H17.595A13.595,13.595 0,0 1,4.002 18.174V18.174A13.595,13.595 0,0 1,17.595 4.579z"
-        android:fillColor="#25D366"/>
+        android:pathData="M17.595,4A13.595,13.595 0,0 1,31.19 17.595A13.595,13.595 0,0 1,17.595 31.19A13.595,13.595 0,0 1,4 17.595A13.595,13.595 0,0 1,17.595 4Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startY="4"
+                android:endY="31.19"
+                android:startColor="#25D366"
+                android:endColor="#217745"
+                android:type="linear"/>
+        </aapt:attr>
+    </path>
     
     <!-- Keyboard/screen outline -->
     <path
-        android:pathData="M17.973,7.277H14.468C12.107,7.277 10.194,9.191 10.194,11.551V17.242C10.194,19.603 12.108,21.517 14.468,21.517H20.074C22.434,21.517 24.348,19.603 24.348,17.242V11.698"
+        android:pathData="M17.971,6.698H14.466C12.106,6.698 10.192,8.612 10.192,10.972V16.663C10.192,19.024 12.106,20.938 14.466,20.938H20.072C22.433,20.938 24.346,19.024 24.346,16.663V11.119"
         android:strokeColor="@android:color/white"
         android:strokeWidth="1.099"
         android:strokeLineCap="round"
@@ -20,16 +29,16 @@
     
     <!-- Small star -->
     <path
-        android:pathData="M17.265,13.308C17.374,11.484 17.518,11.327 19.327,11.065C17.503,10.956 17.346,10.812 17.085,9.003C16.975,10.827 16.831,10.984 15.023,11.246C16.847,11.355 17.003,11.499 17.265,13.308Z"
+        android:pathData="M17.263,12.729C17.372,10.904 17.516,10.748 19.325,10.486C17.501,10.377 17.344,10.233 17.083,8.424C16.973,10.248 16.829,10.405 15.021,10.667C16.845,10.776 17.001,10.920 17.263,12.729Z"
         android:fillColor="@android:color/white"/>
     
     <!-- Medium star -->
     <path
-        android:pathData="M20.741,17.206C20.880,14.879 21.064,14.679 23.371,14.345C21.044,14.206 20.844,14.022 20.511,11.715C20.371,14.042 20.187,14.242 17.880,14.575C20.207,14.715 20.407,14.899 20.741,17.206Z"
+        android:pathData="M20.739,16.627C20.878,14.300 21.062,14.100 23.369,13.766C21.042,13.627 20.843,13.443 20.509,11.136C20.369,13.463 20.186,13.662 17.879,13.996C20.205,14.136 20.405,14.319 20.739,16.627Z"
         android:fillColor="@android:color/white"/>
     
     <!-- Large star -->
     <path
-        android:pathData="M26.705,8.923C23.148,9.287 22.853,9.581 22.490,13.139C22.126,9.581 21.832,9.287 18.274,8.923C21.832,8.560 22.126,8.265 22.490,4.708C22.853,8.265 23.148,8.560 26.705,8.923Z"
+        android:pathData="M26.703,8.344C23.146,8.708 22.851,9.002 22.488,12.560C22.124,9.002 21.830,8.708 18.272,8.344C21.830,7.981 22.124,7.686 22.488,4.128C22.851,7.686 23.146,7.981 26.703,8.344Z"
         android:fillColor="@android:color/white"/>
 </vector>
