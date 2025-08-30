@@ -33,16 +33,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,7 +54,6 @@ import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggButton
-import org.florisboard.lib.snygg.ui.SnyggIcon
 import org.florisboard.lib.snygg.ui.SnyggText
 
 data class MagicWandSection(
@@ -133,16 +126,13 @@ private fun MagicWandSectionItem(
     onButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
-    
     Column(modifier = modifier.fillMaxWidth()) {
-        // Section Header
+        // Section Header - Fixed, no clickable behavior, no expand/collapse icons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { isExpanded = !isExpanded }
                 .padding(vertical = 8.dp, horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             SnyggText(
@@ -150,38 +140,31 @@ private fun MagicWandSectionItem(
                 text = section.title,
                 modifier = Modifier.weight(1f)
             )
-            
-            SnyggIcon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                modifier = Modifier.size(20.dp)
-            )
         }
         
-        // Expanded Content
-        if (isExpanded) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val chunks = section.buttons.chunked(2)
-                chunks.forEach { rowButtons ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        rowButtons.forEach { buttonTitle ->
-                            MagicWandButton(
-                                button = MagicWandButton(title = buttonTitle),
-                                onClick = { onButtonClick(buttonTitle) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        // Fill remaining space if odd number of buttons
-                        if (rowButtons.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+        // Content - Always visible, no conditional rendering
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val chunks = section.buttons.chunked(2)
+            chunks.forEach { rowButtons ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowButtons.forEach { buttonTitle ->
+                        MagicWandButton(
+                            button = MagicWandButton(title = buttonTitle),
+                            onClick = { onButtonClick(buttonTitle) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Fill remaining space if odd number of buttons
+                    if (rowButtons.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }

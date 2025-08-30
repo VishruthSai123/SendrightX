@@ -19,39 +19,39 @@ package com.vishruth.sendright.ime.smartbar
 object MagicWandInstructions {
     
     // Advanced Section Instructions
-    const val REWRITE = "Rewrite the following text to make it clearer, more engaging, and better structured while maintaining the original meaning and tone."
-    
-    const val SUMMARISE = "Summarize the following text into a concise version that captures the main points and key information."
-    
-    const val EXPLAIN = "Explain the following text in simpler terms that are easy to understand, breaking down complex concepts if necessary."
-    
-    const val LETTER = "Transform the following text into a formal letter format with proper greeting, body, and closing."
-    
-    const val OPTIMISE = "Optimize the following text for clarity, conciseness, and impact while preserving the original message."
-    
-    const val FORMAL = "Rewrite the following text in a formal, professional tone suitable for business or academic contexts."
-    
-    const val POST_READY = "Transform the following text into an engaging social media post with appropriate hashtags and emojis."
+    const val REWRITE = "Rewrite the given text with better clarity and flow. Only provide the rewritten text."
+
+    const val SUMMARISE = "Summarise the given text briefly, keeping only the key points. Only provide the summary."
+
+    const val EXPLAIN = "Explain the given text in simple, easy-to-understand words. Only provide the explanation."
+
+    const val LETTER = "Convert the given text into a properly formatted letter. Only provide the letter text."
+
+    const val OPTIMISE = "Optimise the given text for conciseness and impact. Only provide the optimised text."
+
+    const val FORMAL = "Rewrite the given text in a formal tone. Only provide the formal version."
+
+    const val POST_READY = "Convert the given text into a social media post. Only provide the post text."
     
     // Tone Changer Section Instructions
-    const val CASUAL = "Rewrite the following text in a casual, friendly, and conversational tone."
-    
-    const val FRIENDLY = "Rewrite the following text in a warm, welcoming, and friendly tone."
-    
-    const val PROFESSIONAL = "Rewrite the following text in a professional, business-appropriate tone."
-    
-    const val FLIRTY = "Rewrite the following text in a playful, charming, and flirtatious tone."
-    
-    const val ANGER = "Rewrite the following text to express frustration or displeasure in a strong but appropriate way."
-    
-    const val HAPPY = "Rewrite the following text in an enthusiastic, positive, and joyful tone."
+    const val CASUAL = "Rewrite the given text in a casual tone. Only provide the rewritten text."
+
+    const val FRIENDLY = "Rewrite the given text in a friendly and approachable way. Only provide the rewritten text."
+
+    const val PROFESSIONAL = "Rewrite the given text in a professional tone. Only provide the rewritten text."
+
+    const val FLIRTY = "Rewrite the given text in a flirty and playful way. Only provide the rewritten text."
+
+    const val ANGER = "Rewrite the given text expressing anger. Only provide the rewritten text."
+
+    const val HAPPY = "Rewrite the given text in a cheerful and happy tone. Only provide the rewritten text."
     
     // Other Section Instructions
-    const val EMOJIE = "Add relevant emojis to the following text to make it more expressive and engaging."
-    
-    const val TRANSLATE = "Translate the following text to English if it's in another language, or to the most appropriate language if it's already in English."
-    
-    const val ASK = "Transform the following text into a polite question or inquiry."
+    const val EMOJIE = "Add relevant emojis to the given text. Only provide the updated text."
+
+    const val TRANSLATE = "Translate the given text into the target language. Only provide the translated text."
+
+    const val ASK = "Answer the given question directly and clearly. Only provide the answer."
     
     fun getInstructionForButton(buttonTitle: String): String {
         return when (buttonTitle) {
