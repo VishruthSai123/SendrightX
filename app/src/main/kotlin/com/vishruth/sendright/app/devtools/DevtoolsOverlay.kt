@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.devtools
+package com.vishruth.key1.app.devtools
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -39,19 +39,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.clipboardManager
-import com.vishruth.sendright.editorInstance
-import com.vishruth.sendright.ime.keyboard.CachedLayout
-import com.vishruth.sendright.ime.keyboard.DebugLayoutComputationResult
-import com.vishruth.sendright.ime.nlp.NlpInlineAutofill
-import com.vishruth.sendright.ime.theme.ThemeManager
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.observeAsNonNullState
-import com.vishruth.sendright.nlpManager
-import com.vishruth.sendright.themeManager
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.appContext
+import com.vishruth.key1.clipboardManager
+import com.vishruth.key1.editorInstance
+import com.vishruth.key1.ime.keyboard.CachedLayout
+import com.vishruth.key1.ime.keyboard.DebugLayoutComputationResult
+import com.vishruth.key1.ime.nlp.NlpInlineAutofill
+import com.vishruth.key1.ime.theme.ThemeManager
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.observeAsNonNullState
+import com.vishruth.key1.nlpManager
+import com.vishruth.key1.themeManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import java.text.SimpleDateFormat
 import java.util.*

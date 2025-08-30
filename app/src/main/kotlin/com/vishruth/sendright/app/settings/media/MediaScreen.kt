@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.media
+package com.vishruth.key1.app.settings.media
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EmojiSymbols
@@ -26,14 +26,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.app.enumDisplayEntriesOf
-import com.vishruth.sendright.ime.media.emoji.EmojiHistory
-import com.vishruth.sendright.ime.media.emoji.EmojiHistoryHelper
-import com.vishruth.sendright.ime.media.emoji.EmojiSkinTone
-import com.vishruth.sendright.ime.media.emoji.EmojiSuggestionType
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.enumDisplayEntriesOf
+import com.vishruth.key1.ime.media.emoji.EmojiHistory
+import com.vishruth.key1.ime.media.emoji.EmojiHistoryHelper
+import com.vishruth.key1.ime.media.emoji.EmojiSkinTone
+import com.vishruth.key1.ime.media.emoji.EmojiSuggestionType
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.patrickgold.jetpref.datastore.ui.ListPreference

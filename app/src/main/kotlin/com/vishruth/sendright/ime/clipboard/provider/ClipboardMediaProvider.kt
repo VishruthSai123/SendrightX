@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.clipboard.provider
+package com.vishruth.key1.ime.clipboard.provider
 
 import android.content.ContentProvider
 import android.content.ContentResolver
@@ -28,8 +28,8 @@ import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import androidx.exifinterface.media.ExifInterface
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.lib.devtools.flogError
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.lib.devtools.flogError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

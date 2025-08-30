@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.theme
+package com.vishruth.key1.ime.theme
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -39,17 +39,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.ime.smartbar.CachedInlineSuggestionsChipStyleSet
-import com.vishruth.sendright.lib.devtools.flogInfo
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.lib.ext.ExtensionMeta
-import com.vishruth.sendright.lib.io.ZipUtils
-import com.vishruth.sendright.lib.util.TimeUtils.javaLocalTime
-import com.vishruth.sendright.lib.util.ViewUtils
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.appContext
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.ime.smartbar.CachedInlineSuggestionsChipStyleSet
+import com.vishruth.key1.lib.devtools.flogInfo
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.ext.ExtensionMeta
+import com.vishruth.key1.lib.io.ZipUtils
+import com.vishruth.key1.lib.util.TimeUtils.javaLocalTime
+import com.vishruth.key1.lib.util.ViewUtils
 import java.time.LocalTime
 import java.util.*
 import kotlinx.coroutines.CoroutineScope

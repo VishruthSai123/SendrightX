@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.compose
+package com.vishruth.key1.lib.compose
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.vishruth.sendright.lib.ValidationResult
+import com.vishruth.key1.lib.ValidationResult
 
 @Composable
 fun Validation(

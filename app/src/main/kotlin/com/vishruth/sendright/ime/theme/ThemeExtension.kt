@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.theme
+package com.vishruth.key1.ime.theme
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.vishruth.sendright.lib.ext.Extension
-import com.vishruth.sendright.lib.ext.ExtensionEditor
-import com.vishruth.sendright.lib.ext.ExtensionMeta
+import com.vishruth.key1.lib.ext.Extension
+import com.vishruth.key1.lib.ext.ExtensionEditor
+import com.vishruth.key1.lib.ext.ExtensionMeta
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

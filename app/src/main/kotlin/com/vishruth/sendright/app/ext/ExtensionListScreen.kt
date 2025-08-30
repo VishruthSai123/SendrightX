@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.ext
+package com.vishruth.key1.app.ext
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,14 +47,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.ime.theme.ThemeExtension
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.ext.ExtensionManager
-import com.vishruth.sendright.lib.observeAsNonNullState
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.ime.theme.ThemeExtension
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.ext.ExtensionManager
+import com.vishruth.key1.lib.observeAsNonNullState
 import org.florisboard.lib.compose.FlorisOutlinedBox
 import org.florisboard.lib.compose.FlorisTextButton
 import org.florisboard.lib.compose.defaultFlorisOutlinedBox

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app
+package com.vishruth.key1.app
 
 import android.content.Context
 import android.content.Intent
@@ -42,17 +42,17 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.apptheme.FlorisAppTheme
-import com.vishruth.sendright.app.ext.ExtensionImportScreenType
-import com.vishruth.sendright.app.setup.NotificationPermissionState
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.cacheManager
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.compose.LocalPreviewFieldController
-import com.vishruth.sendright.lib.compose.PreviewKeyboardField
-import com.vishruth.sendright.lib.compose.rememberPreviewFieldController
-import com.vishruth.sendright.lib.util.AppVersionUtils
+import com.vishruth.key1.R
+import com.vishruth.key1.app.apptheme.FlorisAppTheme
+import com.vishruth.key1.app.ext.ExtensionImportScreenType
+import com.vishruth.key1.app.setup.NotificationPermissionState
+import com.vishruth.key1.appContext
+import com.vishruth.key1.cacheManager
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.compose.LocalPreviewFieldController
+import com.vishruth.key1.lib.compose.PreviewKeyboardField
+import com.vishruth.key1.lib.compose.rememberPreviewFieldController
+import com.vishruth.key1.lib.util.AppVersionUtils
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.datastore.ui.ProvideDefaultDialogPrefStrings
 import org.florisboard.lib.android.AndroidVersion

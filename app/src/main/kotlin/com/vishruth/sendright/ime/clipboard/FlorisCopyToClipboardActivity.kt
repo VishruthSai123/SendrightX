@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.clipboard
+package com.vishruth.key1.ime.clipboard
 
 import android.content.ClipData
 import android.content.Intent
@@ -46,9 +46,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.app.apptheme.FlorisAppTheme
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.apptheme.FlorisAppTheme
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.android.AndroidClipboardManager
 import org.florisboard.lib.android.AndroidVersion

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.editor
+package com.vishruth.key1.ime.editor
 
 import android.content.Context
 import android.inputmethodservice.InputMethodService
@@ -24,13 +24,13 @@ import android.view.InputDevice
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.inputmethod.InputConnection
-import com.vishruth.sendright.FlorisImeService
-import com.vishruth.sendright.ime.nlp.BreakIteratorGroup
-import com.vishruth.sendright.ime.text.composing.Composer
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.nlpManager
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.FlorisImeService
+import com.vishruth.key1.ime.nlp.BreakIteratorGroup
+import com.vishruth.key1.ime.text.composing.Composer
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.nlpManager
+import com.vishruth.key1.subtypeManager
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

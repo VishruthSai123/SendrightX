@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
 import android.content.Context
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.popup.PopupMapping
-import com.vishruth.sendright.ime.popup.PopupMappingComponent
-import com.vishruth.sendright.ime.text.key.KeyType
-import com.vishruth.sendright.ime.text.keyboard.TextKey
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.text.keyboard.TextKeyboard
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogDebug
-import com.vishruth.sendright.lib.devtools.flogWarning
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.lib.io.ZipUtils
-import com.vishruth.sendright.lib.io.loadJsonAsset
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.appContext
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.popup.PopupMapping
+import com.vishruth.key1.ime.popup.PopupMappingComponent
+import com.vishruth.key1.ime.text.key.KeyType
+import com.vishruth.key1.ime.text.keyboard.TextKey
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.text.keyboard.TextKeyboard
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogDebug
+import com.vishruth.key1.lib.devtools.flogWarning
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.io.ZipUtils
+import com.vishruth.key1.lib.io.loadJsonAsset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers

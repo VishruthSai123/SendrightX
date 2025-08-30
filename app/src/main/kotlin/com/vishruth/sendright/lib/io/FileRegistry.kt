@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.io
+package com.vishruth.key1.lib.io
 
-import com.vishruth.sendright.lib.cache.CacheManager
+import com.vishruth.key1.lib.cache.CacheManager
 import org.florisboard.lib.kotlin.io.FsFile
 
 object FileRegistry {

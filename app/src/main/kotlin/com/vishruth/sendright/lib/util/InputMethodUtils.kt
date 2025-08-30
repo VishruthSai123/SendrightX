@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.util
+package com.vishruth.key1.lib.util
 
 import android.content.ComponentName
 import android.content.Context
@@ -28,8 +28,8 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.lib.devtools.flogDebug
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.lib.devtools.flogDebug
 import kotlinx.coroutines.delay
 import org.florisboard.lib.android.AndroidSettings
 import org.florisboard.lib.android.AndroidVersion
@@ -37,7 +37,7 @@ import org.florisboard.lib.android.systemServiceOrNull
 import org.florisboard.lib.compose.observeAsState
 
 private const val DELIMITER = ':'
-private const val IME_SERVICE_CLASS_NAME = "dev.patrickgold.florisboard.FlorisImeService"
+private const val IME_SERVICE_CLASS_NAME = "com.vishruth.key1.FlorisImeService"
 private const val TIMED_QUERY_DELAY = 500L
 
 object InputMethodUtils {

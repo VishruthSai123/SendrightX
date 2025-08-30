@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.theme
+package com.vishruth.key1.app.settings.theme
 
 import android.icu.lang.UCharacter
 import android.widget.Toast
@@ -68,25 +68,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.enumDisplayEntriesOf
-import com.vishruth.sendright.ime.input.InputKeyEventReceiver
-import com.vishruth.sendright.ime.input.InputShiftState
-import com.vishruth.sendright.ime.keyboard.ComputingEvaluator
-import com.vishruth.sendright.ime.keyboard.DefaultComputingEvaluator
-import com.vishruth.sendright.ime.keyboard.Key
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.keyboard.Keyboard
-import com.vishruth.sendright.ime.keyboard.KeyboardMode
-import com.vishruth.sendright.ime.keyboard.computeImageVector
-import com.vishruth.sendright.ime.keyboard.computeLabel
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.NATIVE_NULLPTR
-import com.vishruth.sendright.lib.compose.FlorisHyperlinkText
-import com.vishruth.sendright.lib.util.InputMethodUtils
+import com.vishruth.key1.R
+import com.vishruth.key1.app.enumDisplayEntriesOf
+import com.vishruth.key1.ime.input.InputKeyEventReceiver
+import com.vishruth.key1.ime.input.InputShiftState
+import com.vishruth.key1.ime.keyboard.ComputingEvaluator
+import com.vishruth.key1.ime.keyboard.DefaultComputingEvaluator
+import com.vishruth.key1.ime.keyboard.Key
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.keyboard.Keyboard
+import com.vishruth.key1.ime.keyboard.KeyboardMode
+import com.vishruth.key1.ime.keyboard.computeImageVector
+import com.vishruth.key1.ime.keyboard.computeLabel
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.NATIVE_NULLPTR
+import com.vishruth.key1.lib.compose.FlorisHyperlinkText
+import com.vishruth.key1.lib.util.InputMethodUtils
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import dev.patrickgold.jetpref.material.ui.JetPrefDropdown
 import dev.patrickgold.jetpref.material.ui.JetPrefTextField

@@ -14,32 +14,32 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.ext
+package com.vishruth.key1.lib.ext
 
 import android.content.Context
 import android.net.Uri
 import android.os.FileObserver
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.LiveData
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.ime.keyboard.KeyboardExtension
-import com.vishruth.sendright.ime.nlp.LanguagePackExtension
-import com.vishruth.sendright.ime.text.composing.Appender
-import com.vishruth.sendright.ime.text.composing.Composer
-import com.vishruth.sendright.ime.text.composing.HangulUnicode
-import com.vishruth.sendright.ime.text.composing.KanaUnicode
-import com.vishruth.sendright.ime.text.composing.WithRules
-import com.vishruth.sendright.ime.theme.ThemeExtension
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogDebug
-import com.vishruth.sendright.lib.devtools.flogError
-import com.vishruth.sendright.lib.io.FlorisRef
-import com.vishruth.sendright.lib.io.ZipUtils
-import com.vishruth.sendright.lib.io.delete
-import com.vishruth.sendright.lib.io.listDirs
-import com.vishruth.sendright.lib.io.listFiles
-import com.vishruth.sendright.lib.io.loadJsonAsset
-import com.vishruth.sendright.lib.observeAsNonNullState
+import com.vishruth.key1.appContext
+import com.vishruth.key1.ime.keyboard.KeyboardExtension
+import com.vishruth.key1.ime.nlp.LanguagePackExtension
+import com.vishruth.key1.ime.text.composing.Appender
+import com.vishruth.key1.ime.text.composing.Composer
+import com.vishruth.key1.ime.text.composing.HangulUnicode
+import com.vishruth.key1.ime.text.composing.KanaUnicode
+import com.vishruth.key1.ime.text.composing.WithRules
+import com.vishruth.key1.ime.theme.ThemeExtension
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogDebug
+import com.vishruth.key1.lib.devtools.flogError
+import com.vishruth.key1.lib.io.FlorisRef
+import com.vishruth.key1.lib.io.ZipUtils
+import com.vishruth.key1.lib.io.delete
+import com.vishruth.key1.lib.io.listDirs
+import com.vishruth.key1.lib.io.listFiles
+import com.vishruth.key1.lib.io.loadJsonAsset
+import com.vishruth.key1.lib.observeAsNonNullState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

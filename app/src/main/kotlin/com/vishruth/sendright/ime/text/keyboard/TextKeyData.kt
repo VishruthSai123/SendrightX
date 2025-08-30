@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.keyboard
+package com.vishruth.key1.ime.text.keyboard
 
 import android.icu.lang.UCharacter
-import com.vishruth.sendright.ime.keyboard.AbstractKeyData
-import com.vishruth.sendright.ime.keyboard.ComputingEvaluator
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.popup.PopupSet
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.key.KeyType
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.Unicode
-import com.vishruth.sendright.lib.lowercase
-import com.vishruth.sendright.lib.uppercase
+import com.vishruth.key1.ime.keyboard.AbstractKeyData
+import com.vishruth.key1.ime.keyboard.ComputingEvaluator
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.popup.PopupSet
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.key.KeyType
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.Unicode
+import com.vishruth.key1.lib.lowercase
+import com.vishruth.key1.lib.uppercase
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

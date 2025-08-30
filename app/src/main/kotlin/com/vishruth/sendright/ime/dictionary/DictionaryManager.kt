@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.dictionary
+package com.vishruth.key1.ime.dictionary
 
 import android.content.Context
 import androidx.room.Room
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.nlp.SuggestionCandidate
-import com.vishruth.sendright.ime.nlp.WordSuggestionCandidate
-import com.vishruth.sendright.lib.FlorisLocale
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.nlp.SuggestionCandidate
+import com.vishruth.key1.ime.nlp.WordSuggestionCandidate
+import com.vishruth.key1.lib.FlorisLocale
 import java.lang.ref.WeakReference
 
 /**

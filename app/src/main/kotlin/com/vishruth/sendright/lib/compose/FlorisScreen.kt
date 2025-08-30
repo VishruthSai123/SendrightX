@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.compose
+package com.vishruth.key1.lib.compose
 
 import android.app.Activity
 import androidx.compose.foundation.layout.RowScope
@@ -37,9 +37,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import com.vishruth.sendright.app.FlorisPreferenceModel
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.app.LocalNavController
+import com.vishruth.key1.app.FlorisPreferenceModel
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.LocalNavController
 import dev.patrickgold.jetpref.datastore.ui.PreferenceLayout
 import dev.patrickgold.jetpref.datastore.ui.PreferenceUiContent
 import org.florisboard.lib.android.AndroidVersion

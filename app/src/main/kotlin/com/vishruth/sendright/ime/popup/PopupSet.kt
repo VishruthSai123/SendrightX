@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.popup
+package com.vishruth.key1.ime.popup
 
-import com.vishruth.sendright.ime.keyboard.AbstractKeyData
-import com.vishruth.sendright.ime.keyboard.ComputingEvaluator
-import com.vishruth.sendright.ime.text.key.KeyHintConfiguration
-import com.vishruth.sendright.ime.text.key.KeyHintMode
+import com.vishruth.key1.ime.keyboard.AbstractKeyData
+import com.vishruth.key1.ime.keyboard.ComputingEvaluator
+import com.vishruth.key1.ime.text.key.KeyHintConfiguration
+import com.vishruth.key1.ime.text.key.KeyHintMode
 import kotlinx.serialization.Serializable
 
 /**

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.ext
+package com.vishruth.key1.app.ext
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.lib.ext.Extension
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.lib.ext.Extension
 import dev.patrickgold.jetpref.material.ui.JetPrefListItem
 
 @Composable

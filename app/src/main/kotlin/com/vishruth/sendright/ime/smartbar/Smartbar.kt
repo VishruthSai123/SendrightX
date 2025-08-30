@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar
+package com.vishruth.key1.ime.smartbar
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -53,16 +53,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.keyboard.FlorisImeSizing
-import com.vishruth.sendright.ime.nlp.NlpInlineAutofill
-import com.vishruth.sendright.ime.smartbar.quickaction.QuickActionButton
-import com.vishruth.sendright.ime.smartbar.quickaction.QuickActionsRow
-import com.vishruth.sendright.ime.smartbar.quickaction.ToggleOverflowPanelAction
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.nlpManager
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.keyboard.FlorisImeSizing
+import com.vishruth.key1.ime.nlp.NlpInlineAutofill
+import com.vishruth.key1.ime.smartbar.quickaction.QuickActionButton
+import com.vishruth.key1.ime.smartbar.quickaction.QuickActionsRow
+import com.vishruth.key1.ime.smartbar.quickaction.ToggleOverflowPanelAction
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.nlpManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.AndroidVersion

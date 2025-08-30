@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar
+package com.vishruth.key1.ime.smartbar
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -39,13 +39,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.nlp.ClipboardSuggestionCandidate
-import com.vishruth.sendright.ime.nlp.SuggestionCandidate
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.nlpManager
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.nlp.ClipboardSuggestionCandidate
+import com.vishruth.key1.ime.nlp.SuggestionCandidate
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.nlpManager
+import com.vishruth.key1.subtypeManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.compose.conditional
 import org.florisboard.lib.compose.florisHorizontalScroll

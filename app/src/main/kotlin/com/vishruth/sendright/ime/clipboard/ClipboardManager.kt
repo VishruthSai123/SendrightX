@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.clipboard
+package com.vishruth.key1.ime.clipboard
 
 import android.content.ClipData
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.editorInstance
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardHistoryDao
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardHistoryDatabase
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardItem
-import com.vishruth.sendright.ime.clipboard.provider.ItemType
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.appContext
+import com.vishruth.key1.editorInstance
+import com.vishruth.key1.ime.clipboard.provider.ClipboardHistoryDao
+import com.vishruth.key1.ime.clipboard.provider.ClipboardHistoryDatabase
+import com.vishruth.key1.ime.clipboard.provider.ClipboardItem
+import com.vishruth.key1.ime.clipboard.provider.ItemType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

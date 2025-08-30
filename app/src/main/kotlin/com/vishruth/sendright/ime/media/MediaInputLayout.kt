@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media
+package com.vishruth.key1.ime.media
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -47,15 +47,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
-import com.vishruth.sendright.ime.input.InputEventDispatcher
-import com.vishruth.sendright.ime.input.LocalInputFeedbackController
-import com.vishruth.sendright.ime.keyboard.FlorisImeSizing
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.media.emoji.EmojiData
-import com.vishruth.sendright.ime.media.emoji.EmojiPaletteView
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.keyboardManager
+import com.vishruth.key1.ime.input.InputEventDispatcher
+import com.vishruth.key1.ime.input.LocalInputFeedbackController
+import com.vishruth.key1.ime.keyboard.FlorisImeSizing
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.media.emoji.EmojiData
+import com.vishruth.key1.ime.media.emoji.EmojiPaletteView
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.keyboardManager
 import org.florisboard.lib.snygg.SnyggSelector
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggColumn

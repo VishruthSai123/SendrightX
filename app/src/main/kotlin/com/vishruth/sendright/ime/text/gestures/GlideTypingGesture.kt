@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.gestures
+package com.vishruth.key1.ime.text.gestures
 
 import android.content.Context
 import android.view.MotionEvent
-import com.vishruth.sendright.R
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.keyboard.TextKey
-import com.vishruth.sendright.lib.devtools.flogDebug
-import com.vishruth.sendright.lib.util.ViewUtils
+import com.vishruth.key1.R
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.keyboard.TextKey
+import com.vishruth.key1.lib.devtools.flogDebug
+import com.vishruth.key1.lib.util.ViewUtils
 import kotlin.math.pow
 import kotlin.math.sqrt
 

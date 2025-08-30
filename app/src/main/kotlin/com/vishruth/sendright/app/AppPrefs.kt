@@ -14,49 +14,49 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app
+package com.vishruth.key1.app
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import com.vishruth.sendright.app.settings.theme.ColorPreferenceSerializer
-import com.vishruth.sendright.app.settings.theme.DisplayKbdAfterDialogs
-import com.vishruth.sendright.app.settings.theme.SnyggLevel
-import com.vishruth.sendright.app.setup.NotificationPermissionState
-import com.vishruth.sendright.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
-import com.vishruth.sendright.ime.core.DisplayLanguageNamesIn
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.input.CapitalizationBehavior
-import com.vishruth.sendright.ime.input.HapticVibrationMode
-import com.vishruth.sendright.ime.input.InputFeedbackActivationMode
-import com.vishruth.sendright.ime.keyboard.IncognitoMode
-import com.vishruth.sendright.ime.keyboard.SpaceBarMode
-import com.vishruth.sendright.ime.landscapeinput.LandscapeInputUiMode
-import com.vishruth.sendright.ime.media.emoji.EmojiHairStyle
-import com.vishruth.sendright.ime.media.emoji.EmojiHistory
-import com.vishruth.sendright.ime.media.emoji.EmojiSkinTone
-import com.vishruth.sendright.ime.media.emoji.EmojiSuggestionType
-import com.vishruth.sendright.ime.nlp.SpellingLanguageMode
-import com.vishruth.sendright.ime.onehanded.OneHandedMode
-import com.vishruth.sendright.ime.smartbar.CandidatesDisplayMode
-import com.vishruth.sendright.ime.smartbar.ExtendedActionsPlacement
-import com.vishruth.sendright.ime.smartbar.IncognitoDisplayMode
-import com.vishruth.sendright.ime.smartbar.SmartbarLayout
-import com.vishruth.sendright.ime.smartbar.quickaction.QuickAction
-import com.vishruth.sendright.ime.smartbar.quickaction.QuickActionArrangement
-import com.vishruth.sendright.ime.smartbar.quickaction.QuickActionJsonConfig
-import com.vishruth.sendright.ime.text.gestures.SwipeAction
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.key.KeyHintConfiguration
-import com.vishruth.sendright.ime.text.key.KeyHintMode
-import com.vishruth.sendright.ime.text.key.UtilityKeyAction
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.theme.ThemeMode
-import com.vishruth.sendright.ime.theme.extCoreTheme
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.lib.observeAsTransformingState
-import com.vishruth.sendright.lib.util.VersionName
+import com.vishruth.key1.app.settings.theme.ColorPreferenceSerializer
+import com.vishruth.key1.app.settings.theme.DisplayKbdAfterDialogs
+import com.vishruth.key1.app.settings.theme.SnyggLevel
+import com.vishruth.key1.app.setup.NotificationPermissionState
+import com.vishruth.key1.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
+import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.input.CapitalizationBehavior
+import com.vishruth.key1.ime.input.HapticVibrationMode
+import com.vishruth.key1.ime.input.InputFeedbackActivationMode
+import com.vishruth.key1.ime.keyboard.IncognitoMode
+import com.vishruth.key1.ime.keyboard.SpaceBarMode
+import com.vishruth.key1.ime.landscapeinput.LandscapeInputUiMode
+import com.vishruth.key1.ime.media.emoji.EmojiHairStyle
+import com.vishruth.key1.ime.media.emoji.EmojiHistory
+import com.vishruth.key1.ime.media.emoji.EmojiSkinTone
+import com.vishruth.key1.ime.media.emoji.EmojiSuggestionType
+import com.vishruth.key1.ime.nlp.SpellingLanguageMode
+import com.vishruth.key1.ime.onehanded.OneHandedMode
+import com.vishruth.key1.ime.smartbar.CandidatesDisplayMode
+import com.vishruth.key1.ime.smartbar.ExtendedActionsPlacement
+import com.vishruth.key1.ime.smartbar.IncognitoDisplayMode
+import com.vishruth.key1.ime.smartbar.SmartbarLayout
+import com.vishruth.key1.ime.smartbar.quickaction.QuickAction
+import com.vishruth.key1.ime.smartbar.quickaction.QuickActionArrangement
+import com.vishruth.key1.ime.smartbar.quickaction.QuickActionJsonConfig
+import com.vishruth.key1.ime.text.gestures.SwipeAction
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.key.KeyHintConfiguration
+import com.vishruth.key1.ime.text.key.KeyHintMode
+import com.vishruth.key1.ime.text.key.UtilityKeyAction
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.theme.ThemeMode
+import com.vishruth.key1.ime.theme.extCoreTheme
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.observeAsTransformingState
+import com.vishruth.key1.lib.util.VersionName
 import dev.patrickgold.jetpref.datastore.annotations.Preferences
 import dev.patrickgold.jetpref.datastore.jetprefDataStoreOf
 import dev.patrickgold.jetpref.datastore.model.LocalTime
@@ -798,7 +798,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             "media__emoji_recently_used" -> {
                 val emojiValues = entry.rawValue.split(";")
                 val recent = emojiValues.map {
-                    com.vishruth.sendright.ime.media.emoji.Emoji(it, "", emptyList())
+                    com.vishruth.key1.ime.media.emoji.Emoji(it, "", emptyList())
                 }
                 val data = EmojiHistory(emptyList(), recent)
                 entry.transform(key = "emoji__history_data", rawValue = Json.encodeToString(data))

@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
-import com.vishruth.sendright.ime.core.SubtypePreset
-import com.vishruth.sendright.ime.nlp.PunctuationRule
-import com.vishruth.sendright.ime.popup.PopupMappingComponent
-import com.vishruth.sendright.ime.text.composing.Composer
-import com.vishruth.sendright.lib.ext.Extension
-import com.vishruth.sendright.lib.ext.ExtensionComponent
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.lib.ext.ExtensionEditor
-import com.vishruth.sendright.lib.ext.ExtensionMeta
+import com.vishruth.key1.ime.core.SubtypePreset
+import com.vishruth.key1.ime.nlp.PunctuationRule
+import com.vishruth.key1.ime.popup.PopupMappingComponent
+import com.vishruth.key1.ime.text.composing.Composer
+import com.vishruth.key1.lib.ext.Extension
+import com.vishruth.key1.lib.ext.ExtensionComponent
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.ext.ExtensionEditor
+import com.vishruth.key1.lib.ext.ExtensionMeta
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.util
+package com.vishruth.key1.lib.util
 
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.annotation.StringRes
-import com.vishruth.sendright.R
-import com.vishruth.sendright.lib.devtools.flogError
-import com.vishruth.sendright.lib.io.FlorisRef
+import com.vishruth.key1.R
+import com.vishruth.key1.lib.devtools.flogError
+import com.vishruth.key1.lib.io.FlorisRef
 import org.florisboard.lib.android.stringRes
 import org.florisboard.lib.kotlin.CurlyArg
 import kotlin.contracts.InvocationKind

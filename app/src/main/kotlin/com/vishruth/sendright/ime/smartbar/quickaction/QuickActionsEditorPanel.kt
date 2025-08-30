@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar.quickaction
+package com.vishruth.key1.ime.smartbar.quickaction
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
@@ -50,14 +50,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.keyboard.FlorisImeSizing
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.toIntOffset
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.keyboard.FlorisImeSizing
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.toIntOffset
 import org.florisboard.lib.compose.stringRes
 import kotlinx.coroutines.runBlocking
 import org.florisboard.lib.snygg.ui.SnyggBox

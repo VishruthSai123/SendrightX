@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp
+package com.vishruth.key1.ime.nlp
 
 import android.content.Context
 import android.os.Build
@@ -24,9 +24,9 @@ import android.view.inputmethod.InlineSuggestion
 import android.view.inputmethod.InlineSuggestionInfo
 import android.widget.inline.InlineContentView
 import androidx.annotation.RequiresApi
-import com.vishruth.sendright.ime.keyboard.FlorisImeSizing
-import com.vishruth.sendright.lib.devtools.flogInfo
-import com.vishruth.sendright.lib.devtools.flogWarning
+import com.vishruth.key1.ime.keyboard.FlorisImeSizing
+import com.vishruth.key1.lib.devtools.flogInfo
+import com.vishruth.key1.lib.devtools.flogWarning
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

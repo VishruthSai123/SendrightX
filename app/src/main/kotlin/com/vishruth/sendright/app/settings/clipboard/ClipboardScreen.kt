@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.clipboard
+package com.vishruth.key1.app.settings.clipboard
 
 import androidx.compose.runtime.Composable
-import com.vishruth.sendright.R
-import com.vishruth.sendright.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.R
+import com.vishruth.key1.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.patrickgold.jetpref.datastore.ui.PreferenceGroup

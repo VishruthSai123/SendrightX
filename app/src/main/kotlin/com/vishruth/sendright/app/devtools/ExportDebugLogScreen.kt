@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.devtools
+package com.vishruth.key1.app.devtools
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -37,11 +37,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.clipboardManager
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.devtools.Devtools
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.clipboardManager
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.devtools.Devtools
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.compose.FlorisButton
 import org.florisboard.lib.compose.florisHorizontalScroll

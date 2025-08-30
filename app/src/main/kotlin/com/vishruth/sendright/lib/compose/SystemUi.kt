@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.compose
+package com.vishruth.key1.lib.compose
 
 import android.app.Activity
 import android.content.Context
@@ -26,7 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
-import com.vishruth.sendright.ime.theme.FlorisImeUi
+import com.vishruth.key1.ime.theme.FlorisImeUi
 import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.snygg.ui.rememberSnyggThemeQuery
 import org.florisboard.lib.snygg.ui.uriOrNull

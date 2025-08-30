@@ -20,7 +20,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 
-private const val SETTINGS_ACTIVITY_NAME = "com.vishruth.sendright.SettingsLauncherAlias"
+private const val SETTINGS_ACTIVITY_NAME = "com.vishruth.key1.SettingsLauncherAlias"
 
 fun Context.hideAppIcon() {
     val pkg: PackageManager = this.packageManager

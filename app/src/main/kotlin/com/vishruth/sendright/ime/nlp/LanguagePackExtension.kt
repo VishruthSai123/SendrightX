@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp
+package com.vishruth.key1.ime.nlp
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.devtools.flogError
-import com.vishruth.sendright.lib.ext.Extension
-import com.vishruth.sendright.lib.ext.ExtensionComponent
-import com.vishruth.sendright.lib.ext.ExtensionEditor
-import com.vishruth.sendright.lib.ext.ExtensionMeta
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.devtools.flogError
+import com.vishruth.key1.lib.ext.Extension
+import com.vishruth.key1.lib.ext.ExtensionComponent
+import com.vishruth.key1.lib.ext.ExtensionEditor
+import com.vishruth.key1.lib.ext.ExtensionMeta
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

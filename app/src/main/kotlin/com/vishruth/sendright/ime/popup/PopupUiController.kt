@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.popup
+package com.vishruth.key1.ime.popup
 
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
@@ -31,20 +31,20 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import com.vishruth.sendright.ime.keyboard.ComputingEvaluator
-import com.vishruth.sendright.ime.keyboard.DefaultComputingEvaluator
-import com.vishruth.sendright.ime.keyboard.Key
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.keyboard.computeImageVector
-import com.vishruth.sendright.ime.keyboard.computeLabel
-import com.vishruth.sendright.ime.media.emoji.EmojiSet
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.key.KeyHintConfiguration
-import com.vishruth.sendright.ime.text.keyboard.TextKey
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.lib.FlorisRect
-import com.vishruth.sendright.lib.toIntOffset
+import com.vishruth.key1.ime.keyboard.ComputingEvaluator
+import com.vishruth.key1.ime.keyboard.DefaultComputingEvaluator
+import com.vishruth.key1.ime.keyboard.Key
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.keyboard.computeImageVector
+import com.vishruth.key1.ime.keyboard.computeLabel
+import com.vishruth.key1.ime.media.emoji.EmojiSet
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.key.KeyHintConfiguration
+import com.vishruth.key1.ime.text.keyboard.TextKey
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.lib.FlorisRect
+import com.vishruth.key1.lib.toIntOffset
 
 @Composable
 fun rememberPopupUiController(

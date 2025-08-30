@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.io
+package com.vishruth.key1.lib.io
 
 import android.content.Context
-import com.vishruth.sendright.ime.keyboard.AbstractKeyData
-import com.vishruth.sendright.ime.keyboard.CaseSelector
-import com.vishruth.sendright.ime.keyboard.CharWidthSelector
-import com.vishruth.sendright.ime.keyboard.KanaSelector
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.keyboard.LayoutDirectionSelector
-import com.vishruth.sendright.ime.keyboard.ShiftStateSelector
-import com.vishruth.sendright.ime.keyboard.VariationSelector
-import com.vishruth.sendright.ime.text.keyboard.AutoTextKeyData
-import com.vishruth.sendright.ime.text.keyboard.MultiTextKeyData
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.keyboard.AbstractKeyData
+import com.vishruth.key1.ime.keyboard.CaseSelector
+import com.vishruth.key1.ime.keyboard.CharWidthSelector
+import com.vishruth.key1.ime.keyboard.KanaSelector
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.keyboard.LayoutDirectionSelector
+import com.vishruth.key1.ime.keyboard.ShiftStateSelector
+import com.vishruth.key1.ime.keyboard.VariationSelector
+import com.vishruth.key1.ime.text.keyboard.AutoTextKeyData
+import com.vishruth.key1.ime.text.keyboard.MultiTextKeyData
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import org.florisboard.lib.android.reader
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json

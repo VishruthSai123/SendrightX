@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media.emoji
+package com.vishruth.key1.ime.media.emoji
 
-import com.vishruth.sendright.app.FlorisPreferenceModel
-import com.vishruth.sendright.lib.devtools.flogError
+import com.vishruth.key1.app.FlorisPreferenceModel
+import com.vishruth.key1.lib.devtools.flogError
 import dev.patrickgold.jetpref.datastore.model.PreferenceSerializer
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

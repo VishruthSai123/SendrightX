@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media.emoticon
+package com.vishruth.key1.ime.media.emoticon
 
 import kotlinx.serialization.Serializable
 

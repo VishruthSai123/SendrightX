@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
 import androidx.compose.ui.unit.LayoutDirection
-import com.vishruth.sendright.ime.input.InputShiftState
-import com.vishruth.sendright.ime.popup.PopupSet
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.key.KeyType
-import com.vishruth.sendright.ime.text.key.KeyVariation
+import com.vishruth.key1.ime.input.InputShiftState
+import com.vishruth.key1.ime.popup.PopupSet
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.key.KeyType
+import com.vishruth.key1.ime.text.key.KeyVariation
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp
+package com.vishruth.key1.ime.nlp
 
 import android.icu.text.BreakIterator
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.editor.EditorContent
-import com.vishruth.sendright.ime.editor.EditorRange
-import com.vishruth.sendright.ime.media.emoji.EmojiSuggestionType
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.editor.EditorContent
+import com.vishruth.key1.ime.editor.EditorRange
+import com.vishruth.key1.ime.media.emoji.EmojiSuggestionType
 
 /**
  * Base interface for any NLP provider implementation. NLP providers maintain their own internal state and only receive

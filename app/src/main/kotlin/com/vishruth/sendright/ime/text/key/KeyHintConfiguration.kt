@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.key
+package com.vishruth.key1.ime.text.key
 
 /**
  * Helper class for summarizing all hint preferences in one single object.

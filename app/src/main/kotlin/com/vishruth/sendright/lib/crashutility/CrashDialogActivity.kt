@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.crashutility
+package com.vishruth.key1.lib.crashutility
 
 import android.annotation.SuppressLint
 import android.content.ClipData
@@ -28,14 +28,14 @@ import android.widget.TextView
 import android.widget.Toast
 import android.widget.Toolbar
 import androidx.activity.ComponentActivity
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceModel
-import com.vishruth.sendright.app.FlorisPreferenceStore
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceModel
+import com.vishruth.key1.app.FlorisPreferenceStore
 import org.florisboard.lib.android.stringRes
-import com.vishruth.sendright.lib.devtools.Devtools
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogWarning
+import com.vishruth.key1.lib.devtools.Devtools
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogWarning
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 

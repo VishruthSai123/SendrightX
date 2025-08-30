@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.ext
+package com.vishruth.key1.app.ext
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,8 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.lib.ext.ExtensionMaintainer
-import com.vishruth.sendright.lib.util.launchUrl
+import com.vishruth.key1.lib.ext.ExtensionMaintainer
+import com.vishruth.key1.lib.util.launchUrl
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import org.florisboard.lib.compose.FlorisChip
 

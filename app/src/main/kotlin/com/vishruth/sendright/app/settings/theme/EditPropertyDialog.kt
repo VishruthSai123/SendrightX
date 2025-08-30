@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.theme
+package com.vishruth.key1.app.settings.theme
 
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
@@ -72,14 +72,14 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isUnspecified
 import androidx.compose.ui.unit.sp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.ext.FONTS
-import com.vishruth.sendright.app.ext.IMAGES
-import com.vishruth.sendright.lib.ValidationResult
-import com.vishruth.sendright.lib.cache.CacheManager
-import com.vishruth.sendright.lib.compose.Validation
-import com.vishruth.sendright.lib.ext.ExtensionValidation
-import com.vishruth.sendright.lib.rememberValidationResult
+import com.vishruth.key1.R
+import com.vishruth.key1.app.ext.FONTS
+import com.vishruth.key1.app.ext.IMAGES
+import com.vishruth.key1.lib.ValidationResult
+import com.vishruth.key1.lib.cache.CacheManager
+import com.vishruth.key1.lib.compose.Validation
+import com.vishruth.key1.lib.ext.ExtensionValidation
+import com.vishruth.key1.lib.rememberValidationResult
 import dev.patrickgold.jetpref.material.ui.ColorRepresentation
 import dev.patrickgold.jetpref.material.ui.ExperimentalJetPrefMaterial3Ui
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog

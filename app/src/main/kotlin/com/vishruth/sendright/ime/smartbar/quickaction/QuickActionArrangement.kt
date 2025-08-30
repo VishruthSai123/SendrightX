@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar.quickaction
+package com.vishruth.key1.ime.smartbar.quickaction
 
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.lib.io.DefaultJsonConfig
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.lib.io.DefaultJsonConfig
 import dev.patrickgold.jetpref.datastore.model.PreferenceSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

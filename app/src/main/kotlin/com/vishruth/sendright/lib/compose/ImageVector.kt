@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.compose
+package com.vishruth.key1.lib.compose
 
 import android.content.Context
 import androidx.annotation.DrawableRes

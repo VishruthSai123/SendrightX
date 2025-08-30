@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.apptheme
+package com.vishruth.key1.app.apptheme
 
 import android.app.Activity
 import android.content.Context
@@ -28,8 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.vishruth.sendright.app.AppTheme
-import com.vishruth.sendright.app.FlorisPreferenceStore
+import com.vishruth.key1.app.AppTheme
+import com.vishruth.key1.app.FlorisPreferenceStore
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.color.ColorMappings
 

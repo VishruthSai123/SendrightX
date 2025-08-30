@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar
+package com.vishruth.key1.ime.smartbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,11 +45,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vishruth.sendright.editorInstance
-import com.vishruth.sendright.ime.keyboard.FlorisImeSizing
-import com.vishruth.sendright.ime.theme.FlorisImeTheme
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.keyboardManager
+import com.vishruth.key1.editorInstance
+import com.vishruth.key1.ime.keyboard.FlorisImeSizing
+import com.vishruth.key1.ime.theme.FlorisImeTheme
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.keyboardManager
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
@@ -201,7 +201,7 @@ private fun MagicWandButton(
 
 private suspend fun handleMagicWandButtonClick(
     buttonTitle: String,
-    editorInstance: com.vishruth.sendright.ime.editor.EditorInstance,
+    editorInstance: com.vishruth.key1.ime.editor.EditorInstance,
     context: android.content.Context
 ) {
     try {

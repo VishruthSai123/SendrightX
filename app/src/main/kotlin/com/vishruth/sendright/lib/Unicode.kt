@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib
+package com.vishruth.key1.lib
 
 import android.icu.lang.UCharacter
 import android.icu.lang.UCharacterCategory

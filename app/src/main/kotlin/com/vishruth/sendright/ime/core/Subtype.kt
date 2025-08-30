@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.core
+package com.vishruth.key1.ime.core
 
-import com.vishruth.sendright.ime.keyboard.LayoutType
-import com.vishruth.sendright.ime.keyboard.LayoutTypeId
-import com.vishruth.sendright.ime.keyboard.extCoreComposer
-import com.vishruth.sendright.ime.keyboard.extCoreCurrencySet
-import com.vishruth.sendright.ime.keyboard.extCoreLayout
-import com.vishruth.sendright.ime.keyboard.extCorePopupMapping
-import com.vishruth.sendright.ime.keyboard.extCorePunctuationRule
-import com.vishruth.sendright.ime.nlp.latin.LatinLanguageProvider
-import com.vishruth.sendright.ime.nlp.han.HanShapeBasedLanguageProvider
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
+import com.vishruth.key1.ime.keyboard.LayoutType
+import com.vishruth.key1.ime.keyboard.LayoutTypeId
+import com.vishruth.key1.ime.keyboard.extCoreComposer
+import com.vishruth.key1.ime.keyboard.extCoreCurrencySet
+import com.vishruth.key1.ime.keyboard.extCoreLayout
+import com.vishruth.key1.ime.keyboard.extCorePopupMapping
+import com.vishruth.key1.ime.keyboard.extCorePunctuationRule
+import com.vishruth.key1.ime.nlp.latin.LatinLanguageProvider
+import com.vishruth.key1.ime.nlp.han.HanShapeBasedLanguageProvider
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.ext.ExtensionComponentName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

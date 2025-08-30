@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp
+package com.vishruth.key1.ime.nlp
 
 import android.icu.text.BreakIterator
-import com.vishruth.sendright.lib.FlorisLocale
+import com.vishruth.key1.lib.FlorisLocale
 import io.github.reactivecircus.cache4k.Cache
 import org.florisboard.lib.kotlin.GuardedByLock
 import org.florisboard.lib.kotlin.guardedByLock

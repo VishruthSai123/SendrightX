@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.dictionary
+package com.vishruth.key1.app.settings.dictionary
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -45,20 +45,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.settings.theme.DialogProperty
-import com.vishruth.sendright.ime.dictionary.DictionaryManager
-import com.vishruth.sendright.ime.dictionary.FREQUENCY_MAX
-import com.vishruth.sendright.ime.dictionary.FREQUENCY_MIN
-import com.vishruth.sendright.ime.dictionary.UserDictionaryDao
-import com.vishruth.sendright.ime.dictionary.UserDictionaryEntry
-import com.vishruth.sendright.ime.dictionary.UserDictionaryValidation
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.compose.Validation
-import com.vishruth.sendright.lib.rememberValidationResult
-import com.vishruth.sendright.lib.util.launchActivity
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.settings.theme.DialogProperty
+import com.vishruth.key1.ime.dictionary.DictionaryManager
+import com.vishruth.key1.ime.dictionary.FREQUENCY_MAX
+import com.vishruth.key1.ime.dictionary.FREQUENCY_MIN
+import com.vishruth.key1.ime.dictionary.UserDictionaryDao
+import com.vishruth.key1.ime.dictionary.UserDictionaryEntry
+import com.vishruth.key1.ime.dictionary.UserDictionaryValidation
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.compose.Validation
+import com.vishruth.key1.lib.rememberValidationResult
+import com.vishruth.key1.lib.util.launchActivity
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import dev.patrickgold.jetpref.material.ui.JetPrefListItem
 import dev.patrickgold.jetpref.material.ui.JetPrefTextField

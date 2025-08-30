@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.ext
+package com.vishruth.key1.lib.ext
 
 import androidx.compose.runtime.saveable.Saver
 import dev.patrickgold.jetpref.datastore.model.PreferenceSerializer

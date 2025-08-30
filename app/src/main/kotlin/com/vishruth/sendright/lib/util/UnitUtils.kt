@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.util
+package com.vishruth.key1.lib.util
 
 object UnitUtils {
     private const val KiB = (1024).toFloat()

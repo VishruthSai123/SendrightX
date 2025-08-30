@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.devtools
+package com.vishruth.key1.app.devtools
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,15 +22,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.ime.dictionary.DictionaryManager
-import com.vishruth.sendright.ime.dictionary.FlorisUserDictionaryDatabase
-import com.vishruth.sendright.ime.smartbar.quickaction.QuickActionArrangement
-import com.vishruth.sendright.lib.compose.FlorisConfirmDeleteDialog
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.ime.dictionary.DictionaryManager
+import com.vishruth.key1.ime.dictionary.FlorisUserDictionaryDatabase
+import com.vishruth.key1.ime.smartbar.quickaction.QuickActionArrangement
+import com.vishruth.key1.lib.compose.FlorisConfirmDeleteDialog
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.datastore.ui.Preference
 import dev.patrickgold.jetpref.datastore.ui.PreferenceGroup

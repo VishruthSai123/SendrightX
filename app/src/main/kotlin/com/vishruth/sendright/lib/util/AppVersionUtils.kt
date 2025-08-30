@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.util
+package com.vishruth.key1.lib.util
 
 import android.content.Context
-import com.vishruth.sendright.app.FlorisPreferenceModel
+import com.vishruth.key1.app.FlorisPreferenceModel
 
 object AppVersionUtils {
     private fun getRawVersionName(context: Context): String {

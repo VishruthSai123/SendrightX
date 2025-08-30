@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.devtools
+package com.vishruth.key1.app.devtools
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,9 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
-import com.vishruth.sendright.R
-import com.vishruth.sendright.ime.core.DisplayLanguageNamesIn
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.R
+import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.android.showLongToastSync
 import org.florisboard.lib.compose.FlorisIconButton

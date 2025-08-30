@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.input
+package com.vishruth.key1.ime.input
 
 /**
  * Enum for the input shift states of a text keyboard.

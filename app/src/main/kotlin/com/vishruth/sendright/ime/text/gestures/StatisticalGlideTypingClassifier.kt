@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.gestures
+package com.vishruth.key1.ime.text.gestures
 
 import android.content.Context
 import androidx.collection.LruCache
 import androidx.collection.SparseArrayCompat
 import androidx.collection.set
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.keyboard.TextKey
-import com.vishruth.sendright.nlpManager
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.keyboard.TextKey
+import com.vishruth.key1.nlpManager
 import java.text.Normalizer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap

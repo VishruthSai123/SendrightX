@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.lifecycle
+package com.vishruth.key1.ime.lifecycle
 
 import android.inputmethodservice.InputMethodService
 import androidx.annotation.CallSuper

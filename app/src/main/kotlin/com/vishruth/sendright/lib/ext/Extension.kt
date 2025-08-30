@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.ext
+package com.vishruth.key1.lib.ext
 
 import android.content.Context
 import android.net.Uri
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.lib.io.FlorisRef
-import com.vishruth.sendright.lib.io.ZipUtils
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.lib.io.FlorisRef
+import com.vishruth.key1.lib.io.ZipUtils
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.localization
+package com.vishruth.key1.app.settings.localization
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -58,27 +58,27 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Observer
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.ime.core.DisplayLanguageNamesIn
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.core.SubtypeJsonConfig
-import com.vishruth.sendright.ime.core.SubtypeLayoutMap
-import com.vishruth.sendright.ime.core.SubtypeNlpProviderMap
-import com.vishruth.sendright.ime.core.SubtypePreset
-import com.vishruth.sendright.ime.keyboard.LayoutArrangementComponent
-import com.vishruth.sendright.ime.keyboard.LayoutType
-import com.vishruth.sendright.ime.keyboard.extCorePopupMapping
-import com.vishruth.sendright.ime.nlp.han.HanShapeBasedLanguageProvider
-import com.vishruth.sendright.ime.nlp.latin.LatinLanguageProvider
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.lib.observeAsNonNullState
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.core.SubtypeJsonConfig
+import com.vishruth.key1.ime.core.SubtypeLayoutMap
+import com.vishruth.key1.ime.core.SubtypeNlpProviderMap
+import com.vishruth.key1.ime.core.SubtypePreset
+import com.vishruth.key1.ime.keyboard.LayoutArrangementComponent
+import com.vishruth.key1.ime.keyboard.LayoutType
+import com.vishruth.key1.ime.keyboard.extCorePopupMapping
+import com.vishruth.key1.ime.nlp.han.HanShapeBasedLanguageProvider
+import com.vishruth.key1.ime.nlp.latin.LatinLanguageProvider
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.observeAsNonNullState
+import com.vishruth.key1.subtypeManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import dev.patrickgold.jetpref.material.ui.JetPrefDropdown

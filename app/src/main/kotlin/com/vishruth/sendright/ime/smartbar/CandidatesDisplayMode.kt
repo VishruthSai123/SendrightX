@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar
+package com.vishruth.key1.ime.smartbar
 
 /**
  * Enum class defining the display mode for the candidates.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.cache
+package com.vishruth.key1.lib.cache
 
 import android.content.Context
 import android.net.Uri
@@ -23,17 +23,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.vishruth.sendright.app.ext.EditorAction
-import com.vishruth.sendright.app.settings.advanced.Backup
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.ime.theme.ThemeExtensionEditor
-import com.vishruth.sendright.lib.NATIVE_NULLPTR
-import com.vishruth.sendright.lib.ext.Extension
-import com.vishruth.sendright.lib.ext.ExtensionDefaults
-import com.vishruth.sendright.lib.ext.ExtensionEditor
-import com.vishruth.sendright.lib.ext.ExtensionJsonConfig
-import com.vishruth.sendright.lib.io.FileRegistry
-import com.vishruth.sendright.lib.io.ZipUtils
+import com.vishruth.key1.app.ext.EditorAction
+import com.vishruth.key1.app.settings.advanced.Backup
+import com.vishruth.key1.appContext
+import com.vishruth.key1.ime.theme.ThemeExtensionEditor
+import com.vishruth.key1.lib.NATIVE_NULLPTR
+import com.vishruth.key1.lib.ext.Extension
+import com.vishruth.key1.lib.ext.ExtensionDefaults
+import com.vishruth.key1.lib.ext.ExtensionEditor
+import com.vishruth.key1.lib.ext.ExtensionJsonConfig
+import com.vishruth.key1.lib.io.FileRegistry
+import com.vishruth.key1.lib.io.ZipUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers

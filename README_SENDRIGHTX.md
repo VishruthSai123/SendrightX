@@ -97,9 +97,9 @@ Original Author: Patrick Zedler
 ## Development
 
 ### Package Structure
-- **Package ID**: `com.vishruth.sendrightx`
-- **Debug**: `com.vishruth.sendrightx.release` 
-- **Beta**: `com.vishruth.sendrightx.beta`
+- **Package ID**: `com.vishruth.key1`
+- **Debug**: `com.vishruth.key1.debug` 
+- **Beta**: `com.vishruth.key1.beta`
 
 ### Building
 ```bash

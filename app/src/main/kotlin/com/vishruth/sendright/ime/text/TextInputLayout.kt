@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text
+package com.vishruth.key1.ime.text
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,16 +30,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.LayoutDirection
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.smartbar.IncognitoDisplayMode
-import com.vishruth.sendright.ime.smartbar.InlineSuggestionsStyleCache
-import com.vishruth.sendright.ime.smartbar.MagicWandPanel
-import com.vishruth.sendright.ime.smartbar.Smartbar
-import com.vishruth.sendright.ime.smartbar.quickaction.QuickActionsOverflowPanel
-import com.vishruth.sendright.ime.text.keyboard.TextKeyboardLayout
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.keyboardManager
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.smartbar.IncognitoDisplayMode
+import com.vishruth.key1.ime.smartbar.InlineSuggestionsStyleCache
+import com.vishruth.key1.ime.smartbar.MagicWandPanel
+import com.vishruth.key1.ime.smartbar.Smartbar
+import com.vishruth.key1.ime.smartbar.quickaction.QuickActionsOverflowPanel
+import com.vishruth.key1.ime.text.keyboard.TextKeyboardLayout
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.keyboardManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.snygg.ui.SnyggIcon
 

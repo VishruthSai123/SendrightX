@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.compose
+package com.vishruth.key1.lib.compose
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.vishruth.sendright.R
+import com.vishruth.key1.R
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import org.florisboard.lib.compose.stringRes
 

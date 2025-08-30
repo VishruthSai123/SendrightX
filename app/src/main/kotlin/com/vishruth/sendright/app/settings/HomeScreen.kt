@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings
+package com.vishruth.key1.app.settings
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -31,11 +31,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.util.InputMethodUtils
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.util.InputMethodUtils
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.datastore.ui.Preference
 import org.florisboard.lib.compose.FlorisErrorCard

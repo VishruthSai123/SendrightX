@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.theme
+package com.vishruth.key1.ime.theme
 
 import android.content.Context
-import com.vishruth.sendright.lib.devtools.flogError
+import com.vishruth.key1.lib.devtools.flogError
 import org.florisboard.lib.kotlin.io.subFile
 import org.florisboard.lib.snygg.value.SnyggAssetResolver
 import java.net.URI

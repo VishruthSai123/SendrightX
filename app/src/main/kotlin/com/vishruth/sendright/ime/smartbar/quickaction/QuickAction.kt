@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar.quickaction
+package com.vishruth.key1.ime.smartbar.quickaction
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import com.vishruth.sendright.R
-import com.vishruth.sendright.editorInstance
-import com.vishruth.sendright.ime.keyboard.ComputingEvaluator
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.keyboardManager
+import com.vishruth.key1.R
+import com.vishruth.key1.editorInstance
+import com.vishruth.key1.ime.keyboard.ComputingEvaluator
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.keyboardManager
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.florisboard.lib.compose.stringRes

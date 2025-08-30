@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.advanced
+package com.vishruth.key1.app.settings.advanced
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FormatColorFill
@@ -26,14 +26,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.AppTheme
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.app.enumDisplayEntriesOf
-import com.vishruth.sendright.ime.core.DisplayLanguageNamesIn
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.R
+import com.vishruth.key1.app.AppTheme
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.app.enumDisplayEntriesOf
+import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.datastore.ui.ColorPickerPreference
 import dev.patrickgold.jetpref.datastore.ui.ListPreference

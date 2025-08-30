@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.keyboard
+package com.vishruth.key1.ime.text.keyboard
 
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.keyboard.AbstractKeyData
-import com.vishruth.sendright.ime.keyboard.ComputingEvaluator
-import com.vishruth.sendright.ime.keyboard.Key
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.keyboard.KeyboardMode
-import com.vishruth.sendright.ime.keyboard.computeImageVector
-import com.vishruth.sendright.ime.keyboard.computeLabel
-import com.vishruth.sendright.ime.popup.MutablePopupSet
-import com.vishruth.sendright.ime.popup.PopupMapping
-import com.vishruth.sendright.ime.popup.PopupSet
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.key.KeyType
-import com.vishruth.sendright.ime.text.key.KeyVariation
-import com.vishruth.sendright.lib.lowercase
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.keyboard.AbstractKeyData
+import com.vishruth.key1.ime.keyboard.ComputingEvaluator
+import com.vishruth.key1.ime.keyboard.Key
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.keyboard.KeyboardMode
+import com.vishruth.key1.ime.keyboard.computeImageVector
+import com.vishruth.key1.ime.keyboard.computeLabel
+import com.vishruth.key1.ime.popup.MutablePopupSet
+import com.vishruth.key1.ime.popup.PopupMapping
+import com.vishruth.key1.ime.popup.PopupSet
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.key.KeyType
+import com.vishruth.key1.ime.text.key.KeyVariation
+import com.vishruth.key1.lib.lowercase
 
 class TextKey(override val data: AbstractKeyData) : Key(data) {
     var computedData: KeyData = TextKeyData.UNSPECIFIED

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.clipboard.provider
+package com.vishruth.key1.ime.clipboard.provider
 
 import android.content.ClipData
 import android.content.ClipDescription.EXTRA_IS_REMOTE_DEVICE
@@ -46,7 +46,7 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
 import androidx.room.migration.AutoMigrationSpec
-import com.vishruth.sendright.R
+import com.vishruth.key1.R
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable

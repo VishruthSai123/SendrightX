@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar
+package com.vishruth.key1.ime.smartbar
 
 import android.os.Build
 import android.view.View
@@ -34,10 +34,10 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.viewinterop.AndroidView
-import com.vishruth.sendright.ime.nlp.NlpInlineAutofillSuggestion
-import com.vishruth.sendright.ime.popup.GlobalStateNumPopupsShowing
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.lib.toIntOffset
+import com.vishruth.key1.ime.nlp.NlpInlineAutofillSuggestion
+import com.vishruth.key1.ime.popup.GlobalStateNumPopupsShowing
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.lib.toIntOffset
 import org.florisboard.lib.compose.florisHorizontalScroll
 import org.florisboard.lib.snygg.SnyggSinglePropertySet
 import org.florisboard.lib.snygg.ui.rememberSnyggThemeQuery

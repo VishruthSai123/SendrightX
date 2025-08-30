@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
 import androidx.compose.ui.unit.LayoutDirection
-import com.vishruth.sendright.ime.ImeUiMode
-import com.vishruth.sendright.ime.input.InputShiftState
-import com.vishruth.sendright.ime.text.key.KeyVariation
+import com.vishruth.key1.ime.ImeUiMode
+import com.vishruth.key1.ime.input.InputShiftState
+import com.vishruth.key1.ime.text.key.KeyVariation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.atomic.AtomicInteger

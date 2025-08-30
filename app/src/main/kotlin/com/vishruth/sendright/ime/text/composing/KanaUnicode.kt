@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.composing
+package com.vishruth.key1.ime.text.composing
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.about
+package com.vishruth.key1.app.settings.about
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -38,13 +38,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.clipboardManager
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.util.launchUrl
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.clipboardManager
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.util.launchUrl
 import dev.patrickgold.jetpref.datastore.ui.Preference
 import org.florisboard.lib.android.stringRes
 import org.florisboard.lib.compose.FlorisCanvasIcon

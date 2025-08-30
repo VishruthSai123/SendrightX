@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.dictionary
+package com.vishruth.key1.ime.dictionary
 
 import android.content.ContentValues
 import android.content.Context
@@ -33,9 +33,9 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
-import com.vishruth.sendright.R
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.ValidationRule
+import com.vishruth.key1.R
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.ValidationRule
 import org.florisboard.lib.android.readText
 import org.florisboard.lib.android.writeText
 import org.florisboard.lib.kotlin.tryOrNull

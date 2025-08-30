@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.ext
+package com.vishruth.key1.lib.ext
 
 import androidx.core.text.trimmedLength
-import com.vishruth.sendright.R
-import com.vishruth.sendright.ime.theme.ThemeExtensionComponent
-import com.vishruth.sendright.lib.ValidationRule
+import com.vishruth.key1.R
+import com.vishruth.key1.ime.theme.ThemeExtensionComponent
+import com.vishruth.key1.lib.ValidationRule
 import org.florisboard.lib.snygg.SnyggStylesheet
-import com.vishruth.sendright.lib.validate
+import com.vishruth.key1.lib.validate
 import org.florisboard.lib.snygg.value.SnyggVarValue
 
 object ExtensionValidation {

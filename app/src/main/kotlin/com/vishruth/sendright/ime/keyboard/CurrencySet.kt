@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 

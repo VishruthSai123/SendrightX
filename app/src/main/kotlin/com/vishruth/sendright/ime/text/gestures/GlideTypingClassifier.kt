@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.gestures
+package com.vishruth.key1.ime.text.gestures
 
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.text.keyboard.TextKey
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.text.keyboard.TextKey
 
 /**
  * Inherit this to be able to handle gesture typing. Takes in raw pointer data, and

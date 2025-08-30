@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.onehanded
+package com.vishruth.key1.ime.onehanded
 
 /**
  * Static object which contains all possible one-handed mode strings.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.theme
+package com.vishruth.key1.app.settings.theme
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -69,24 +69,24 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.app.apptheme.Shapes
-import com.vishruth.sendright.app.ext.ExtensionComponentView
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.ime.theme.ThemeExtensionComponent
-import com.vishruth.sendright.ime.theme.ThemeExtensionComponentEditor
-import com.vishruth.sendright.ime.theme.ThemeExtensionEditor
-import com.vishruth.sendright.ime.theme.ThemeManager
-import com.vishruth.sendright.ime.theme.extPreviewTheme
-import com.vishruth.sendright.lib.cache.CacheManager
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.compose.PreviewKeyboardField
-import com.vishruth.sendright.lib.compose.Validation
-import com.vishruth.sendright.lib.compose.rememberPreviewFieldController
-import com.vishruth.sendright.lib.ext.ExtensionValidation
-import com.vishruth.sendright.lib.rememberValidationResult
-import com.vishruth.sendright.themeManager
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.apptheme.Shapes
+import com.vishruth.key1.app.ext.ExtensionComponentView
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.ime.theme.ThemeExtensionComponent
+import com.vishruth.key1.ime.theme.ThemeExtensionComponentEditor
+import com.vishruth.key1.ime.theme.ThemeExtensionEditor
+import com.vishruth.key1.ime.theme.ThemeManager
+import com.vishruth.key1.ime.theme.extPreviewTheme
+import com.vishruth.key1.lib.cache.CacheManager
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.compose.PreviewKeyboardField
+import com.vishruth.key1.lib.compose.Validation
+import com.vishruth.key1.lib.compose.rememberPreviewFieldController
+import com.vishruth.key1.lib.ext.ExtensionValidation
+import com.vishruth.key1.lib.rememberValidationResult
+import com.vishruth.key1.themeManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import dev.patrickgold.jetpref.material.ui.JetPrefListItem

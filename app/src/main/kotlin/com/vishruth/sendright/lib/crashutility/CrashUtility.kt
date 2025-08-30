@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.crashutility
+package com.vishruth.key1.lib.crashutility
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -29,12 +29,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Process
 import android.util.Log
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.FlorisImeService
-import com.vishruth.sendright.R
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogError
-import com.vishruth.sendright.lib.devtools.flogInfo
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.FlorisImeService
+import com.vishruth.key1.R
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogError
+import com.vishruth.key1.lib.devtools.flogInfo
 import java.lang.ref.WeakReference
 import org.florisboard.lib.kotlin.io.FsDir
 import org.florisboard.lib.kotlin.io.FsFile

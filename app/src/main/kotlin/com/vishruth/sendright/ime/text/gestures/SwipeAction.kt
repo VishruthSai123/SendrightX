@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.gestures
+package com.vishruth.key1.ime.text.gestures
 
 /**
  * Enum for declaring the possible actions for swipe gestures.

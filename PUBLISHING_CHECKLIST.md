@@ -8,7 +8,7 @@
 - [x] **README updated** - Clear attribution to FlorisBoard project
 
 ### Package Rebranding
-- [x] **Package ID changed** - `com.vishruth.sendrightx` (unique identifier)
+- [x] **Package ID changed** - `com.vishruth.key1` (unique identifier)
 - [x] **App name set** - "SendRight" (clear differentiation)
 - [x] **Icons customized** - Custom adaptive icon system implemented
 - [x] **Manifest updated** - Comments and schemes rebranded to SendRight

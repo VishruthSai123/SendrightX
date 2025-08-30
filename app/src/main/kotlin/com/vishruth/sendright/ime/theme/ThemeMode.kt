@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.theme
+package com.vishruth.key1.ime.theme
 
 /**
  * Enum class which specifies all theme modes available. Used in the Settings

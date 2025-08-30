@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.localization
+package com.vishruth.key1.app.settings.localization
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
@@ -40,18 +40,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.app.ext.ExtensionImportScreenType
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.ime.nlp.LanguagePackComponent
-import com.vishruth.sendright.lib.compose.FlorisConfirmDeleteDialog
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.ext.Extension
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.lib.observeAsNonNullState
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.app.ext.ExtensionImportScreenType
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.ime.nlp.LanguagePackComponent
+import com.vishruth.key1.lib.compose.FlorisConfirmDeleteDialog
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.ext.Extension
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.observeAsNonNullState
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.patrickgold.jetpref.datastore.ui.Preference
 import dev.patrickgold.jetpref.material.ui.JetPrefListItem

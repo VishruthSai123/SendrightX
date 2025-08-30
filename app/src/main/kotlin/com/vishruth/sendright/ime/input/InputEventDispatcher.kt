@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.input
+package com.vishruth.key1.ime.input
 
 import android.os.SystemClock
 import android.view.ViewConfiguration
 import androidx.collection.SparseArrayCompat
 import androidx.collection.isNotEmpty
 import androidx.collection.set
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.text.gestures.SwipeAction
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.text.gestures.SwipeAction
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import org.florisboard.lib.android.removeAndReturn
-import com.vishruth.sendright.lib.devtools.flogDebug
+import com.vishruth.key1.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

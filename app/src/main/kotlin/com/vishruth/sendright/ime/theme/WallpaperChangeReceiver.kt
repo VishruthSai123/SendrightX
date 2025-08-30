@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.theme
+package com.vishruth.key1.ime.theme
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.vishruth.sendright.lib.devtools.flogDebug
-import com.vishruth.sendright.themeManager
+import com.vishruth.key1.lib.devtools.flogDebug
+import com.vishruth.key1.themeManager
 import kotlinx.coroutines.flow.update
 
 class WallpaperChangeReceiver : BroadcastReceiver() {

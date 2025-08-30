@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media.emoji
+package com.vishruth.key1.ime.media.emoji
 
 import android.content.Context
-import com.vishruth.sendright.lib.FlorisLocale
+import com.vishruth.key1.lib.FlorisLocale
 import org.florisboard.lib.android.bufferedReader
 import io.github.reactivecircus.cache4k.Cache
 import java.util.*

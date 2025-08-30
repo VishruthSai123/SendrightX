@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp.han
+package com.vishruth.key1.ime.nlp.han
 
 import android.content.Context
 import android.database.sqlite.SQLiteException
 import android.icu.text.BreakIterator
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.editor.EditorContent
-import com.vishruth.sendright.ime.editor.EditorRange
-import com.vishruth.sendright.ime.nlp.BreakIteratorGroup
-import com.vishruth.sendright.ime.nlp.LanguagePackComponent
-import com.vishruth.sendright.ime.nlp.LanguagePackExtension
-import com.vishruth.sendright.ime.nlp.SpellingProvider
-import com.vishruth.sendright.ime.nlp.SpellingResult
-import com.vishruth.sendright.ime.nlp.SuggestionCandidate
-import com.vishruth.sendright.ime.nlp.SuggestionProvider
-import com.vishruth.sendright.ime.nlp.WordSuggestionCandidate
-import com.vishruth.sendright.lib.devtools.flogDebug
-import com.vishruth.sendright.lib.devtools.flogError
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.appContext
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.editor.EditorContent
+import com.vishruth.key1.ime.editor.EditorRange
+import com.vishruth.key1.ime.nlp.BreakIteratorGroup
+import com.vishruth.key1.ime.nlp.LanguagePackComponent
+import com.vishruth.key1.ime.nlp.LanguagePackExtension
+import com.vishruth.key1.ime.nlp.SpellingProvider
+import com.vishruth.key1.ime.nlp.SpellingResult
+import com.vishruth.key1.ime.nlp.SuggestionCandidate
+import com.vishruth.key1.ime.nlp.SuggestionProvider
+import com.vishruth.key1.ime.nlp.WordSuggestionCandidate
+import com.vishruth.key1.lib.devtools.flogDebug
+import com.vishruth.key1.lib.devtools.flogError
+import com.vishruth.key1.subtypeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

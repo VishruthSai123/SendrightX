@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.editor
+package com.vishruth.key1.ime.editor
 
 import org.florisboard.lib.kotlin.safeSubstring
 

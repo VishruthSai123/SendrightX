@@ -47,7 +47,7 @@ val projectVersionNameSuffix = projectVersionName.substringAfter("-", "").let { 
 }
 
 android {
-    namespace = "com.vishruth.sendright"
+    namespace = "com.vishruth.key1"
     compileSdk = projectCompileSdk.toInt()
     buildToolsVersion = tools.versions.buildTools.get()
     ndkVersion = tools.versions.ndk.get()
@@ -67,7 +67,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.vishruth.sendrightx"
+        applicationId = "com.vishruth.key1"
         minSdk = projectMinSdk.toInt()
         targetSdk = projectTargetSdk.toInt()
         versionCode = projectVersionCode.toInt()

@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.input
+package com.vishruth.key1.ime.input
 
 import android.inputmethodservice.InputMethodService
 import android.media.AudioManager
 import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.keyboard.KeyData
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.keyboard.KeyData
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.systemServiceOrNull
 import org.florisboard.lib.android.systemVibratorOrNull
 import org.florisboard.lib.android.vibrate
-import com.vishruth.sendright.lib.devtools.flogDebug
+import com.vishruth.key1.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.ext
+package com.vishruth.key1.app.ext
 
 import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,17 +42,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.cacheManager
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.ime.keyboard.KeyboardExtension
-import com.vishruth.sendright.ime.nlp.LanguagePackExtension
-import com.vishruth.sendright.ime.theme.ThemeExtension
-import com.vishruth.sendright.lib.NATIVE_NULLPTR
-import com.vishruth.sendright.lib.cache.CacheManager
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.io.FileRegistry
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.cacheManager
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.ime.keyboard.KeyboardExtension
+import com.vishruth.key1.ime.nlp.LanguagePackExtension
+import com.vishruth.key1.ime.theme.ThemeExtension
+import com.vishruth.key1.lib.NATIVE_NULLPTR
+import com.vishruth.key1.lib.cache.CacheManager
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.io.FileRegistry
 import org.florisboard.lib.compose.FlorisBulletSpacer
 import org.florisboard.lib.compose.FlorisButtonBar
 import org.florisboard.lib.compose.FlorisOutlinedBox

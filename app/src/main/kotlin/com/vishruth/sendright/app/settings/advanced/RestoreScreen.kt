@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.advanced
+package com.vishruth.key1.app.settings.advanced
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,20 +41,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceModel
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.cacheManager
-import com.vishruth.sendright.clipboardManager
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardFileStorage
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardItem
-import com.vishruth.sendright.ime.clipboard.provider.ItemType
-import com.vishruth.sendright.lib.cache.CacheManager
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.ext.ExtensionManager
-import com.vishruth.sendright.lib.io.ZipUtils
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceModel
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.cacheManager
+import com.vishruth.key1.clipboardManager
+import com.vishruth.key1.ime.clipboard.provider.ClipboardFileStorage
+import com.vishruth.key1.ime.clipboard.provider.ClipboardItem
+import com.vishruth.key1.ime.clipboard.provider.ItemType
+import com.vishruth.key1.lib.cache.CacheManager
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.ext.ExtensionManager
+import com.vishruth.key1.lib.io.ZipUtils
 import dev.patrickgold.jetpref.datastore.runtime.AndroidAppDataStorage
 import dev.patrickgold.jetpref.datastore.runtime.FileBasedStorage
 import dev.patrickgold.jetpref.datastore.runtime.ImportStrategy
@@ -81,7 +81,7 @@ import org.florisboard.lib.kotlin.io.subFile
 
 object Restore {
     const val MIN_VERSION_CODE = 64
-    const val PACKAGE_NAME = "dev.patrickgold.florisboard"
+    const val PACKAGE_NAME = "com.vishruth.key1"
     const val BACKUP_ARCHIVE_FILE_NAME = "backup.zip"
 }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.compose
+package com.vishruth.key1.lib.compose
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -53,8 +53,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.lib.util.InputMethodUtils
+import com.vishruth.key1.R
+import com.vishruth.key1.lib.util.InputMethodUtils
 import org.florisboard.lib.android.showShortToastSync
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.compose.stringRes

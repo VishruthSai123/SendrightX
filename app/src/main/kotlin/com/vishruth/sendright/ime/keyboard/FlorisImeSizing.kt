@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
 import android.content.Context
 import android.content.res.Resources
@@ -35,14 +35,14 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsCompat
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.smartbar.ExtendedActionsPlacement
-import com.vishruth.sendright.ime.smartbar.SmartbarLayout
-import com.vishruth.sendright.ime.text.keyboard.TextKeyboard
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.observeAsTransformingState
-import com.vishruth.sendright.lib.util.ViewUtils
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.smartbar.ExtendedActionsPlacement
+import com.vishruth.key1.ime.smartbar.SmartbarLayout
+import com.vishruth.key1.ime.text.keyboard.TextKeyboard
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.observeAsTransformingState
+import com.vishruth.key1.lib.util.ViewUtils
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.isOrientationLandscape

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
 enum class KeyboardMode(val value: Int) {
     UNSPECIFIED(-1),

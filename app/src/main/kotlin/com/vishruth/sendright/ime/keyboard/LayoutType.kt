@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

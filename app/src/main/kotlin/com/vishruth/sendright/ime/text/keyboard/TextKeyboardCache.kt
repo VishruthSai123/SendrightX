@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.keyboard
+package com.vishruth.key1.ime.text.keyboard
 
 import androidx.collection.SparseArrayCompat
 import androidx.collection.set
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.keyboard.KeyboardMode
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogDebug
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.keyboard.KeyboardMode
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred

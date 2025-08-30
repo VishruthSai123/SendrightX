@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.key.KeyType
-import com.vishruth.sendright.ime.text.keyboard.TextKey
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.text.keyboard.TextKeyboard
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.key.KeyType
+import com.vishruth.key1.ime.text.keyboard.TextKey
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.text.keyboard.TextKeyboard
 
 /**
  * Abstract class describing a computed keyboard. The exact implementation is dependent on the subclass and the

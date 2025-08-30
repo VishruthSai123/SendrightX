@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media.emoji
+package com.vishruth.key1.ime.media.emoji
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEmotions
@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.EmojiSymbols
 import androidx.compose.material.icons.filled.EmojiTransportation
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.vishruth.sendright.R
+import com.vishruth.key1.R
 
 enum class EmojiCategory(val id: String) {
     RECENTLY_USED("recently_used"),

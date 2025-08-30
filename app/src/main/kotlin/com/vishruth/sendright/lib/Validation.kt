@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib
+package com.vishruth.key1.lib
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable

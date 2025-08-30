@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.setup
+package com.vishruth.key1.app.setup
 
 import android.content.Context
 import android.content.Intent
@@ -40,17 +40,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisAppActivity
-import com.vishruth.sendright.app.FlorisPreferenceModel
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.compose.FlorisScreenScope
-import com.vishruth.sendright.lib.util.InputMethodUtils
-import com.vishruth.sendright.lib.util.launchActivity
-import com.vishruth.sendright.lib.util.launchUrl
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisAppActivity
+import com.vishruth.key1.app.FlorisPreferenceModel
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.compose.FlorisScreenScope
+import com.vishruth.key1.lib.util.InputMethodUtils
+import com.vishruth.key1.lib.util.launchActivity
+import com.vishruth.key1.lib.util.launchUrl
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.datastore.ui.PreferenceUiScope
 import kotlinx.coroutines.CoroutineScope

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib
+package com.vishruth.key1.lib
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.geometry.Offset

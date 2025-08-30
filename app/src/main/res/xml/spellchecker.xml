@@ -3,7 +3,7 @@
 <!-- Last update: 2022-06-27T22:42:38 -->
 <spell-checker xmlns:android="http://schemas.android.com/apk/res/android"
     android:label="@string/sendright_app_name"
-    android:settingsActivity="com.vishruth.sendright.SettingsLauncherAlias">
+    android:settingsActivity="com.vishruth.key1.SettingsLauncherAlias">
     <subtype android:label="@string/general__system_string_placeholder" android:subtypeLocale="af"/>
     <subtype android:label="@string/general__system_string_placeholder" android:subtypeLocale="agq"/>
     <subtype android:label="@string/general__system_string_placeholder" android:subtypeLocale="ak"/>

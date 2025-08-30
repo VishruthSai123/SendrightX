@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.typing
+package com.vishruth.key1.app.settings.typing
 
 import android.content.ComponentName
 import android.content.Intent
@@ -33,8 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.lib.util.launchActivity
+import com.vishruth.key1.R
+import com.vishruth.key1.lib.util.launchActivity
 import org.florisboard.lib.android.AndroidSettings
 import org.florisboard.lib.compose.FlorisCanvasIcon
 import org.florisboard.lib.compose.FlorisErrorCard

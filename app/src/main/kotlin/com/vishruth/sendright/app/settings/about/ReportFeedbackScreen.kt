@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.about
+package com.vishruth.key1.app.settings.about
 
 import android.content.Intent
 import android.net.Uri
@@ -53,9 +53,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.R
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.R
+import com.vishruth.key1.lib.compose.FlorisScreen
 import org.florisboard.lib.compose.stringRes
 
 enum class ReportType(val displayName: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {

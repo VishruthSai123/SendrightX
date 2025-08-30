@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib
+package com.vishruth.key1.lib
 
 import android.content.Context
-import com.vishruth.sendright.extensionManager
+import com.vishruth.key1.extensionManager
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind

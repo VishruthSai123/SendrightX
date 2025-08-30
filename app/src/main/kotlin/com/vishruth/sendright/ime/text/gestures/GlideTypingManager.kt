@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.gestures
+package com.vishruth.key1.ime.text.gestures
 
 import android.content.Context
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.nlp.WordSuggestionCandidate
-import com.vishruth.sendright.ime.text.keyboard.TextKey
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.nlpManager
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.nlp.WordSuggestionCandidate
+import com.vishruth.key1.ime.text.keyboard.TextKey
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.nlpManager
+import com.vishruth.key1.subtypeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

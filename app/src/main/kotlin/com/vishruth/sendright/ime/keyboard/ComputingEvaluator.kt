@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
@@ -48,16 +48,16 @@ import androidx.compose.material.icons.filled.SentimentSatisfiedAlt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.vishruth.sendright.R
-import com.vishruth.sendright.ime.core.DisplayLanguageNamesIn
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.editor.FlorisEditorInfo
-import com.vishruth.sendright.ime.editor.ImeOptions
-import com.vishruth.sendright.ime.input.InputShiftState
-import com.vishruth.sendright.ime.text.key.KeyCode
-import com.vishruth.sendright.ime.text.key.KeyType
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.compose.vectorResource
+import com.vishruth.key1.R
+import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.editor.FlorisEditorInfo
+import com.vishruth.key1.ime.editor.ImeOptions
+import com.vishruth.key1.ime.input.InputShiftState
+import com.vishruth.key1.ime.text.key.KeyCode
+import com.vishruth.key1.ime.text.key.KeyType
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.compose.vectorResource
 import org.florisboard.lib.compose.icons.ForwardDelete
 
 interface ComputingEvaluator {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.landscapeinput
+package com.vishruth.key1.ime.landscapeinput
 
 enum class LandscapeInputUiMode {
     NEVER_SHOW,

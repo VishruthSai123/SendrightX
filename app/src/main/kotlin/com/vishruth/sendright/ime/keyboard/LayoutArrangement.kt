@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
-import com.vishruth.sendright.lib.ext.ExtensionComponent
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.ext.ExtensionComponent
+import com.vishruth.key1.lib.ext.ExtensionComponentName
 import kotlinx.serialization.Serializable
 
 typealias LayoutArrangement = List<List<AbstractKeyData>>

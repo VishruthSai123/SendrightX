@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.core
+package com.vishruth.key1.ime.core
 
 import android.content.Context
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.keyboard.CurrencySet
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.devtools.flogDebug
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.keyboard.CurrencySet
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

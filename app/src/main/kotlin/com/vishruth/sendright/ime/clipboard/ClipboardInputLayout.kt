@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.clipboard
+package com.vishruth.key1.ime.clipboard
 
 import android.content.ContentUris
 import android.graphics.BitmapFactory
@@ -87,24 +87,24 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.clipboardManager
-import com.vishruth.sendright.ime.ImeUiMode
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardFileStorage
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardItem
-import com.vishruth.sendright.ime.clipboard.provider.ItemType
-import com.vishruth.sendright.ime.keyboard.FlorisImeSizing
-import com.vishruth.sendright.ime.media.KeyboardLikeButton
-import com.vishruth.sendright.ime.smartbar.AnimationDuration
-import com.vishruth.sendright.ime.smartbar.VerticalEnterTransition
-import com.vishruth.sendright.ime.smartbar.VerticalExitTransition
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.theme.FlorisImeUi
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.observeAsNonNullState
-import com.vishruth.sendright.lib.observeAsTransformingState
-import com.vishruth.sendright.lib.util.NetworkUtils
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.clipboardManager
+import com.vishruth.key1.ime.ImeUiMode
+import com.vishruth.key1.ime.clipboard.provider.ClipboardFileStorage
+import com.vishruth.key1.ime.clipboard.provider.ClipboardItem
+import com.vishruth.key1.ime.clipboard.provider.ItemType
+import com.vishruth.key1.ime.keyboard.FlorisImeSizing
+import com.vishruth.key1.ime.media.KeyboardLikeButton
+import com.vishruth.key1.ime.smartbar.AnimationDuration
+import com.vishruth.key1.ime.smartbar.VerticalEnterTransition
+import com.vishruth.key1.ime.smartbar.VerticalExitTransition
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.observeAsNonNullState
+import com.vishruth.key1.lib.observeAsTransformingState
+import com.vishruth.key1.lib.util.NetworkUtils
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import java.time.Instant
 import kotlinx.coroutines.delay

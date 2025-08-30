@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.keyboard
+package com.vishruth.key1.app.settings.keyboard
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.enumDisplayEntriesOf
-import com.vishruth.sendright.ime.input.HapticVibrationMode
-import com.vishruth.sendright.ime.input.InputFeedbackActivationMode
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.R
+import com.vishruth.key1.app.enumDisplayEntriesOf
+import com.vishruth.key1.ime.input.HapticVibrationMode
+import com.vishruth.key1.ime.input.InputFeedbackActivationMode
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.patrickgold.jetpref.datastore.ui.ListPreference

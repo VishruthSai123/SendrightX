@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.devtools
+package com.vishruth.key1.lib.devtools
 
 import android.content.Context
 import android.util.Log
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.lib.devtools.Flog.OUTPUT_CONSOLE
-import com.vishruth.sendright.lib.devtools.Flog.createTag
-import com.vishruth.sendright.lib.devtools.Flog.getStacktraceElement
-import com.vishruth.sendright.lib.devtools.Flog.log
+import com.vishruth.key1.appContext
+import com.vishruth.key1.lib.devtools.Flog.OUTPUT_CONSOLE
+import com.vishruth.key1.lib.devtools.Flog.createTag
+import com.vishruth.key1.lib.devtools.Flog.getStacktraceElement
+import com.vishruth.key1.lib.devtools.Flog.log
 import java.lang.ref.WeakReference
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract

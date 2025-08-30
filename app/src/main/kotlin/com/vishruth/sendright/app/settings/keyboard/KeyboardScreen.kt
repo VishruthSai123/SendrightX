@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.keyboard
+package com.vishruth.key1.app.settings.keyboard
 
 import androidx.compose.runtime.Composable
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.app.enumDisplayEntriesOf
-import com.vishruth.sendright.ime.input.CapitalizationBehavior
-import com.vishruth.sendright.ime.keyboard.SpaceBarMode
-import com.vishruth.sendright.ime.landscapeinput.LandscapeInputUiMode
-import com.vishruth.sendright.ime.onehanded.OneHandedMode
-import com.vishruth.sendright.ime.smartbar.IncognitoDisplayMode
-import com.vishruth.sendright.ime.text.key.KeyHintMode
-import com.vishruth.sendright.ime.text.key.UtilityKeyAction
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.app.enumDisplayEntriesOf
+import com.vishruth.key1.ime.input.CapitalizationBehavior
+import com.vishruth.key1.ime.keyboard.SpaceBarMode
+import com.vishruth.key1.ime.landscapeinput.LandscapeInputUiMode
+import com.vishruth.key1.ime.onehanded.OneHandedMode
+import com.vishruth.key1.ime.smartbar.IncognitoDisplayMode
+import com.vishruth.key1.ime.text.key.KeyHintMode
+import com.vishruth.key1.ime.text.key.UtilityKeyAction
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.patrickgold.jetpref.datastore.ui.ListPreference

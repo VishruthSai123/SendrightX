@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp
+package com.vishruth.key1.ime.nlp
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
@@ -25,10 +25,10 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardItem
-import com.vishruth.sendright.ime.clipboard.provider.ItemType
-import com.vishruth.sendright.ime.media.emoji.Emoji
-import com.vishruth.sendright.lib.util.NetworkUtils
+import com.vishruth.key1.ime.clipboard.provider.ClipboardItem
+import com.vishruth.key1.ime.clipboard.provider.ItemType
+import com.vishruth.key1.ime.media.emoji.Emoji
+import com.vishruth.key1.lib.util.NetworkUtils
 
 /**
  * Interface for a candidate item, which is returned by a suggestion provider and used by the UI logic to render

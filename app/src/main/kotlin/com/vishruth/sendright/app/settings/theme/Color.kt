@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.theme
+package com.vishruth.key1.app.settings.theme
 
 import androidx.compose.ui.graphics.Color
 import dev.patrickgold.jetpref.datastore.model.PreferenceSerializer

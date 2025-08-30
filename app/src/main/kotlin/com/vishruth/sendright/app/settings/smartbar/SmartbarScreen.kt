@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.smartbar
+package com.vishruth.key1.app.settings.smartbar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.enumDisplayEntriesOf
-import com.vishruth.sendright.ime.smartbar.CandidatesDisplayMode
-import com.vishruth.sendright.ime.smartbar.ExtendedActionsPlacement
-import com.vishruth.sendright.ime.smartbar.SmartbarLayout
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.R
+import com.vishruth.key1.app.enumDisplayEntriesOf
+import com.vishruth.key1.ime.smartbar.CandidatesDisplayMode
+import com.vishruth.key1.ime.smartbar.ExtendedActionsPlacement
+import com.vishruth.key1.ime.smartbar.SmartbarLayout
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.ListPreference
 import dev.patrickgold.jetpref.datastore.ui.PreferenceGroup
 import dev.patrickgold.jetpref.datastore.ui.SwitchPreference

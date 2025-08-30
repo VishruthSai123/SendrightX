@@ -46,7 +46,7 @@ Modifications clearly documented in:
 ### Major Changes Made to Original FlorisBoard:
 1. **AI Integration**: Magic Wand panel with Gemini API
 2. **Branding**: SendRight visual identity and naming
-3. **Namespace**: Migration to com.vishruth.sendright
+3. **Namespace**: Migration to com.vishruth.key1
 4. **Network Features**: Internet permissions for AI functionality
 5. **UX Enhancements**: Auto-close behaviors and improved workflows
 6. **Build Configuration**: Modified for SendRight distribution

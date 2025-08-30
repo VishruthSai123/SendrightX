@@ -28,8 +28,8 @@ This derivative work includes the following major modifications and enhancements
 - **Custom Icons**: SendRight-specific launcher icons and visual assets
 
 ### Technical Modifications
-- **Namespace Changes**: Migrated from `dev.patrickgold.florisboard` to `com.vishruth.sendright`
-- **Package Configuration**: Modified application ID to `com.vishruth.sendrightx`
+- **Namespace Changes**: Migrated from `dev.patrickgold.florisboard` to `com.vishruth.key1`
+- **Package Configuration**: Modified application ID to `com.vishruth.key1`
 - **Build System**: Enhanced Gradle configuration for SendRight distribution
 - **Manifest Updates**: Added network permissions and updated service declarations
 

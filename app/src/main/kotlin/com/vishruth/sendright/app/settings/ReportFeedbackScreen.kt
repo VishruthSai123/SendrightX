@@ -1,4 +1,4 @@
-package com.vishruth.sendright.app.settings
+package com.vishruth.key1.app.settings
 
 import android.content.Intent
 import android.os.Build
@@ -33,8 +33,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.lib.compose.FlorisScreen
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.Preference
 
 enum class IssueType(val displayName: String, val emailSubject: String) {

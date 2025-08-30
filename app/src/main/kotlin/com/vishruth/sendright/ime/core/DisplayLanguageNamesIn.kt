@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.core
+package com.vishruth.key1.ime.core
 
 /**
  * DisplayLocalesIn indicates how language names should be visually presented to the user.

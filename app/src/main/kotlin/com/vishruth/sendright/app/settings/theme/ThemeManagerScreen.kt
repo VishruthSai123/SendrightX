@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.theme
+package com.vishruth.key1.app.settings.theme
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -32,14 +32,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.ime.theme.ThemeExtensionComponent
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.lib.observeAsNonNullState
-import com.vishruth.sendright.themeManager
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.ime.theme.ThemeExtensionComponent
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.observeAsNonNullState
+import com.vishruth.key1.themeManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.material.ui.JetPrefListItem
 import org.florisboard.lib.compose.FlorisOutlinedBox

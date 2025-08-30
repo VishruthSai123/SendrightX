@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.popup
+package com.vishruth.key1.ime.popup
 
-import com.vishruth.sendright.ime.keyboard.AbstractKeyData
-import com.vishruth.sendright.ime.text.key.KeyVariation
-import com.vishruth.sendright.lib.ext.ExtensionComponent
+import com.vishruth.key1.ime.keyboard.AbstractKeyData
+import com.vishruth.key1.ime.text.key.KeyVariation
+import com.vishruth.key1.lib.ext.ExtensionComponent
 import kotlinx.serialization.Serializable
 
 /**

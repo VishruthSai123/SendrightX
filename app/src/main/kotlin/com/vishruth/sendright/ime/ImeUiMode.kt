@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime
+package com.vishruth.key1.ime
 
 enum class ImeUiMode(val value: Int) {
     TEXT(0),

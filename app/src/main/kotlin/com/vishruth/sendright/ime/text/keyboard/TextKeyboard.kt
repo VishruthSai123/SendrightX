@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.keyboard
+package com.vishruth.key1.ime.text.keyboard
 
-import com.vishruth.sendright.ime.keyboard.Key
-import com.vishruth.sendright.ime.keyboard.Keyboard
-import com.vishruth.sendright.ime.keyboard.KeyboardMode
-import com.vishruth.sendright.ime.popup.PopupMapping
+import com.vishruth.key1.ime.keyboard.Key
+import com.vishruth.key1.ime.keyboard.Keyboard
+import com.vishruth.key1.ime.keyboard.KeyboardMode
+import com.vishruth.key1.ime.popup.PopupMapping
 import kotlin.math.abs
 
 class TextKeyboard(

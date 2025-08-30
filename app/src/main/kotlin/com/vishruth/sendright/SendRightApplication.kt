@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright
+package com.vishruth.key1
 
 import android.app.Application
 import android.content.BroadcastReceiver
@@ -26,23 +26,23 @@ import android.content.IntentFilter
 import android.os.Handler
 import android.util.Log
 import androidx.core.os.UserManagerCompat
-import com.vishruth.sendright.app.FlorisPreferenceModel
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.clipboard.ClipboardManager
-import com.vishruth.sendright.ime.core.SubtypeManager
-import com.vishruth.sendright.ime.dictionary.DictionaryManager
-import com.vishruth.sendright.ime.editor.EditorInstance
-import com.vishruth.sendright.ime.keyboard.KeyboardManager
-import com.vishruth.sendright.ime.media.emoji.FlorisEmojiCompat
-import com.vishruth.sendright.ime.nlp.NlpManager
-import com.vishruth.sendright.ime.text.gestures.GlideTypingManager
-import com.vishruth.sendright.ime.theme.ThemeManager
-import com.vishruth.sendright.lib.cache.CacheManager
-import com.vishruth.sendright.lib.crashutility.CrashUtility
-import com.vishruth.sendright.lib.devtools.Flog
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogError
-import com.vishruth.sendright.lib.ext.ExtensionManager
+import com.vishruth.key1.app.FlorisPreferenceModel
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.clipboard.ClipboardManager
+import com.vishruth.key1.ime.core.SubtypeManager
+import com.vishruth.key1.ime.dictionary.DictionaryManager
+import com.vishruth.key1.ime.editor.EditorInstance
+import com.vishruth.key1.ime.keyboard.KeyboardManager
+import com.vishruth.key1.ime.media.emoji.FlorisEmojiCompat
+import com.vishruth.key1.ime.nlp.NlpManager
+import com.vishruth.key1.ime.text.gestures.GlideTypingManager
+import com.vishruth.key1.ime.theme.ThemeManager
+import com.vishruth.key1.lib.cache.CacheManager
+import com.vishruth.key1.lib.crashutility.CrashUtility
+import com.vishruth.key1.lib.devtools.Flog
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogError
+import com.vishruth.key1.lib.ext.ExtensionManager
 
 import dev.patrickgold.jetpref.datastore.runtime.initAndroid
 import kotlinx.coroutines.CoroutineScope

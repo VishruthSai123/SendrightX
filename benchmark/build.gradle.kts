@@ -20,7 +20,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vishruth.sendright.benchmark"
+    namespace = "com.vishruth.key1.benchmark"
     compileSdk = 34
 
     compileOptions {

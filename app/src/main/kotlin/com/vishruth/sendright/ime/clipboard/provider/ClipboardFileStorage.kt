@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.clipboard.provider
+package com.vishruth.key1.ime.clipboard.provider
 
 import android.content.Context
 import android.net.Uri
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogDebug
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogDebug
 import org.florisboard.lib.android.readToFile
 import org.florisboard.lib.kotlin.io.FsFile
 import org.florisboard.lib.kotlin.io.subFile

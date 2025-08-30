@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.theme
+package com.vishruth.key1.app.settings.theme
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brightness2
@@ -28,17 +28,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.app.enumDisplayEntriesOf
-import com.vishruth.sendright.app.ext.AddonManagementReferenceBox
-import com.vishruth.sendright.app.ext.ExtensionListScreenType
-import com.vishruth.sendright.ime.theme.ThemeManager
-import com.vishruth.sendright.ime.theme.ThemeMode
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.themeManager
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.app.enumDisplayEntriesOf
+import com.vishruth.key1.app.ext.AddonManagementReferenceBox
+import com.vishruth.key1.app.ext.ExtensionListScreenType
+import com.vishruth.key1.ime.theme.ThemeManager
+import com.vishruth.key1.ime.theme.ThemeMode
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.themeManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.datastore.ui.ColorPickerPreference
 import dev.patrickgold.jetpref.datastore.ui.ListPreference

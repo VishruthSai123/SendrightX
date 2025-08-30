@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp
+package com.vishruth.key1.ime.nlp
 
 import android.content.Context
 import android.os.SystemClock
 import android.util.LruCache
 import androidx.lifecycle.MutableLiveData
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.clipboardManager
-import com.vishruth.sendright.editorInstance
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardItem
-import com.vishruth.sendright.ime.clipboard.provider.ItemType
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.editor.EditorContent
-import com.vishruth.sendright.ime.editor.EditorRange
-import com.vishruth.sendright.ime.media.emoji.EmojiSuggestionProvider
-import com.vishruth.sendright.ime.nlp.han.HanShapeBasedLanguageProvider
-import com.vishruth.sendright.ime.nlp.latin.LatinLanguageProvider
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.util.NetworkUtils
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.clipboardManager
+import com.vishruth.key1.editorInstance
+import com.vishruth.key1.ime.clipboard.provider.ClipboardItem
+import com.vishruth.key1.ime.clipboard.provider.ItemType
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.editor.EditorContent
+import com.vishruth.key1.ime.editor.EditorRange
+import com.vishruth.key1.ime.media.emoji.EmojiSuggestionProvider
+import com.vishruth.key1.ime.nlp.han.HanShapeBasedLanguageProvider
+import com.vishruth.key1.ime.nlp.latin.LatinLanguageProvider
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.util.NetworkUtils
+import com.vishruth.key1.subtypeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

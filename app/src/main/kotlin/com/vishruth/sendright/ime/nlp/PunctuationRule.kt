@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp
+package com.vishruth.key1.ime.nlp
 
-import com.vishruth.sendright.lib.ext.ExtensionComponent
+import com.vishruth.key1.lib.ext.ExtensionComponent
 import kotlinx.serialization.Serializable
 
 /**

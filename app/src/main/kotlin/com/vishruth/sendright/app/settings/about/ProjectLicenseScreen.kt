@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.about
+package com.vishruth.key1.app.settings.about
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -27,10 +27,10 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.io.FlorisRef
-import com.vishruth.sendright.lib.io.loadTextAsset
+import com.vishruth.key1.R
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.io.FlorisRef
+import com.vishruth.key1.lib.io.loadTextAsset
 import org.florisboard.lib.compose.florisHorizontalScroll
 import org.florisboard.lib.compose.florisVerticalScroll
 import org.florisboard.lib.compose.stringRes

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.ext
+package com.vishruth.key1.app.ext
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,12 +37,12 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.ime.nlp.LanguagePackComponent
-import com.vishruth.sendright.ime.theme.ThemeExtensionComponent
-import com.vishruth.sendright.lib.ext.ExtensionComponent
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.lib.ext.ExtensionMeta
+import com.vishruth.key1.R
+import com.vishruth.key1.ime.nlp.LanguagePackComponent
+import com.vishruth.key1.ime.theme.ThemeExtensionComponent
+import com.vishruth.key1.lib.ext.ExtensionComponent
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.ext.ExtensionMeta
 import org.florisboard.lib.compose.FlorisIconButton
 import org.florisboard.lib.compose.FlorisOutlinedBox
 import org.florisboard.lib.compose.FlorisTextButton

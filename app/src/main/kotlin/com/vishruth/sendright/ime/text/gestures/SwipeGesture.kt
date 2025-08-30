@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.text.gestures
+package com.vishruth.key1.ime.text.gestures
 
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.lib.Pointer
-import com.vishruth.sendright.lib.PointerMap
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogDebug
-import com.vishruth.sendright.lib.util.ViewUtils
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.lib.Pointer
+import com.vishruth.key1.lib.PointerMap
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogDebug
+import com.vishruth.key1.lib.util.ViewUtils
 import kotlin.math.abs
 import kotlin.math.atan2
 

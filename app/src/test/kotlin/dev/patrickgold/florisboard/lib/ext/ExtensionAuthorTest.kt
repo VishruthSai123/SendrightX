@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.patrickgold.florisboard.lib.ext
+package com.vishruth.key1.lib.ext
 
 /*
 import io.kotest.core.spec.style.FreeSpec

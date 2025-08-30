@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.theme
+package com.vishruth.key1.ime.theme
 
-import com.vishruth.sendright.lib.ext.ExtensionComponent
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
+import com.vishruth.key1.lib.ext.ExtensionComponent
+import com.vishruth.key1.lib.ext.ExtensionComponentName
 import org.florisboard.lib.snygg.SnyggStylesheetEditor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun extCoreTheme(id: String) = ExtensionComponentName(
-    extensionId = "com.vishruth.sendright.themes",
+    extensionId = "com.vishruth.key1.themes",
     componentId = id,
 )
 

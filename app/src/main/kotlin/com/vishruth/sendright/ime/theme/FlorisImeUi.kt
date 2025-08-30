@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.theme
+package com.vishruth.key1.ime.theme
 
-import com.vishruth.sendright.R
+import com.vishruth.key1.R
 
 enum class FlorisImeUi(val elementName: String, val resId: Int?) {
     Root(

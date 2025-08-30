@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.util
+package com.vishruth.key1.lib.util
 
 import android.icu.text.SimpleDateFormat
-import com.vishruth.sendright.lib.FlorisLocale
+import com.vishruth.key1.lib.FlorisLocale
 import dev.patrickgold.jetpref.datastore.model.LocalTime
 import java.time.Instant
 import java.time.format.DateTimeFormatter

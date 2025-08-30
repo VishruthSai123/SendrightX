@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar.quickaction
+package com.vishruth.key1.ime.smartbar.quickaction
 
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -39,13 +39,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import dev.patrickgold.compose.tooltip.PlainTooltip
-import com.vishruth.sendright.FlorisImeService
-import com.vishruth.sendright.R
-import com.vishruth.sendright.ime.keyboard.ComputingEvaluator
-import com.vishruth.sendright.ime.keyboard.computeImageVector
-import com.vishruth.sendright.ime.keyboard.computeLabel
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.ime.theme.FlorisImeUi
+import com.vishruth.key1.FlorisImeService
+import com.vishruth.key1.R
+import com.vishruth.key1.ime.keyboard.ComputingEvaluator
+import com.vishruth.key1.ime.keyboard.computeImageVector
+import com.vishruth.key1.ime.keyboard.computeLabel
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.ime.theme.FlorisImeUi
 import org.florisboard.lib.snygg.SnyggSelector
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggIcon
@@ -133,7 +133,7 @@ fun QuickActionButton(
                         }
                         
                         // Special handling for magic wand PNG icons
-                        if (action.data.code == com.vishruth.sendright.ime.text.key.KeyCode.MAGIC_WAND) {
+                        if (action.data.code == com.vishruth.key1.ime.text.key.KeyCode.MAGIC_WAND) {
                             val pngResource = if (evaluator.state.isMagicWandPanelVisible) {
                                 R.drawable.magicwand_close
                             } else {

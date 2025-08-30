@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.setup
+package com.vishruth.key1.app.setup
 
 /**
  * The [NotificationPermissionState] is used to determine the status of the notification permission.

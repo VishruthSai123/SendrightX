@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.localization
+package com.vishruth.key1.app.settings.localization
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -36,17 +36,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
-import com.vishruth.sendright.app.Routes
-import com.vishruth.sendright.app.enumDisplayEntriesOf
-import com.vishruth.sendright.ime.core.DisplayLanguageNamesIn
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.keyboard.LayoutType
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.compose.FlorisScreen
-import com.vishruth.sendright.lib.observeAsNonNullState
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.R
+import com.vishruth.key1.app.LocalNavController
+import com.vishruth.key1.app.Routes
+import com.vishruth.key1.app.enumDisplayEntriesOf
+import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.keyboard.LayoutType
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.compose.FlorisScreen
+import com.vishruth.key1.lib.observeAsNonNullState
+import com.vishruth.key1.subtypeManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.datastore.ui.ListPreference
 import dev.patrickgold.jetpref.datastore.ui.Preference

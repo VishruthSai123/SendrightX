@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar
+package com.vishruth.key1.ime.smartbar
 
 enum class IncognitoDisplayMode {
     REPLACE_SHARED_ACTIONS_TOGGLE,

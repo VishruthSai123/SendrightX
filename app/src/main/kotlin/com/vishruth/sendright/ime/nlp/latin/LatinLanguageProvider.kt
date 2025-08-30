@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.nlp.latin
+package com.vishruth.key1.ime.nlp.latin
 
 import android.content.Context
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.editor.EditorContent
-import com.vishruth.sendright.ime.nlp.SpellingProvider
-import com.vishruth.sendright.ime.nlp.SpellingResult
-import com.vishruth.sendright.ime.nlp.SuggestionCandidate
-import com.vishruth.sendright.ime.nlp.SuggestionProvider
-import com.vishruth.sendright.ime.nlp.WordSuggestionCandidate
-import com.vishruth.sendright.lib.devtools.flogDebug
+import com.vishruth.key1.appContext
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.editor.EditorContent
+import com.vishruth.key1.ime.nlp.SpellingProvider
+import com.vishruth.key1.ime.nlp.SpellingResult
+import com.vishruth.key1.ime.nlp.SuggestionCandidate
+import com.vishruth.key1.ime.nlp.SuggestionProvider
+import com.vishruth.key1.ime.nlp.WordSuggestionCandidate
+import com.vishruth.key1.lib.devtools.flogDebug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.MapSerializer
@@ -36,7 +36,7 @@ import org.florisboard.lib.kotlin.guardedByLock
 
 class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProvider {
     companion object {
-        const val ProviderId = "com.vishruth.sendright.nlp.providers.latin"
+        const val ProviderId = "com.vishruth.key1.nlp.providers.latin"
     }
 
     private val appContext by context.appContext()

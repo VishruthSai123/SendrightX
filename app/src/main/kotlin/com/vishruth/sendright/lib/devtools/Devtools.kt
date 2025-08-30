@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.devtools
+package com.vishruth.key1.lib.devtools
 
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
 import android.os.Debug
-import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.FlorisPreferenceModel
-import com.vishruth.sendright.extensionManager
-import com.vishruth.sendright.lib.titlecase
-import com.vishruth.sendright.lib.util.TimeUtils
-import com.vishruth.sendright.lib.util.UnitUtils
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.R
+import com.vishruth.key1.app.FlorisPreferenceModel
+import com.vishruth.key1.extensionManager
+import com.vishruth.key1.lib.titlecase
+import com.vishruth.key1.lib.util.TimeUtils
+import com.vishruth.key1.lib.util.UnitUtils
+import com.vishruth.key1.subtypeManager
 import org.florisboard.lib.android.systemService
 import java.io.BufferedReader
 import java.io.IOException

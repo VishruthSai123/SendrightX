@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.input
+package com.vishruth.key1.ime.input
 
 enum class CapitalizationBehavior {
     CAPSLOCK_BY_DOUBLE_TAP,

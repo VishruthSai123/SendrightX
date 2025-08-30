@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.keyboard
+package com.vishruth.key1.ime.keyboard
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.vishruth.sendright.lib.FlorisRect
+import com.vishruth.key1.lib.FlorisRect
 
 /**
  * Abstract class describing the smallest computed unit in a computed keyboard. Each key represents exactly one key

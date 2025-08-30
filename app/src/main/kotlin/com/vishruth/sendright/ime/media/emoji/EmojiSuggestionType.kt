@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media.emoji
+package com.vishruth.key1.ime.media.emoji
 
 enum class EmojiSuggestionType(val prefix: String) {
     LEADING_COLON(":"),

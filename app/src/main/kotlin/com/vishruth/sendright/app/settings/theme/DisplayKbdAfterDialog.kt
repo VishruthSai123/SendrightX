@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.theme
+package com.vishruth.key1.app.settings.theme
 
 /**
  * DisplayPreviewAfterDialogs indicates if the keyboard should auto-open after closing

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.smartbar.quickaction
+package com.vishruth.key1.ime.smartbar.quickaction
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
@@ -29,10 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.smartbar.SmartbarLayout
-import com.vishruth.sendright.ime.text.keyboard.TextKeyData
-import com.vishruth.sendright.keyboardManager
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.smartbar.SmartbarLayout
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
+import com.vishruth.key1.keyboardManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.snygg.ui.SnyggRow
 

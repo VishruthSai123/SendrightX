@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright
+package com.vishruth.key1
 
 import android.service.textservice.SpellCheckerService
 import android.view.textservice.SentenceSuggestionsInfo
 import android.view.textservice.SuggestionsInfo
 import android.view.textservice.TextInfo
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.dictionary.DictionaryManager
-import com.vishruth.sendright.ime.nlp.SpellingLanguageMode
-import com.vishruth.sendright.ime.nlp.SpellingResult
-import com.vishruth.sendright.lib.FlorisLocale
-import com.vishruth.sendright.lib.devtools.LogTopic
-import com.vishruth.sendright.lib.devtools.flogInfo
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.dictionary.DictionaryManager
+import com.vishruth.key1.ime.nlp.SpellingLanguageMode
+import com.vishruth.key1.ime.nlp.SpellingResult
+import com.vishruth.key1.lib.FlorisLocale
+import com.vishruth.key1.lib.devtools.LogTopic
+import com.vishruth.key1.lib.devtools.flogInfo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.florisboard.lib.kotlin.map

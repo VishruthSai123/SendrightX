@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.editor
+package com.vishruth.key1.ime.editor
 
 import android.content.ClipDescription
 import android.content.ContentUris
@@ -22,24 +22,24 @@ import android.content.Context
 import android.view.KeyEvent
 import androidx.core.view.inputmethod.InputConnectionCompat
 import androidx.core.view.inputmethod.InputContentInfoCompat
-import com.vishruth.sendright.FlorisImeService
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.appContext
-import com.vishruth.sendright.clipboardManager
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardFileStorage
-import com.vishruth.sendright.ime.clipboard.provider.ClipboardItem
-import com.vishruth.sendright.ime.clipboard.provider.ItemType
-import com.vishruth.sendright.ime.input.InputShiftState
-import com.vishruth.sendright.ime.keyboard.IncognitoMode
-import com.vishruth.sendright.ime.keyboard.KeyboardMode
-import com.vishruth.sendright.ime.nlp.SuggestionCandidate
-import com.vishruth.sendright.ime.text.composing.Appender
-import com.vishruth.sendright.ime.text.composing.Composer
-import com.vishruth.sendright.ime.text.key.KeyVariation
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.lib.ext.ExtensionComponentName
-import com.vishruth.sendright.nlpManager
-import com.vishruth.sendright.subtypeManager
+import com.vishruth.key1.FlorisImeService
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.appContext
+import com.vishruth.key1.clipboardManager
+import com.vishruth.key1.ime.clipboard.provider.ClipboardFileStorage
+import com.vishruth.key1.ime.clipboard.provider.ClipboardItem
+import com.vishruth.key1.ime.clipboard.provider.ItemType
+import com.vishruth.key1.ime.input.InputShiftState
+import com.vishruth.key1.ime.keyboard.IncognitoMode
+import com.vishruth.key1.ime.keyboard.KeyboardMode
+import com.vishruth.key1.ime.nlp.SuggestionCandidate
+import com.vishruth.key1.ime.text.composing.Appender
+import com.vishruth.key1.ime.text.composing.Composer
+import com.vishruth.key1.ime.text.key.KeyVariation
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.ext.ExtensionComponentName
+import com.vishruth.key1.nlpManager
+import com.vishruth.key1.subtypeManager
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
 import org.florisboard.lib.android.showShortToastSync

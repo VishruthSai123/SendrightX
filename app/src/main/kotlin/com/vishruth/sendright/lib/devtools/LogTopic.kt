@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.lib.devtools
+package com.vishruth.key1.lib.devtools
 
 /**
  * This object holds all custom log topics for the [Flog] utility.

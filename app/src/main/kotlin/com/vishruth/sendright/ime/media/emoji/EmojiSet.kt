@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media.emoji
+package com.vishruth.key1.ime.media.emoji
 
 @JvmInline
 value class EmojiSet(val emojis: List<Emoji>) {

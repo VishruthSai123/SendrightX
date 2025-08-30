@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.app.settings.theme
+package com.vishruth.key1.app.settings.theme
 
 /**
  * SnyggLevel indicates if a rule property is intended to be edited by all users (BASIC) or only by advanced users

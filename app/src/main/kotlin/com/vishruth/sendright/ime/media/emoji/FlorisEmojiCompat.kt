@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media.emoji
+package com.vishruth.key1.ime.media.emoji
 
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.emoji2.text.DefaultEmojiCompatConfig
 import androidx.emoji2.text.EmojiCompat
-import com.vishruth.sendright.lib.devtools.flogError
-import com.vishruth.sendright.lib.devtools.flogInfo
+import com.vishruth.key1.lib.devtools.flogError
+import com.vishruth.key1.lib.devtools.flogInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

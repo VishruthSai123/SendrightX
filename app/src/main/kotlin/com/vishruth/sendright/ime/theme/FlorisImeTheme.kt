@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.theme
+package com.vishruth.key1.ime.theme
 
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -27,9 +27,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.keyboardManager
-import com.vishruth.sendright.themeManager
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.themeManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.snygg.ui.ProvideSnyggTheme
 import org.florisboard.lib.snygg.ui.rememberSnyggTheme

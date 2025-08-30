@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.vishruth.sendright.ime.media.emoji
+package com.vishruth.key1.ime.media.emoji
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.stream.Collectors
 import android.content.Context
-import com.vishruth.sendright.app.FlorisPreferenceStore
-import com.vishruth.sendright.ime.core.Subtype
-import com.vishruth.sendright.ime.editor.EditorContent
-import com.vishruth.sendright.ime.nlp.EmojiSuggestionCandidate
-import com.vishruth.sendright.ime.nlp.SuggestionCandidate
-import com.vishruth.sendright.ime.nlp.SuggestionProvider
-import com.vishruth.sendright.lib.FlorisLocale
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.core.Subtype
+import com.vishruth.key1.ime.editor.EditorContent
+import com.vishruth.key1.ime.nlp.EmojiSuggestionCandidate
+import com.vishruth.key1.ime.nlp.SuggestionCandidate
+import com.vishruth.key1.ime.nlp.SuggestionProvider
+import com.vishruth.key1.lib.FlorisLocale
 import io.github.reactivecircus.cache4k.Cache
 
 /**
