@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FormatColorFill
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
@@ -147,11 +146,6 @@ fun OtherScreen() = FlorisScreen {
             icon = ImageVector.vectorResource(R.drawable.ic_keyboard_keys),
             title = stringRes(R.string.physical_keyboard__title),
             onClick = { navController.navigate(Routes.Settings.PhysicalKeyboard) },
-        )
-        Preference(
-            icon = Icons.Default.RateReview,
-            title = stringRes(R.string.report_feedback__title),
-            onClick = { navController.navigate(Routes.Settings.ReportFeedback) },
         )
     }
 }

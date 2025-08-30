@@ -1,272 +1,290 @@
-/*
- * Copyright (C) 2021 Patrick Goldinger
- * Copyright (C) 2024 Vishruth
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.vishruth.sendright.app.settings
 
 import android.content.Intent
 import android.os.Build
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.vishruth.sendright.BuildConfig
-import com.vishruth.sendright.R
-import com.vishruth.sendright.app.LocalNavController
 import com.vishruth.sendright.lib.compose.FlorisScreen
-import org.florisboard.lib.compose.stringRes
+import dev.patrickgold.jetpref.datastore.ui.Preference
 
-// Enum for different types of reports/feedback
-enum class ReportType(val displayName: String, val emailSubjectPrefix: String) {
-    BUG_REPORT("Bug Report", "[BUG]"),
-    FEATURE_REQUEST("Feature Request", "[FEATURE]"),
-    AI_CONTENT_ISSUE("AI Content Issue", "[AI_CONTENT]"),
-    PERFORMANCE_ISSUE("Performance Issue", "[PERFORMANCE]"),
-    UI_UX_FEEDBACK("UI/UX Feedback", "[UI_UX]"),
-    ACCESSIBILITY_ISSUE("Accessibility Issue", "[ACCESSIBILITY]"),
-    PRIVACY_CONCERN("Privacy Concern", "[PRIVACY]"),
-    GENERAL_FEEDBACK("General Feedback", "[FEEDBACK]")
+enum class IssueType(val displayName: String, val emailSubject: String) {
+    BUG_REPORT("Bug Report", "Bug Report"),
+    FEATURE_REQUEST("Feature Request", "Feature Request"),
+    AI_CONTENT_ISSUE("AI Content Issue", "AI Content Policy Issue"),
+    PERFORMANCE_ISSUE("Performance Issue", "Performance Issue"),
+    ACCESSIBILITY_ISSUE("Accessibility Issue", "Accessibility Issue"),
+    CRASH_REPORT("App Crash", "Crash Report"),
+    OTHER("Other", "General Feedback")
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportFeedbackScreen() = FlorisScreen {
-    title = stringRes(R.string.report_feedback__title)
+    title = "Report & Feedback"
     previewFieldVisible = false
 
     content {
         val context = LocalContext.current
-        val scrollState = rememberScrollState()
         
-        // State variables
-        var selectedReportType by remember { mutableStateOf<ReportType?>(null) }
-        var expanded by remember { mutableStateOf(false) }
-        var subject by remember { mutableStateOf("") }
-        var message by remember { mutableStateOf("") }
-
+        var selectedIssueType by remember { mutableStateOf(IssueType.BUG_REPORT) }
+        var isDropdownExpanded by remember { mutableStateOf(false) }
+        var userDescription by remember { mutableStateOf("") }
+        var additionalInfo by remember { mutableStateOf("") }
+        
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(16.dp),
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Description text
             Text(
-                text = stringRes(R.string.report_feedback__info_description),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "Submit Feedback",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
-
-            // Report Type Dropdown
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedReportType?.displayName ?: "",
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text(stringRes(R.string.report_feedback__type_label)) },
-                    placeholder = { Text("Select type of report") },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = null
-                        )
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
+            
+            Text(
+                text = "Please fill out the form below. Your submission will be formatted and sent via email.",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-                
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    ReportType.values().forEach { reportType ->
-                        DropdownMenuItem(
-                            text = { Text(reportType.displayName) },
-                            onClick = {
-                                selectedReportType = reportType
-                                expanded = false
-                            }
+                    // Issue Type Dropdown
+                    Text(
+                        text = "Issue Type *",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    
+                    OutlinedButton(
+                        onClick = { isDropdownExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(selectedIssueType.displayName)
+                        Icons.Default.KeyboardArrowDown
+                    }
+                    
+                    DropdownMenu(
+                        expanded = isDropdownExpanded,
+                        onDismissRequest = { isDropdownExpanded = false }
+                    ) {
+                        IssueType.values().forEach { issueType ->
+                            DropdownMenuItem(
+                                text = { Text(issueType.displayName) },
+                                onClick = {
+                                    selectedIssueType = issueType
+                                    isDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                    
+                    // Description Field
+                    Text(
+                        text = "Description *",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    
+                    OutlinedTextField(
+                        value = userDescription,
+                        onValueChange = { userDescription = it },
+                        placeholder = { 
+                            Text(when (selectedIssueType) {
+                                IssueType.BUG_REPORT -> "Describe the bug and steps to reproduce..."
+                                IssueType.FEATURE_REQUEST -> "Describe the feature you'd like to see..."
+                                IssueType.AI_CONTENT_ISSUE -> "Describe the AI content issue..."
+                                IssueType.CRASH_REPORT -> "Describe what you were doing when the app crashed..."
+                                else -> "Describe your issue or feedback..."
+                            })
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        maxLines = 6,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            keyboardType = KeyboardType.Text
                         )
+                    )
+                    
+                    // Additional Information Field
+                    Text(
+                        text = "Additional Information",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    
+                    OutlinedTextField(
+                        value = additionalInfo,
+                        onValueChange = { additionalInfo = it },
+                        placeholder = { Text("Any additional details, error messages, or context...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2,
+                        maxLines = 4,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            keyboardType = KeyboardType.Text
+                        )
+                    )
+                    
+                    // Submit Button
+                    Button(
+                        onClick = {
+                            val deviceInfo = """
+Device: ${Build.MANUFACTURER} ${Build.MODEL}
+Android Version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})
+App Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})
+Device Model: ${Build.DEVICE}""".trimIndent()
+                            
+                            val emailBody = buildString {
+                                appendLine("Issue Type: ${selectedIssueType.displayName}")
+                                appendLine()
+                                appendLine("Description:")
+                                appendLine(userDescription.ifBlank { "No description provided" })
+                                appendLine()
+                                if (additionalInfo.isNotBlank()) {
+                                    appendLine("Additional Information:")
+                                    appendLine(additionalInfo)
+                                    appendLine()
+                                }
+                                appendLine("Device Information:")
+                                appendLine(deviceInfo)
+                                appendLine()
+                                appendLine("---")
+                                appendLine("Thank you for helping improve SendRight!")
+                            }
+                            
+                            val subject = "[SendRight ${selectedIssueType.emailSubject}] - ${Build.MODEL}"
+                            
+                            // Direct Gmail app intent
+                            val gmailIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                setPackage("com.google.android.gm") // Force Gmail app
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+                                putExtra(Intent.EXTRA_SUBJECT, subject)
+                                putExtra(Intent.EXTRA_TEXT, emailBody)
+                            }
+                            
+                            try {
+                                context.startActivity(gmailIntent)
+                            } catch (e: Exception) {
+                                // If Gmail app not available, try generic email
+                                val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "message/rfc822"
+                                    putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+                                    putExtra(Intent.EXTRA_SUBJECT, subject)
+                                    putExtra(Intent.EXTRA_TEXT, emailBody)
+                                }
+                                try {
+                                    context.startActivity(fallbackIntent)
+                                } catch (e2: Exception) {
+                                    Toast.makeText(context, "Gmail app not found. Please install Gmail.", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = userDescription.isNotBlank()
+                    ) {
+                        Text("Send via Gmail App")
                     }
                 }
             }
-
-            // Subject field
-            OutlinedTextField(
-                value = subject,
-                onValueChange = { subject = it },
-                label = { Text("Subject") },
-                placeholder = { Text("Brief description of your issue or suggestion") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            // Message field
-            OutlinedTextField(
-                value = message,
-                onValueChange = { message = it },
-                label = { Text(stringRes(R.string.report_feedback__description_label)) },
-                placeholder = { Text(stringRes(R.string.report_feedback__description_hint)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                maxLines = 8
-            )
-
-            // AI Content Notice (if AI content issue is selected)
-            if (selectedReportType == ReportType.AI_CONTENT_ISSUE) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Text(
-                        text = stringRes(R.string.report_feedback__ai_content_notice_description),
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
-            // Privacy Notice
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        text = stringRes(R.string.report_feedback__device_info_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Text(
-                        text = stringRes(R.string.report_feedback__device_info_title),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    val deviceInfo = getDeviceInfo()
-                    Text(
-                        text = deviceInfo,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // Send button
-            Button(
-                onClick = {
-                    sendEmailReport(
-                        context = context,
-                        reportType = selectedReportType,
-                        subject = subject,
-                        message = message
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                enabled = selectedReportType != null && subject.isNotBlank() && message.isNotBlank()
-            ) {
-                Text(
-                    text = stringRes(R.string.report_feedback__send_button),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
         }
-    }
-}
-
-private fun getDeviceInfo(): String {
-    return buildString {
-        appendLine("App Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-        appendLine("Android Version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-        appendLine("Device: ${Build.MANUFACTURER} ${Build.MODEL}")
-        appendLine("Build: ${Build.DISPLAY}")
-        appendLine("Architecture: ${Build.SUPPORTED_ABIS.joinToString(", ")}")
-    }
-}
-
-private fun sendEmailReport(
-    context: android.content.Context,
-    reportType: ReportType?,
-    subject: String,
-    message: String
-) {
-    if (reportType == null) return
-    
-    val emailSubject = "${reportType.emailSubjectPrefix} $subject"
-    val deviceInfo = getDeviceInfo()
-    
-    val emailBody = buildString {
-        appendLine("Report Type: ${reportType.displayName}")
-        appendLine("Subject: $subject")
-        appendLine()
-        appendLine("Description:")
-        appendLine(message)
-        appendLine()
-        appendLine("--- Device Information ---")
-        append(deviceInfo)
         
-        if (reportType == ReportType.AI_CONTENT_ISSUE) {
-            appendLine()
-            appendLine("--- AI Content Report ---")
-            appendLine("This report is submitted in compliance with Google Play policies regarding AI-generated content.")
-        }
-    }
-    
-    val emailIntent = Intent(Intent.ACTION_SEND).apply {
-        type = "message/rfc822"
-        putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
-        putExtra(Intent.EXTRA_SUBJECT, emailSubject)
-        putExtra(Intent.EXTRA_TEXT, emailBody)
-    }
-    
-    try {
-        context.startActivity(Intent.createChooser(emailIntent, "Send Email"))
-    } catch (e: Exception) {
-        // Handle case where no email app is available
-        // Could show a toast or copy to clipboard as fallback
+        Preference(
+            icon = Icons.Default.BugReport,
+            title = "Quick Gmail App Report",
+            summary = "Send a quick bug report directly via Gmail app",
+            onClick = { 
+                val quickSubject = "[SendRight Quick Report] - ${Build.MODEL}"
+                val quickBody = """Quick Bug Report
+
+Please describe the issue you encountered:
+
+
+Steps to Reproduce:
+1. 
+2. 
+3. 
+
+Device Information:
+- Device: ${Build.MANUFACTURER} ${Build.MODEL}
+- Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})
+- App Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})
+
+---
+Thank you for helping improve SendRight!"""
+                
+                // Direct Gmail app intent
+                val gmailIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    setPackage("com.google.android.gm") // Force Gmail app
+                    putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+                    putExtra(Intent.EXTRA_SUBJECT, quickSubject)
+                    putExtra(Intent.EXTRA_TEXT, quickBody)
+                }
+                
+                try {
+                    context.startActivity(gmailIntent)
+                } catch (e: Exception) {
+                    // If Gmail app not available, try generic email
+                    val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "message/rfc822"
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+                        putExtra(Intent.EXTRA_SUBJECT, quickSubject)
+                        putExtra(Intent.EXTRA_TEXT, quickBody)
+                    }
+                    try {
+                        context.startActivity(fallbackIntent)
+                    } catch (e2: Exception) {
+                        Toast.makeText(context, "Gmail app not found. Please install Gmail.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        )
+        
+        Preference(
+            icon = Icons.AutoMirrored.Filled.Help,
+            title = "Contact Information",
+            summary = "Email: vishruthsait@gmail.com • Response within 24-48 hours"
+        )
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.SmartButton
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.outlined.Build
@@ -130,6 +131,11 @@ fun HomeScreen() = FlorisScreen {
             icon = Icons.Default.Gesture,
             title = stringRes(R.string.settings__gestures__title),
             onClick = { navController.navigate(Routes.Settings.Gestures) },
+        )
+        Preference(
+            icon = Icons.Default.RateReview,
+            title = "Report & Feedback",
+            onClick = { navController.navigate(Routes.Settings.ReportFeedback) },
         )
         Preference(
             icon = Icons.Outlined.Build,

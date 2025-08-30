@@ -50,9 +50,9 @@ import com.vishruth.sendright.app.ext.ExtensionListScreen
 import com.vishruth.sendright.app.ext.ExtensionListScreenType
 import com.vishruth.sendright.app.ext.ExtensionViewScreen
 import com.vishruth.sendright.app.settings.HomeScreen
+import com.vishruth.sendright.app.settings.ReportFeedbackScreen
 import com.vishruth.sendright.app.settings.about.AboutScreen
 import com.vishruth.sendright.app.settings.about.ProjectLicenseScreen
-import com.vishruth.sendright.app.settings.about.ReportFeedbackScreen
 import com.vishruth.sendright.app.settings.about.ThirdPartyLicensesScreen
 import com.vishruth.sendright.app.settings.advanced.BackupScreen
 import com.vishruth.sendright.app.settings.advanced.OtherScreen
