@@ -78,7 +78,11 @@ fun MagicWandPanel(
         listOf(
             MagicWandSection(
                 title = "Advanced",
-                buttons = listOf("Rewrite", "Summarise", "Explain", "Letter", "Optimise", "Formal", "Post Ready")
+                buttons = listOf("Rewrite", "Summarise", "Letter", "Optimise", "Formal", "Post Ready")
+            ),
+            MagicWandSection(
+                title = "Study",
+                buttons = listOf("Explain", "Equation", "Solution")
             ),
             MagicWandSection(
                 title = "Tone Changer", 
