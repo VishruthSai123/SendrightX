@@ -51,10 +51,19 @@ object MagicWandInstructions {
 
     const val HAPPY = "Rewrite the given text in a cheerful and happy tone. Only provide the rewritten text."
     
+    // Translation Section Instructions
+    const val TELUGU = "Translate the given text into Telugu language. Only provide the translated text in Telugu script."
+
+    const val HINDI = "Translate the given text into Hindi language. Only provide the translated text in Devanagari script."
+
+    const val TAMIL = "Translate the given text into Tamil language. Only provide the translated text in Tamil script."
+
+    const val ENGLISH = "Translate the given text into English language. Only provide the translated text."
+
+    const val MULTI = "Translate the text as specified in the user's request. The user will provide the target language in their message (e.g., 'Translate Hello to Telugu'). Only provide the translated text in the requested language and script."
+    
     // Other Section Instructions
     const val EMOJIE = "Add relevant emojis to the given text. Only provide the updated text."
-
-    const val TRANSLATE = "Translate the given text into the target language. Only provide the translated text."
 
     const val ASK = "Answer the given question directly and clearly. Only provide the answer."
     
@@ -75,8 +84,12 @@ object MagicWandInstructions {
             "Flirty" -> FLIRTY
             "Anger" -> ANGER
             "Happy" -> HAPPY
+            "Telugu" -> TELUGU
+            "Hindi" -> HINDI
+            "Tamil" -> TAMIL
+            "English" -> ENGLISH
+            "Multi" -> MULTI
             "Emojie" -> EMOJIE
-            "Translate" -> TRANSLATE
             "Ask" -> ASK
             else -> "Transform the following text appropriately."
         }

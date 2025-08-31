@@ -33,8 +33,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -58,7 +63,9 @@ import org.florisboard.lib.snygg.ui.SnyggText
 
 data class MagicWandSection(
     val title: String,
-    val buttons: List<String>
+    val buttons: List<String>,
+    val isExpandable: Boolean = false,
+    val isExpanded: Boolean = false
 )
 
 data class MagicWandButton(
@@ -74,26 +81,35 @@ fun MagicWandPanel(
     val editorInstance by context.editorInstance()
     val scope = rememberCoroutineScope()
     
-    val magicWandSections = remember {
-        listOf(
-            MagicWandSection(
-                title = "Advanced",
-                buttons = listOf("Rewrite", "Summarise", "Letter", "Optimise", "Formal", "Post Ready")
-            ),
-            MagicWandSection(
-                title = "Study",
-                buttons = listOf("Explain", "Equation", "Solution")
-            ),
-            MagicWandSection(
-                title = "Tone Changer", 
-                buttons = listOf("Casual", "Friendly", "Professional", "Flirty", "Anger", "Happy")
-            ),
-            MagicWandSection(
-                title = "Other",
-                buttons = listOf("Emojie", "Translate", "Ask")
-            )
+    // State for managing expanded sections
+    val expandedSections = remember { mutableStateMapOf<String, Boolean>() }
+    
+    val magicWandSections = listOf(
+        MagicWandSection(
+            title = "Advanced",
+            buttons = listOf("Rewrite", "Summarise", "Letter", "Optimise", "Formal", "Post Ready")
+        ),
+        MagicWandSection(
+            title = "Study",
+            buttons = listOf("Explain", "Equation", "Solution")
+        ),
+        MagicWandSection(
+            title = "Tone Changer", 
+            buttons = listOf("Casual", "Friendly", "Professional", "Flirty", "Anger", "Happy")
+        ),
+        MagicWandSection(
+            title = "Translation",
+            buttons = listOf("Telugu", "Hindi", "Tamil", "English", "Multi"),
+            isExpandable = true,
+            isExpanded = expandedSections["Translation"] ?: false
+        ),
+        MagicWandSection(
+            title = "Other",
+            buttons = listOf("Emojie", "Ask"),
+            isExpandable = true,
+            isExpanded = expandedSections["Other"] ?: false
         )
-    }
+    )
 
     SnyggBox(
         elementName = FlorisImeUi.SmartbarActionsOverflow.elementName,
@@ -117,6 +133,9 @@ fun MagicWandPanel(
                                 context = context
                             )
                         }
+                    },
+                    onToggleExpand = { sectionTitle ->
+                        expandedSections[sectionTitle] = !(expandedSections[sectionTitle] ?: false)
                     }
                 )
             }
@@ -128,15 +147,21 @@ fun MagicWandPanel(
 private fun MagicWandSectionItem(
     section: MagicWandSection,
     onButtonClick: (String) -> Unit,
+    onToggleExpand: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        // Section Header - Fixed, no clickable behavior, no expand/collapse icons
+        // Section Header with expand/collapse functionality
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable {
+                    if (section.isExpandable) {
+                        onToggleExpand(section.title)
+                    }
+                }
                 .padding(vertical = 8.dp, horizontal = 12.dp),
-            horizontalArrangement = Arrangement.Start,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             SnyggText(
@@ -144,31 +169,41 @@ private fun MagicWandSectionItem(
                 text = section.title,
                 modifier = Modifier.weight(1f)
             )
+            
+            if (section.isExpandable) {
+                Icon(
+                    imageVector = if (section.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (section.isExpanded) "Collapse" else "Expand",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
         
-        // Content - Always visible, no conditional rendering
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            val chunks = section.buttons.chunked(2)
-            chunks.forEach { rowButtons ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    rowButtons.forEach { buttonTitle ->
-                        MagicWandButton(
-                            button = MagicWandButton(title = buttonTitle),
-                            onClick = { onButtonClick(buttonTitle) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    // Fill remaining space if odd number of buttons
-                    if (rowButtons.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
+        // Content - Show only if not expandable or if expanded
+        if (!section.isExpandable || section.isExpanded) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val chunks = section.buttons.chunked(2)
+                chunks.forEach { rowButtons ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        rowButtons.forEach { buttonTitle ->
+                            MagicWandButton(
+                                button = MagicWandButton(title = buttonTitle),
+                                onClick = { onButtonClick(buttonTitle) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        // Fill remaining space if odd number of buttons
+                        if (rowButtons.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
             }
