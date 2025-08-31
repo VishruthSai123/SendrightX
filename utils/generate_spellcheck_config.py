@@ -8,7 +8,7 @@
    language. As such we take the list of languages from an emulated or physical device and generate a spell checker
    config with subtypes for all languages.
 
-   Before running this script, make sure that exactly one device is connected and that SendRight (2.2
+   Before running this script, make sure that exactly one device is connected and that SendRight (2.3
    or newer) is installed. Then go to Settings > Devtools > System locales and tap the save icon in the top right
    corner. This creates a tsv file with all the devices in the interal app storage, which this script can now read.
 """

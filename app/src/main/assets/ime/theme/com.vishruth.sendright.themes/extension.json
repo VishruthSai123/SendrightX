@@ -2,7 +2,7 @@
   "$": "ime.extension.theme",
   "meta": {
     "id": "com.vishruth.key1.themes",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "title": "Right default themes",
     "description": "Default themes (both day and night) for the keyboard UI",
     "maintainers": [ "Vishruth <vishruth@sendright.com>" ],

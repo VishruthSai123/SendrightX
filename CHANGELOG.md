@@ -2,7 +2,7 @@
 
 SendRight is an AI-enhanced Android keyboard built upon the solid foundation of FlorisBoard. This changelog documents the modifications and enhancements made to create SendRight.
 
-## Version 2.2 - Enhanced AI Features Release
+## Version 2.3 - Enhanced AI Features Release
 
 ### 🤖 AI Features Integration
 - **AI-Powered Text Assistance**: Integrated advanced AI capabilities to provide intelligent text suggestions and corrections
