@@ -270,7 +270,7 @@ private fun PreviewExtensionViewerScreen() {
     val testExtension = ThemeExtension(
         meta = ExtensionMeta(
             id = "com.example.theme.test",
-            version = "2.4.3",
+            version = "2.5.3",
             title = "Test theme",
             description = "This is a test theme to preview the extension viewer screen UI.",
             keywords = listOf("Beach", "Sea", "Sun"),
