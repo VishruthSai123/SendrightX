@@ -17,18 +17,29 @@ This project integrates with Gemini AI API for text transformation features. To 
    cp local.properties.template local.properties
    ```
 
-2. Edit `local.properties` and add your Gemini API key:
+2. Edit `local.properties` and add your Gemini API key(s):
    ```properties
-   # Get your API key from: https://makersuite.google.com/app/apikey
+   # Primary API key (Required)
    GEMINI_API_KEY=your_actual_api_key_here
+   
+   # Fallback API keys (Optional - for redundancy)
+   GEMINI_API_KEY_FALLBACK_1=your_fallback_api_key_1_here
+   GEMINI_API_KEY_FALLBACK_2=your_fallback_api_key_2_here
+   GEMINI_API_KEY_FALLBACK_3=your_fallback_api_key_3_here
    ```
 
-### 2. Get Gemini API Key
+### 2. Get Gemini API Key(s)
 
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Sign in with your Google account
 3. Create a new API key
 4. Copy the key to your `local.properties` file
+
+**For Fallback Keys:**
+- You can create multiple API keys from the same Google account
+- Or use different Google accounts for better redundancy
+- Each Google account gets separate rate limits
+- Recommended: At least 2-3 API keys for reliability
 
 ### 3. Verify Setup
 
@@ -46,6 +57,23 @@ This project integrates with Gemini AI API for text transformation features. To 
 - ✅ **Template file** for easy developer setup
 - ✅ **Runtime validation** to ensure keys are configured
 - ✅ **Rate limiting** to prevent API abuse
+- ✅ **Fallback API keys** for improved reliability
+- ✅ **Automatic key rotation** when primary key fails
+
+## 🔄 Fallback API Keys
+
+For improved reliability, you can configure multiple API keys:
+
+1. **Primary Key**: Main API key used for all requests
+2. **Fallback Keys**: Backup keys used when primary fails
+3. **Automatic Rotation**: System automatically tries fallback keys
+4. **Smart Recovery**: Returns to primary key when it recovers
+
+### Benefits:
+- **Higher Uptime**: Service continues even if one key fails
+- **Load Distribution**: Can use keys from different Google accounts
+- **Error Recovery**: Automatic failover without user intervention
+- **Rate Limit Mitigation**: Distribute load across multiple quotas
 
 ## 📁 File Structure
 

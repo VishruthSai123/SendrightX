@@ -11,6 +11,9 @@
     <!-- Permission needed to create notifications on devices running Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+    <!-- Permission needed for voice input functionality -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
     <!-- Android 11+ only: Define that SendRight X requests to see all apps that
           ship with an IME or Spell Check service. This is used to guide the user
           in the Settings Ui why SendRight X may not be working.

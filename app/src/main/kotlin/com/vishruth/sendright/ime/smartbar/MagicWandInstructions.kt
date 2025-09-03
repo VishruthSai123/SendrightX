@@ -23,13 +23,13 @@ object MagicWandInstructions {
 
     const val SUMMARISE = "Summarise the given text briefly, keeping only the key points. Only provide the summary."
 
-    const val LETTER = "Convert the given text into a properly formatted letter. Only provide the letter text."
+    const val LETTER = "Convert the given text into a properly formatted letter , it can be mostly as email formatted. Only provide the letter text."
 
-    const val OPTIMISE = "Optimise the given text for conciseness and impact. Only provide the optimised text."
+    const val OPTIMISE = "Optimise the given text for conciseness and impact , espessially for AI's LLM's etc... , Only provide the optimised text."
 
     const val FORMAL = "Rewrite the given text in a formal tone. Only provide the formal version."
 
-    const val POST_READY = "Convert the given text into a social media post. Only provide the post text."
+    const val POST_READY = "Convert the given text into a social media post , make it unique, attractive , even add emojies if needed. only give consisly , avoid being verbose , . Only provide the post text."
     
     // Study Section Instructions
     const val EXPLAIN = "Explain the given text in simple, easy-to-understand words. Only provide the explanation."
@@ -52,20 +52,20 @@ object MagicWandInstructions {
     const val HAPPY = "Rewrite the given text in a cheerful and happy tone. Only provide the rewritten text."
     
     // Translation Section Instructions
-    const val TELUGU = "Translate the given text into Telugu language. Only provide the translated text in Telugu script."
+    const val TELUGU = "Translate the given text into Telugu language , also understand what the given text is while transforming. Only provide the translated text in Telugu script."
 
-    const val HINDI = "Translate the given text into Hindi language. Only provide the translated text in Devanagari script."
+    const val HINDI = "Translate the given text into Hindi language , also understand what the given text is while transforming. Only provide the translated text in Devanagari script."
+ 
+    const val TAMIL = "Translate the given text into Tamil language , also understand what the given text is while transforming. Only provide the translated text in Tamil script."
 
-    const val TAMIL = "Translate the given text into Tamil language. Only provide the translated text in Tamil script."
-
-    const val ENGLISH = "Translate the given text into English language. Only provide the translated text."
+    const val ENGLISH = "Translate the given text into English language , also understand what the given text is while transforming. Only provide the translated text."
 
     const val MULTI = "Translate the text as specified in the user's request. The user will provide the target language in their message (e.g., 'Translate Hello to Telugu'). Only provide the translated text in the requested language and script."
     
     // Other Section Instructions
     const val EMOJIE = "Add relevant emojis to the given text. Only provide the updated text."
 
-    const val ASK = "Answer the given question directly and clearly. Only provide the answer."
+    const val ASK = "First Understand the text and Answer the given question directly and clearly. Only provide the answer."
     
     fun getInstructionForButton(buttonTitle: String): String {
         return when (buttonTitle) {

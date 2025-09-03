@@ -31,6 +31,7 @@ import com.vishruth.key1.ime.editor.EditorRange
 import com.vishruth.key1.ime.media.emoji.EmojiSuggestionProvider
 import com.vishruth.key1.ime.nlp.han.HanShapeBasedLanguageProvider
 import com.vishruth.key1.ime.nlp.latin.LatinLanguageProvider
+import com.vishruth.key1.ime.smartbar.CandidatesDisplayMode
 import com.vishruth.key1.keyboardManager
 import com.vishruth.key1.lib.util.NetworkUtils
 import com.vishruth.key1.subtypeManager
@@ -230,10 +231,9 @@ class NlpManager(context: Context) {
             }
             internalSuggestionsGuard.withLock {
                 if (internalSuggestions.first < reqTime) {
-                    internalSuggestions = reqTime to buildList {
-                        addAll(emojiSuggestions)
-                        addAll(suggestions)
-                    }
+                    // Build suggestions list considering classic mode constraints
+                    val finalSuggestions = buildSuggestionsForDisplayMode(emojiSuggestions, suggestions)
+                    internalSuggestions = reqTime to finalSuggestions
                 }
             }
         }
@@ -243,6 +243,40 @@ class NlpManager(context: Context) {
         val reqTime = SystemClock.uptimeMillis()
         runBlocking {
             internalSuggestions = reqTime to suggestions
+        }
+    }
+
+    /**
+     * Builds the final suggestions list considering display mode constraints.
+     * In classic mode, when emojis are present, limit to 2 emoji + 1 word suggestion.
+     */
+    private fun buildSuggestionsForDisplayMode(
+        emojiSuggestions: List<SuggestionCandidate>,
+        wordSuggestions: List<SuggestionCandidate>
+    ): List<SuggestionCandidate> {
+        val isClassicMode = prefs.suggestion.displayMode.get() == CandidatesDisplayMode.CLASSIC
+        
+        return when {
+            !isClassicMode -> {
+                // For non-classic modes, use original behavior
+                buildList {
+                    addAll(emojiSuggestions)
+                    addAll(wordSuggestions)
+                }
+            }
+            emojiSuggestions.isNotEmpty() -> {
+                // Classic mode with emoji suggestions: limit to 2 emojis + 1 word
+                buildList {
+                    // Add up to 2 emoji suggestions
+                    addAll(emojiSuggestions.take(2))
+                    // Add 1 word suggestion if available
+                    wordSuggestions.firstOrNull()?.let { add(it) }
+                }
+            }
+            else -> {
+                // Classic mode without emoji suggestions: show up to 3 word suggestions
+                wordSuggestions.take(3)
+            }
         }
     }
 

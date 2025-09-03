@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import com.vishruth.key1.app.settings.theme.ColorPreferenceSerializer
 import com.vishruth.key1.app.settings.theme.DisplayKbdAfterDialogs
 import com.vishruth.key1.app.settings.theme.SnyggLevel
+import com.vishruth.key1.app.setup.MicrophonePermissionState
 import com.vishruth.key1.app.setup.NotificationPermissionState
 import com.vishruth.key1.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
 import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
@@ -462,6 +463,10 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val notificationPermissionState = enum(
             key = "internal__notification_permission_state",
             default = NotificationPermissionState.NOT_SET,
+        )
+        val microphonePermissionState = enum(
+            key = "internal__microphone_permission_state",
+            default = MicrophonePermissionState.NOT_SET,
         )
     }
 

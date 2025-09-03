@@ -121,6 +121,9 @@ android {
 
             // Add Gemini API key to BuildConfig
             buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
@@ -143,6 +146,9 @@ android {
 
             // Add Gemini API key to BuildConfig
             buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
@@ -159,6 +165,9 @@ android {
 
             // Add Gemini API key to BuildConfig
             buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")

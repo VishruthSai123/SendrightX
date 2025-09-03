@@ -64,7 +64,8 @@ Download and install the APK file on your Android device, then:
 
 ## Permissions
 
-- **Internet**: For AI-powered features and voice input
+- **Internet**: For AI-powered features and network requests
+- **Record Audio**: For voice input functionality 
 - **Vibrate**: For haptic feedback during typing
 - **Post Notifications**: For clipboard and system notifications
 

@@ -24,13 +24,23 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 
 object GeminiApiService {
-    private val API_KEY = BuildConfig.GEMINI_API_KEY
-    private const val ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    private val API_KEYS = listOf(
+        BuildConfig.GEMINI_API_KEY,
+        BuildConfig.GEMINI_API_KEY_FALLBACK_1,
+        BuildConfig.GEMINI_API_KEY_FALLBACK_2,
+        BuildConfig.GEMINI_API_KEY_FALLBACK_3
+    ).filter { it.isNotBlank() } // Only use non-empty API keys
+    
+    private var currentApiKeyIndex = 0
     private var lastRequestTime = 0L
+    private const val ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     private const val MIN_REQUEST_INTERVAL = 1000L // 1 second between requests
+    private const val MAX_RETRY_ATTEMPTS = 3
+    private const val RETRY_DELAY_MS = 2000L // 2 seconds between retries
     
     @Serializable
     data class GeminiRequest(
@@ -60,12 +70,60 @@ object GeminiApiService {
     private val json = Json { ignoreUnknownKeys = true }
     
     suspend fun transformText(inputText: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
-        try {
-            // Validate API key
-            if (API_KEY.isBlank()) {
-                return@withContext Result.failure(Exception("Gemini API key not configured. Please add GEMINI_API_KEY to local.properties"))
+        // Validate API keys
+        if (API_KEYS.isEmpty()) {
+            return@withContext Result.failure(Exception("🔑 API key not configured. Please check settings."))
+        }
+        
+        // Try all available API keys with retry logic
+        repeat(API_KEYS.size) { keyAttempt ->
+            repeat(MAX_RETRY_ATTEMPTS) { retryAttempt ->
+                val result = makeApiRequest(inputText, instruction, currentApiKeyIndex)
+                
+                result.fold(
+                    onSuccess = { return@withContext result },
+                    onFailure = { error ->
+                        val shouldRetryWithSameKey = when {
+                            error is IOException && (error.message?.contains("503") == true || 
+                                                    error.message?.contains("Service temporarily unavailable") == true ||
+                                                    error.message?.contains("500") == true ||
+                                                    error.message?.contains("502") == true ||
+                                                    error.message?.contains("504") == true ||
+                                                    error.message?.contains("timeout") == true) -> true
+                            else -> false
+                        }
+                        
+                        val shouldTryNextKey = when {
+                            error is IOException && (error.message?.contains("403") == true ||
+                                                    error.message?.contains("401") == true ||
+                                                    error.message?.contains("API key") == true) -> true
+                            else -> false
+                        }
+                        
+                        when {
+                            shouldRetryWithSameKey && retryAttempt < MAX_RETRY_ATTEMPTS - 1 -> {
+                                delay(RETRY_DELAY_MS * (retryAttempt + 1)) // Exponential backoff
+                            }
+                            shouldTryNextKey || retryAttempt == MAX_RETRY_ATTEMPTS - 1 -> {
+                                // Move to next API key
+                                currentApiKeyIndex = (currentApiKeyIndex + 1) % API_KEYS.size
+                                return@repeat // Break out of retry loop to try next key
+                            }
+                            else -> {
+                                return@withContext result // Return the error if can't retry
+                            }
+                        }
+                    }
+                )
             }
-            
+        }
+        
+        // All API keys exhausted
+        Result.failure(Exception("❌ All services unavailable. Please try again later."))
+    }
+    
+    private suspend fun makeApiRequest(inputText: String, instruction: String, apiKeyIndex: Int): Result<String> = withContext(Dispatchers.IO) {
+        try {
             // Rate limiting: ensure minimum interval between requests
             val currentTime = System.currentTimeMillis()
             val timeSinceLastRequest = currentTime - lastRequestTime
@@ -83,12 +141,14 @@ object GeminiApiService {
                 )
             )
             
-            val url = URL("$ENDPOINT?key=$API_KEY")
+            val url = URL("$ENDPOINT?key=${API_KEYS[apiKeyIndex]}")
             val connection = url.openConnection() as HttpURLConnection
             
             connection.apply {
                 requestMethod = "POST"
                 setRequestProperty("Content-Type", "application/json")
+                connectTimeout = 30000 // 30 seconds
+                readTimeout = 30000 // 30 seconds
                 doOutput = true
             }
             
@@ -106,18 +166,47 @@ object GeminiApiService {
                 if (transformedText != null) {
                     Result.success(transformedText.trim())
                 } else {
-                    Result.failure(Exception("No response from Gemini API"))
+                    Result.failure(Exception("🤔 No response received. Please try again."))
                 }
             } else if (responseCode == 429) {
                 val errorStream = connection.errorStream?.bufferedReader()?.use { it.readText() }
-                Result.failure(IOException("Rate limit exceeded. Please wait a moment and try again."))
+                Result.failure(IOException("⏳ Too many requests. Please wait a moment and try again."))
+            } else if (responseCode == 503) {
+                val errorStream = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                Result.failure(IOException("🔧 Service temporarily unavailable. Please try again later."))
+            } else if (responseCode == 500 || responseCode == 502 || responseCode == 504) {
+                val errorStream = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                Result.failure(IOException("⚠️ Service experiencing issues. Please try again in a few moments."))
+            } else if (responseCode == 403) {
+                val errorStream = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                Result.failure(IOException("🔐 Access denied. Please check your configuration."))
             } else {
                 val errorStream = connection.errorStream?.bufferedReader()?.use { it.readText() }
-                Result.failure(IOException("HTTP $responseCode: $errorStream"))
+                Result.failure(IOException("❌ Service error. Please try again later."))
             }
+        } catch (e: SocketTimeoutException) {
+            Result.failure(IOException("🕰️ Request timeout. Please check your connection and try again."))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(IOException("❌ Something went wrong. Please try again."))
         }
+    }
+    
+    /**
+     * Get information about the current API key configuration
+     */
+    fun getApiKeyInfo(): String {
+        return when {
+            API_KEYS.isEmpty() -> "No API keys configured"
+            API_KEYS.size == 1 -> "1 API key configured (no fallbacks)"
+            else -> "${API_KEYS.size} API keys configured (1 primary + ${API_KEYS.size - 1} fallbacks)"
+        }
+    }
+    
+    /**
+     * Reset to primary API key (for testing purposes)
+     */
+    fun resetToPrimaryKey() {
+        currentApiKeyIndex = 0
     }
     
     private fun buildPrompt(inputText: String, instruction: String): String {
