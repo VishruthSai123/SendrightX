@@ -8,13 +8,13 @@ sdk.dir=YOUR_ANDROID_SDK_PATH
 # Get your API key from: https://makersuite.google.com/app/apikey
 
 # Primary API Key (Required)
-GEMINI_API_KEY=AIzaSyAy2qdSXZR8l_M3-a7iptbqQSNmTP-fprA
+GEMINI_API_KEY=your_primary_api_key_here
 
 # Fallback API Keys (Optional - for redundancy)
 # Add additional API keys as backups in case primary fails
-GEMINI_API_KEY_FALLBACK_1=AIzaSyD3yTkQU3ETvK_GxY_yrxgxymxv5W71zDk
-GEMINI_API_KEY_FALLBACK_2=AIzaSyDXuCbpHvoSAaqsZQbbjdS9HONmxSyYFog
-GEMINI_API_KEY_FALLBACK_3=AIzaSyCHkzE8rjaSJkuiOXfrlLdBCB9u0qi50HI
+GEMINI_API_KEY_FALLBACK_1=your_backup_key_1_here
+GEMINI_API_KEY_FALLBACK_2=your_backup_key_2_here
+GEMINI_API_KEY_FALLBACK_3=your_backup_key_3_here
 
 # Note: You can create multiple API keys from the same Google account
 # or use API keys from different Google accounts for better redundancy
