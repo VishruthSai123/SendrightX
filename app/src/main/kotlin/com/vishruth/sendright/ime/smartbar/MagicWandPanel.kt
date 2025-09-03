@@ -253,12 +253,12 @@ private suspend fun handleMagicWandButtonClick(
         }
         
         if (allText.isBlank()) {
-            context.showShortToast("✏️ Please type some text first")
+            context.showShortToast("Please type some text first")
             return
         }
         
         // Show processing message
-        context.showShortToast("🧠 Processing...")
+        context.showShortToast("Processing...")
         
         // Get instruction for the button
         val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
@@ -277,12 +277,12 @@ private suspend fun handleMagicWandButtonClick(
             editorInstance.setSelection(0, totalTextLength)
             editorInstance.deleteSelectedText()
             editorInstance.commitText(transformedText)
-            context.showShortToast("✨ Text transformed!")
+            context.showShortToast("Text transformed!")
         }.onFailure { error ->
-            context.showShortToast(error.message ?: "❌ Something went wrong")
+            context.showShortToast(error.message ?: "Something went wrong")
         }
         
     } catch (e: Exception) {
-        context.showShortToast("❌ Something went wrong. Please try again.")
+        context.showShortToast("Something went wrong. Please try again.")
     }
 }
