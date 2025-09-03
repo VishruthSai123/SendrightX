@@ -213,13 +213,16 @@ class NlpManager(context: Context) {
             }
             val suggestions = when {
                 emojiSuggestions.isNotEmpty() && prefs.emoji.suggestionType.get().prefix.isNotEmpty() -> {
+                    // When emoji suggestions are available with prefix (like ":smile"), 
+                    // don't show word suggestions to avoid confusion
                     emptyList()
                 }
                 else -> {
+                    // Allow word suggestions when no emoji suggestions or when using inline text mode
                     getSuggestionProvider(subtype).suggest(
                         subtype = subtype,
                         content = content,
-                        maxCandidateCount = 8,
+                        maxCandidateCount = if (emojiSuggestions.isNotEmpty()) 5 else 8, // Leave space for emoji suggestions
                         allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
                     )

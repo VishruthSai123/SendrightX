@@ -260,7 +260,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionType = enum(
             key = "emoji__suggestion_type",
-            default = EmojiSuggestionType.LEADING_COLON,
+            default = EmojiSuggestionType.INLINE_TEXT,
         )
         val suggestionUpdateHistory = boolean(
             key = "emoji__suggestion_update_history",

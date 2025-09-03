@@ -19,7 +19,7 @@ package com.vishruth.key1.ime.smartbar
 object MagicWandInstructions {
     
     // Advanced Section Instructions
-    const val REWRITE = "Rewrite the given text with better clarity and flow. Only provide the rewritten text."
+    const val REWRITE = "Fix any grammar, spelling, and punctuation errors in the given text while preserving the original meaning, tone, and style. Improve sentence structure for better flow and readability without making the text more verbose or changing the language. Only correct mistakes and enhance clarity minimally. Only provide the corrected text."
 
     const val SUMMARISE = "Summarise the given text briefly, keeping only the key points. Only provide the summary."
 
