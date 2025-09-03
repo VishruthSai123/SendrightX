@@ -26,6 +26,7 @@
 
         <application
         android:name=".SendRightApplication"
+        android:label="@string/sendright_app_name"
         android:allowBackup="false"
         android:requestLegacyExternalStorage="true"
         android:theme="@style/SendRightAppTheme.Splash"
