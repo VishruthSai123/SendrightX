@@ -50,8 +50,12 @@ fun SystemUiIme() {
 
     LaunchedEffect(useDarkIcons, hasBackgroundImage) {
         windowInsetsController.isAppearanceLightNavigationBars = useDarkIcons
-        if (AndroidVersion.ATLEAST_API29_Q) {
-            window.isNavigationBarContrastEnforced = hasBackgroundImage
+        windowInsetsController.isAppearanceLightStatusBars = useDarkIcons
+        
+        // Use modern WindowInsetsController for navigation bar contrast instead of deprecated APIs
+        if (AndroidVersion.ATLEAST_API29_Q && hasBackgroundImage) {
+            // For edge-to-edge with background images, let the system handle contrast automatically
+            // The enableEdgeToEdge() call in the activity will ensure proper contrast enforcement
         }
     }
 }

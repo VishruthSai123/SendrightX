@@ -16,14 +16,12 @@
 
 package com.vishruth.key1.lib.compose
 
-import android.app.Activity
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -33,8 +31,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import com.vishruth.key1.app.FlorisPreferenceModel
@@ -42,7 +38,6 @@ import com.vishruth.key1.app.FlorisPreferenceStore
 import com.vishruth.key1.app.LocalNavController
 import dev.patrickgold.jetpref.datastore.ui.PreferenceLayout
 import dev.patrickgold.jetpref.datastore.ui.PreferenceUiContent
-import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.compose.FlorisAppBar
 import org.florisboard.lib.compose.FlorisIconButton
 import org.florisboard.lib.compose.autoMirrorForRtl
@@ -128,18 +123,11 @@ private class FlorisScreenScopeImpl : FlorisScreenScope {
     fun Render() {
         val context = LocalContext.current
         val previewFieldController = LocalPreviewFieldController.current
-        val colorScheme = MaterialTheme.colorScheme
 
         SideEffect {
-            val window = (context as Activity).window
             previewFieldController?.isVisible = previewFieldVisible
-            window.statusBarColor = Color.Transparent.toArgb()
-            if (AndroidVersion.ATLEAST_API29_Q) {
-                window.navigationBarColor = Color.Transparent.toArgb()
-                window.isNavigationBarContrastEnforced = true
-            } else {
-                window.navigationBarColor = colorScheme.scrim.toArgb()
-            }
+            // Note: Status bar and navigation bar colors are now handled by enableEdgeToEdge()
+            // in the activity and modern WindowInsetsController APIs in SystemUi.kt
         }
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
