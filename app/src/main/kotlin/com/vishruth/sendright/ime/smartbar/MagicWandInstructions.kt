@@ -65,7 +65,7 @@ object MagicWandInstructions {
     // Other Section Instructions
     const val EMOJIE = "Add relevant emojis to the given text. Only provide the updated text."
 
-    const val ASK = "First Understand the text and Answer the given question directly and clearly. Only provide the answer."
+    const val CHAT = "You are an AI assistant having a direct conversation. Respond naturally and directly to the user's input without any prefixes or extra text. Provide helpful, concise responses."
     
     fun getInstructionForButton(buttonTitle: String): String {
         return when (buttonTitle) {
@@ -90,7 +90,7 @@ object MagicWandInstructions {
             "English" -> ENGLISH
             "Multi" -> MULTI
             "Emojie" -> EMOJIE
-            "Ask" -> ASK
+            "Chat" -> CHAT
             else -> "Transform the following text appropriately."
         }
     }

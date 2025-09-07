@@ -105,7 +105,7 @@ fun MagicWandPanel(
         ),
         MagicWandSection(
             title = "Other",
-            buttons = listOf("Emojie", "Ask"),
+            buttons = listOf("Emojie", "Chat"),
             isExpandable = true,
             isExpanded = expandedSections["Other"] ?: false
         )
@@ -244,6 +244,51 @@ private suspend fun handleMagicWandButtonClick(
     context: android.content.Context
 ) {
     try {
+        // Special handling for Chat button
+        if (buttonTitle == "Chat") {
+            // Get selected text or current word
+            val activeContent = editorInstance.activeContent
+            val selectedText = activeContent.selectedText
+            val textToProcess = if (selectedText.isNotBlank()) {
+                selectedText
+            } else {
+                // If no text selected, get the current word
+                editorInstance.getCurrentWord()
+            }
+            
+            if (textToProcess.isBlank()) {
+                context.showShortToast("Please select some text or position cursor in a word to chat about")
+                return
+            }
+            
+            // Show processing message
+            context.showShortToast("Thinking...")
+            
+            // Get instruction for chat
+            val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
+            
+            // Call Gemini API with chat instruction
+            val result = GeminiApiService.transformText(textToProcess, instruction)
+            
+            result.onSuccess { responseText ->
+                // Replace selected text with chat response
+                if (selectedText.isNotBlank()) {
+                    editorInstance.deleteSelectedText()
+                } else {
+                    // If no selection, select current word first
+                    editorInstance.selectCurrentWord()
+                    editorInstance.deleteSelectedText()
+                }
+                editorInstance.commitText(responseText)
+                context.showShortToast("Response received!")
+            }.onFailure { error ->
+                context.showShortToast(error.message ?: "Something went wrong")
+            }
+            
+            return
+        }
+        
+        // Handle all other buttons with existing logic
         // Get all text from the input field
         val activeContent = editorInstance.activeContent
         val allText = buildString {
