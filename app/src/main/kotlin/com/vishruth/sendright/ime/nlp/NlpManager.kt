@@ -311,6 +311,7 @@ class NlpManager(context: Context) {
     }
 
     fun getListOfWords(subtype: Subtype): List<String> {
+        // flogDebug { "NlpManager.getListOfWords called for subtype: ${subtype.primaryLocale}" }
         return runBlocking { getSuggestionProvider(subtype).getListOfWords(subtype) }
     }
 

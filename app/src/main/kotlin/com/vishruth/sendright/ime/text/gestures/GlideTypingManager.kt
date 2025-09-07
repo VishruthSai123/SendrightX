@@ -49,6 +49,7 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
     private var lastTime = System.currentTimeMillis()
 
     override fun onGlideComplete(data: GlideTypingGesture.Detector.PointerData) {
+        // flogDebug { "onGlideComplete called" }
         updateSuggestionsAsync(MAX_SUGGESTION_COUNT, true) {
             glideTypingClassifier.clear()
         }
@@ -80,6 +81,15 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
     }
 
     /**
+     * Refresh the word data in the internal gesture classifier
+     */
+    fun refreshWordData() {
+        // flogDebug { "GlideTypingManager.refreshWordData() called" }
+        glideTypingClassifier.setWordData(subtypeManager.activeSubtype, true)
+        // flogDebug { "GlideTypingManager.refreshWordData() completed" }
+    }
+
+    /**
      * Asks gesture classifier for suggestions and then passes that on to the smartbar.
      * Also commits the most confident suggestion if [commit] is set. All happens on an async executor.
      * NB: only fetches [MAX_SUGGESTION_COUNT] suggestions.
@@ -88,13 +98,17 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
      * were successfully set.
      */
     private fun updateSuggestionsAsync(maxSuggestionsToShow: Int, commit: Boolean, callback: (Boolean) -> Unit) {
+        // flogDebug { "updateSuggestionsAsync called with maxSuggestionsToShow: $maxSuggestionsToShow, commit: $commit" }
         if (!glideTypingClassifier.ready) {
+            // flogDebug { "Glide typing classifier not ready" }
             callback.invoke(false)
             return
         }
 
         scope.launch(Dispatchers.Default) {
+            // flogDebug { "Getting suggestions from glide typing classifier" }
             val suggestions = glideTypingClassifier.getSuggestions(MAX_SUGGESTION_COUNT, true)
+            // flogDebug { "Got ${suggestions.size} suggestions from classifier" }
 
             withContext(Dispatchers.Main) {
                 val suggestionList = buildList {
@@ -105,6 +119,7 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
                         add(WordSuggestionCandidate(it, confidence = 1.0))
                     }
                 }
+                // flogDebug { "Sending ${suggestionList.size} suggestions to NLP manager" }
 
                 nlpManager.suggestDirectly(suggestionList)
                 if (commit && suggestions.isNotEmpty()) {

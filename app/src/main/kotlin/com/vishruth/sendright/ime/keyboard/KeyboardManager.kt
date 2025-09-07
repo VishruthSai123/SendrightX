@@ -31,6 +31,7 @@ import com.vishruth.key1.appContext
 import com.vishruth.key1.clipboardManager
 import com.vishruth.key1.editorInstance
 import com.vishruth.key1.extensionManager
+import com.vishruth.key1.glideTypingManager
 import com.vishruth.key1.ime.ImeUiMode
 import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
 import com.vishruth.key1.ime.core.Subtype
@@ -65,6 +66,16 @@ import com.vishruth.key1.lib.util.InputMethodUtils
 import com.vishruth.key1.nlpManager
 import com.vishruth.key1.subtypeManager
 import java.lang.ref.WeakReference
+
+// Autosave feature imports
+import com.vishruth.key1.ime.dictionary.DictionaryManager
+import com.vishruth.key1.ime.dictionary.FREQUENCY_DEFAULT
+import com.vishruth.key1.ime.dictionary.FREQUENCY_MAX
+import com.vishruth.key1.ime.dictionary.UserDictionaryEntry
+import com.vishruth.key1.ime.nlp.latin.LatinLanguageProvider
+import com.vishruth.key1.ime.text.gestures.StatisticalGlideTypingClassifier
+import com.vishruth.key1.lib.devtools.flogDebug
+import org.florisboard.lib.kotlin.guardedByLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -555,6 +566,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private fun handleSpace(data: KeyData) {
         val candidate = nlpManager.getAutoCommitCandidate()
         candidate?.let { commitCandidate(it) }
+        
+        // Autosave the previous word when space is pressed (similar to Gboard)
+        autosavePreviousWord()
+        
         if (prefs.keyboard.spaceBarSwitchesToCharacters.get()) {
             when (activeState.keyboardMode) {
                 KeyboardMode.NUMERIC_ADVANCED,
@@ -579,6 +594,100 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         if (!subtypeManager.activeSubtype.primaryLocale.supportsAutoSpace &&
                 candidate != null) { /* Do nothing */ } else {
             editorInstance.commitText(KeyCode.SPACE.toChar().toString())
+        }
+    }
+
+    /**
+     * Autosaves the previous word when space is pressed, similar to Gboard functionality.
+     * This captures words that users type which are not in the static dictionary.
+     */
+    private fun autosavePreviousWord() {
+        scope.launch {
+            try {
+                // Get the current editor content
+                val content = editorInstance.activeContent
+                
+                // Get text before cursor to extract the last word
+                // We want to get the text before the space was pressed, so we get 100 characters before cursor
+                // and then extract the last word from that text
+                val textBeforeCursor = editorInstance.run { content.getTextBeforeCursor(100) }
+                
+                // Extract the last word (everything after the last space or from the beginning if no space)
+                val lastWord = if (textBeforeCursor.isNotEmpty()) {
+                    // Split by whitespace and get the last non-empty part
+                    val words = textBeforeCursor.trim().split("\\s+".toRegex())
+                    words.lastOrNull { it.isNotEmpty() }?.trim() ?: ""
+                } else {
+                    ""
+                }
+                
+                flogDebug { "Autosave debug - textBeforeCursor: '$textBeforeCursor', lastWord: '$lastWord'" }
+                
+                // Only save non-empty words that contain at least one letter
+                if (lastWord.isNotEmpty() && lastWord.any { it.isLetter() }) {
+                    // Get the dictionary manager and check if word exists in static dictionary
+                    val dictionaryManager = DictionaryManager.default()
+                    dictionaryManager.loadUserDictionariesIfNecessary()
+                    
+                    // Check if the word already exists in the static dictionary by getting the list of words
+                    val staticWords = nlpManager.getListOfWords(subtypeManager.activeSubtype)
+                    flogDebug { "Static words count: ${staticWords.size}" }
+                    flogDebug { "Sample static words: ${staticWords.take(10)}" }
+                    
+                    val isAlreadyInStaticDict = staticWords.contains(lastWord) || staticWords.contains(lastWord.lowercase())
+                    
+                    flogDebug { "Autosave debug - isAlreadyInStaticDict: $isAlreadyInStaticDict" }
+                    
+                    // Only save words that are not already in our static dictionary
+                    if (!isAlreadyInStaticDict) {
+                        val userDictionaryDao = dictionaryManager.florisUserDictionaryDao()
+                        
+                        flogDebug { "UserDictionaryDao in autosave: $userDictionaryDao" }
+                        
+                        // Check if the word already exists in the user dictionary
+                        val existingEntries = userDictionaryDao?.queryExact(lastWord, subtypeManager.activeSubtype.primaryLocale)
+                        flogDebug { "Existing entries for '$lastWord': $existingEntries" }
+                        
+                        if (existingEntries != null && existingEntries.isEmpty()) {
+                            // Word doesn't exist in user dictionary, so add it with a higher frequency
+                            val entry = UserDictionaryEntry(
+                                id = 0, // 0 means auto-generate ID
+                                word = lastWord,
+                                freq = kotlin.math.min(FREQUENCY_DEFAULT + 20, FREQUENCY_MAX), // Boost frequency for recently used words
+                                locale = subtypeManager.activeSubtype.primaryLocale.localeTag(),
+                                shortcut = null
+                            )
+                            userDictionaryDao.insert(entry)
+                            flogDebug { "Autosaved previous word to user dictionary: $lastWord with boosted frequency" }
+                            
+                            // Force refresh the glide typing classifier to include the new word
+                            try {
+                                // Get the glide typing manager from the application context
+                                val glideTypingManager = appContext.glideTypingManager
+                                // Force refresh the word data in the classifier
+                                // flogDebug { "About to refresh glide typing classifier for autosaved word: $lastWord" }
+                                glideTypingManager.value.refreshWordData()
+                                // flogDebug { "Forced refresh of glide typing classifier for word: $lastWord" }
+                            } catch (e: Exception) {
+                                // flogDebug { "Failed to force refresh glide typing classifier: ${e.message}" }
+                                e.printStackTrace()
+                            }
+                        } else if (existingEntries != null && existingEntries.isNotEmpty()) {
+                            // Word exists, log that it already exists
+                            flogDebug { "Previous word already exists in user dictionary: $lastWord" }
+                        } else {
+                            flogDebug { "User dictionary DAO is null or query failed" }
+                        }
+                    } else {
+                        flogDebug { "Word already exists in static dictionary: $lastWord" }
+                    }
+                } else {
+                    flogDebug { "Word is empty or contains no letters: '$lastWord'" }
+                }
+            } catch (e: Exception) {
+                flogDebug { "Failed to autosave previous word: ${e.message}" }
+                e.printStackTrace()
+            }
         }
     }
 

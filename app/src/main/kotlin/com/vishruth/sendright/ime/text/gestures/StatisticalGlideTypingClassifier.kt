@@ -24,6 +24,7 @@ import com.vishruth.key1.ime.core.Subtype
 import com.vishruth.key1.ime.keyboard.KeyData
 import com.vishruth.key1.ime.text.key.KeyCode
 import com.vishruth.key1.ime.text.keyboard.TextKey
+import com.vishruth.key1.lib.devtools.flogDebug
 import com.vishruth.key1.nlpManager
 import java.text.Normalizer
 import java.util.*
@@ -57,7 +58,11 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
     private var layoutSubtype: Subtype? = null
     private var currentSubtype: Subtype? = null
     val ready: Boolean
-        get() = currentSubtype == layoutSubtype && wordDataSubtype == layoutSubtype && wordDataSubtype != null
+        get() {
+            val isReady = currentSubtype == layoutSubtype && wordDataSubtype == layoutSubtype && wordDataSubtype != null
+            // flogDebug { "ready check: currentSubtype=${currentSubtype?.primaryLocale}, layoutSubtype=${layoutSubtype?.primaryLocale}, wordDataSubtype=${wordDataSubtype?.primaryLocale}, result=$isReady" }
+            return isReady
+        }
     private val prunerCache = LruCache<Subtype, Pruner>(PRUNER_CACHE_SIZE)
 
     /**
@@ -100,31 +105,39 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
         /**
          * For multiple subtypes, the pruner is cached.
          */
-        private const val PRUNER_CACHE_SIZE = 5
+        private const val PRUNER_CACHE_SIZE = 10  // Increased from 5 to 10
     }
 
     override fun addGesturePoint(position: GlideTypingGesture.Detector.Position) {
+        // flogDebug { "addGesturePoint called with position: (${position.x}, ${position.y})" }
         if (!gesture.isEmpty) {
             val dx = gesture.getLastX() - position.x
             val dy = gesture.getLastY() - position.y
 
             if (dx * dx + dy * dy > distanceThresholdSquared) {
+                // flogDebug { "Adding point to gesture" }
                 gesture.addPoint(position.x, position.y)
+            } else {
+                // flogDebug { "Point too close to previous point, skipping" }
             }
         } else {
+            // flogDebug { "Adding first point to gesture" }
             gesture.addPoint(position.x, position.y)
         }
     }
 
     override fun setLayout(keyViews: List<TextKey>, subtype: Subtype) {
+        // flogDebug { "setLayout called with ${keyViews.size} keys and subtype: ${subtype.primaryLocale}" }
         setWordData(subtype)
         // stop duplicate calls
         if (layoutSubtype == subtype && keys == keyViews) {
+            // flogDebug { "Skipping setLayout - same subtype and keys" }
             return
         }
 
         // if only layout changed but not subtype
         val layoutChanged = layoutSubtype == subtype
+        // flogDebug { "layoutChanged: $layoutChanged" }
 
         keysByCharacter.clear()
         keys.clear()
@@ -136,25 +149,50 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
         distanceThresholdSquared = (keyViews.first().visibleBounds.width / 4).toInt()
         distanceThresholdSquared *= distanceThresholdSquared
 
+        // flogDebug { "wordDataSubtype: ${wordDataSubtype?.primaryLocale}, layoutSubtype: ${layoutSubtype?.primaryLocale}" }
         if (
             (wordDataSubtype == layoutSubtype)
             || layoutChanged // should force a re-initialize
         ) {
+            // flogDebug { "Calling initializePruner with layoutChanged=$layoutChanged" }
             initializePruner(layoutChanged)
         }
+        // flogDebug { "setLayout completed" }
     }
 
     override fun setWordData(subtype: Subtype) {
+        // flogDebug { "setWordData called without forceRefresh" }
+        setWordData(subtype, false)
+    }
+
+    /**
+     * Set word data for the classifier
+     *
+     * @param subtype The subtype to get words for
+     * @param forceRefresh If true, forces a refresh even if the subtype is the same
+     */
+    fun setWordData(subtype: Subtype, forceRefresh: Boolean) {
         // stop duplicate calls..
-        if (wordDataSubtype == subtype) {
+        if (!forceRefresh && wordDataSubtype == subtype) {
+            // flogDebug { "Skipping setWordData - not force refresh and same subtype" }
             return
         }
 
+        // flogDebug { "setWordData called with forceRefresh=$forceRefresh" }
         this.words = nlpManager.getListOfWords(subtype)
+        
+        // Debug log to see how many words we're getting
+        // flogDebug { "StatisticalGlideTypingClassifier loaded ${this.words.size} words for subtype ${subtype.primaryLocale}" }
+        // Log first 10 words for debugging
+        // flogDebug { "First 10 words: ${this.words.take(10)}" }
 
         this.wordDataSubtype = subtype
         if (wordDataSubtype == layoutSubtype) {
-            initializePruner(false)
+            // flogDebug { "Initializing pruner with forceRefresh=$forceRefresh" }
+            initializePruner(forceRefresh)
+        } else {
+            // flogDebug { "Not initializing pruner - wordDataSubtype != layoutSubtype" }
+            // flogDebug { "wordDataSubtype: $wordDataSubtype, layoutSubtype: $layoutSubtype" }
         }
     }
 
@@ -164,20 +202,35 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
      */
     private fun initializePruner(invalidateCache: Boolean) {
         val currentSubtype = this.layoutSubtype!!
+        // flogDebug { "initializePruner called with invalidateCache=$invalidateCache for subtype: ${currentSubtype.primaryLocale}" }
         val cached = when {
-            invalidateCache -> null
-            else -> prunerCache.get(currentSubtype)
+            invalidateCache -> {
+                // Remove the cached pruner when forcing refresh
+                // flogDebug { "Removing cached pruner for subtype: ${currentSubtype.primaryLocale}" }
+                prunerCache.remove(currentSubtype)
+                null
+            }
+            else -> {
+                val cachedPruner = prunerCache.get(currentSubtype)
+                // flogDebug { "Cache lookup for subtype ${currentSubtype.primaryLocale}: ${if (cachedPruner != null) "HIT" else "MISS"}" }
+                cachedPruner
+            }
         }
         if (cached == null) {
+            // flogDebug { "Creating new Pruner for subtype: ${currentSubtype.primaryLocale}" }
             this.pruner = Pruner(PRUNING_LENGTH_THRESHOLD, this.words, keysByCharacter)
+            // flogDebug { "Putting new Pruner in cache for subtype: ${currentSubtype.primaryLocale}" }
             prunerCache.put(currentSubtype, this.pruner)
         } else {
+            // flogDebug { "Using cached Pruner for subtype: ${currentSubtype.primaryLocale}" }
             this.pruner = cached
         }
         this.currentSubtype = currentSubtype
+        // flogDebug { "initializePruner completed for subtype: ${currentSubtype.primaryLocale}" }
     }
 
     override fun initGestureFromPointerData(pointerData: GlideTypingGesture.Detector.PointerData) {
+        // flogDebug { "initGestureFromPointerData called with ${pointerData.positions.size} positions" }
         for (position in pointerData.positions) {
             addGesturePoint(position)
         }
@@ -185,31 +238,43 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
 
     private val lruSuggestionCache = LruCache<Pair<Gesture, Int>, List<String>>(SUGGESTION_CACHE_SIZE)
     override fun getSuggestions(maxSuggestionCount: Int, gestureCompleted: Boolean): List<String> {
+        // flogDebug { "getSuggestions called with maxSuggestionCount: $maxSuggestionCount, gestureCompleted: $gestureCompleted" }
         return when (val cached = lruSuggestionCache.get(Pair(this.gesture, maxSuggestionCount))) {
             null -> {
+                // flogDebug { "No cached suggestions found, calculating new ones" }
                 val suggestions = unCachedGetSuggestions(maxSuggestionCount)
                 lruSuggestionCache.put(Pair(this.gesture.clone(), maxSuggestionCount), suggestions)
 
                 suggestions
             }
             else -> {
+                // flogDebug { "Returning cached suggestions" }
                 cached
             }
         }
     }
 
     private fun unCachedGetSuggestions(maxSuggestionCount: Int): List<String> {
+        // flogDebug { "unCachedGetSuggestions called with maxSuggestionCount: $maxSuggestionCount" }
         val candidates = arrayListOf<String>()
         val candidateWeights = arrayListOf<Float>()
         val key = keys.firstOrNull() ?: return listOf()
         val radius = min(key.visibleBounds.height, key.visibleBounds.width)
+        // flogDebug { "Pruning by extremities" }
         var remainingWords = pruner.pruneByExtremities(gesture, this.keys)
+        // flogDebug { "After pruning by extremities, ${remainingWords.size} words remain" }
         val userGesture = gesture.resample(SAMPLING_POINTS)
         val normalizedUserGesture: Gesture = userGesture.normalizeByBoxSide()
+        // flogDebug { "Pruning by length" }
         remainingWords = pruner.pruneByLength(gesture, remainingWords, keysByCharacter, keys)
+        // flogDebug { "After pruning by length, ${remainingWords.size} words remain" }
 
         for (i in remainingWords.indices) {
             val word = remainingWords[i]
+            // Log first 10 words for debugging
+            if (i < 10) {
+                // flogDebug { "Processing word: $word" }
+            }
             val idealGestures = Gesture.generateIdealGestures(word, keysByCharacter)
 
             for (idealGesture in idealGestures) {
@@ -247,10 +312,12 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
             }
         }
 
+        // flogDebug { "Returning ${candidates.size} candidates" }
         return candidates
     }
 
     override fun clear() {
+        // flogDebug { "clear called" }
         gesture.clear()
     }
 
@@ -301,6 +368,19 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
         /** A tree that provides fast access to words based on their first and last letter.  */
         private val wordTree = Collections.synchronizedMap(HashMap<Pair<Int, Int>, ArrayList<String>>())
 
+        init {
+            // flogDebug { "Pruner initialized with ${words.size} words" }
+            synchronized(wordTree) {
+                for (word in words) {
+                    val keyPair = getFirstKeyLastKey(word, keysByCharacter)
+                    keyPair?.let {
+                        wordTree.getOrPut(keyPair) { arrayListOf() }.add(word)
+                    }
+                }
+                // flogDebug { "Pruner wordTree built with ${wordTree.size} entries" }
+            }
+        }
+
         /**
          * Finds the words whose start and end letter are closest to the start and end points of the
          * user gesture.
@@ -313,6 +393,7 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
             userGesture: Gesture,
             keys: Iterable<TextKey>,
         ): ArrayList<String> {
+            // flogDebug { "Pruner.pruneByExtremities called" }
             val remainingWords = ArrayList<String>()
             val startX = userGesture.getFirstX()
             val startY = userGesture.getFirstY()
@@ -320,15 +401,18 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
             val endY = userGesture.getLastY()
             val startKeys = findNClosestKeys(startX, startY, 2, keys)
             val endKeys = findNClosestKeys(endX, endY, 2, keys)
+            // flogDebug { "Start keys: $startKeys, End keys: $endKeys" }
             for (startKey in startKeys) {
                 for (endKey in endKeys) {
                     val keyPair = Pair(startKey, endKey)
                     val wordsForKeys = synchronized(wordTree) { wordTree[keyPair] }
                     if (wordsForKeys != null) {
+                        // flogDebug { "Found ${wordsForKeys.size} words for key pair ($startKey, $endKey)" }
                         remainingWords.addAll(wordsForKeys)
                     }
                 }
             }
+            // flogDebug { "Pruner.pruneByExtremities returning ${remainingWords.size} words" }
             return remainingWords
         }
 
@@ -346,20 +430,27 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
             keysByCharacter: SparseArrayCompat<TextKey>,
             keys: List<TextKey>,
         ): ArrayList<String> {
+            // flogDebug { "Pruner.pruneByLength called with ${words.size} words" }
             val remainingWords = ArrayList<String>()
 
             val key = keys.firstOrNull() ?: return arrayListOf()
             val radius = min(key.visibleBounds.height, key.visibleBounds.width)
             val userLength = userGesture.getLength()
+            // flogDebug { "User gesture length: $userLength, Radius: $radius" }
             for (word in words) {
                 val idealGestures = Gesture.generateIdealGestures(word, keysByCharacter)
                 for (idealGesture in idealGestures) {
                     val wordIdealLength = getCachedIdealLength(word, idealGesture)
-                    if (abs(userLength - wordIdealLength) < lengthThreshold * radius) {
+                    val lengthDiff = abs(userLength - wordIdealLength)
+                    val threshold = lengthThreshold * radius
+                    // flogDebug { "Word: $word, Ideal length: $wordIdealLength, Length diff: $lengthDiff, Threshold: $threshold" }
+                    if (lengthDiff < threshold) {
                         remainingWords.add(word)
+                        // flogDebug { "Word $word passed length pruning" }
                     }
                 }
             }
+            // flogDebug { "Pruner.pruneByLength returning ${remainingWords.size} words" }
             return remainingWords
         }
 
@@ -419,17 +510,6 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
 
                 return keyDistances.entries.sortedWith { c1, c2 -> c1.value.compareTo(c2.value) }.take(n)
                     .map { it.key.baseCode() }
-            }
-        }
-
-        init {
-            synchronized(wordTree) {
-                for (word in words) {
-                    val keyPair = getFirstKeyLastKey(word, keysByCharacter)
-                    keyPair?.let {
-                        wordTree.getOrPut(keyPair) { arrayListOf() }.add(word)
-                    }
-                }
             }
         }
     }
