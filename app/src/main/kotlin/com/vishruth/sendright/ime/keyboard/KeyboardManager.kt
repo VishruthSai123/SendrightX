@@ -550,7 +550,11 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      */
     fun handleHardwareKeyboardSpace() {
         val candidate = nlpManager.getAutoCommitCandidate()
-        candidate?.let { commitCandidate(it) }
+        // Only auto-commit if the confidence is high enough (above 0.8)
+        // This prevents drastic word changes when the user just wants to type normally
+        if (candidate != null && candidate.confidence > 0.8) {
+            commitCandidate(candidate)
+        }
         // Skip handling changing to characters keyboard and double space periods
         // TODO: this is whether we commit space after selecting candidate. Should be determined by SuggestionProvider
         if (!subtypeManager.activeSubtype.primaryLocale.supportsAutoSpace &&
@@ -565,7 +569,12 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      */
     private fun handleSpace(data: KeyData) {
         val candidate = nlpManager.getAutoCommitCandidate()
-        candidate?.let { commitCandidate(it) }
+        
+        // Only auto-commit if the confidence is high enough (above 0.8)
+        // This prevents drastic word changes when the user just wants to type normally
+        if (candidate != null && candidate.confidence > 0.8) {
+            commitCandidate(candidate)
+        }
         
         // Autosave the previous word when space is pressed (similar to Gboard)
         autosavePreviousWord()
@@ -1048,7 +1057,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.VIEW_SYMBOLS2 -> activeState.keyboardMode = KeyboardMode.SYMBOLS2
             else -> {
                 if (activeState.imeUiMode == ImeUiMode.MEDIA) {
-                    nlpManager.getAutoCommitCandidate()?.let { commitCandidate(it) }
+                    val candidate = nlpManager.getAutoCommitCandidate()
+                    if (candidate != null && candidate.confidence > 0.8) {
+                        commitCandidate(candidate)
+                    }
                     editorInstance.commitText(data.asString(isForDisplay = false))
                     return@batchEdit
                 }
@@ -1074,7 +1086,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                         KeyType.CHARACTER, KeyType.NUMERIC ->{
                             val text = data.asString(isForDisplay = false)
                             if (!UCharacter.isUAlphabetic(UCharacter.codePointAt(text, 0))) {
-                                nlpManager.getAutoCommitCandidate()?.let { commitCandidate(it) }
+                                val candidate = nlpManager.getAutoCommitCandidate()
+                                if (candidate != null && candidate.confidence > 0.8) {
+                                    commitCandidate(candidate)
+                                }
                             }
                             editorInstance.commitChar(text)
                         }

@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.vishruth.key1.app.FlorisPreferenceStore
 import com.vishruth.key1.ime.nlp.ClipboardSuggestionCandidate
+import com.vishruth.key1.ime.nlp.EmojiSuggestionCandidate
 import com.vishruth.key1.ime.nlp.SuggestionCandidate
 import com.vishruth.key1.ime.theme.FlorisImeUi
 import com.vishruth.key1.keyboardManager
@@ -195,8 +196,16 @@ private fun CandidateItem(
                 SnyggIcon(imageVector = candidate.icon!!)
             }
         }
+        // Calculate weight based on candidate type for CLASSIC mode
+        val weightValue = if (displayMode == CandidatesDisplayMode.CLASSIC) {
+            // Emojis take 1 column, words take 2 columns in 3-column layout
+            if (candidate is EmojiSuggestionCandidate) 1f else 2f
+        } else {
+            1f
+        }
+        
         SnyggColumn(
-            modifier = if (displayMode == CandidatesDisplayMode.CLASSIC) Modifier.weight(1f) else Modifier,
+            modifier = if (displayMode == CandidatesDisplayMode.CLASSIC) Modifier.weight(weightValue) else Modifier,
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {

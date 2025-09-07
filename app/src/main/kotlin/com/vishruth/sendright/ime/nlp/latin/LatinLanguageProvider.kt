@@ -211,7 +211,7 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                 wordLower == composingText -> {
                     exactMatches.add(WordSuggestionCandidate(
                         text = word,
-                        confidence = confidence,
+                        confidence = confidence * 0.9, // Reduced from 1.0 to 0.9 to be more conservative
                         isEligibleForAutoCommit = true,
                         sourceProvider = this@LatinLanguageProvider,
                     ))
