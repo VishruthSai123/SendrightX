@@ -17,6 +17,7 @@
 package com.vishruth.key1.ime.text.gestures
 
 import android.content.Context
+import android.os.Build
 import androidx.collection.LruCache
 import androidx.collection.SparseArrayCompat
 import androidx.collection.set
@@ -26,6 +27,7 @@ import com.vishruth.key1.ime.text.key.KeyCode
 import com.vishruth.key1.ime.text.keyboard.TextKey
 import com.vishruth.key1.lib.devtools.flogDebug
 import com.vishruth.key1.nlpManager
+import org.florisboard.lib.android.AndroidVersion
 import java.text.Normalizer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -70,6 +72,14 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
      */
     private var distanceThresholdSquared = 0
 
+    // Performance optimizations for all devices
+    // Reduce sampling points for better performance across all devices
+    private val optimizedSamplingPoints = SAMPLING_POINTS / 4  // Reduced from 200 to 50
+    
+    // Increase cache sizes for better performance
+    private val optimizedSuggestionCacheSize = SUGGESTION_CACHE_SIZE * 2  // Increased from 5 to 10
+    private val optimizedPrunerCacheSize = PRUNER_CACHE_SIZE * 2  // Increased from 10 to 20
+
     companion object {
         /**
          * Describes the allowed length variance in a gesture. If a gesture is too long or too short, it is immediately
@@ -106,6 +116,9 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
          * For multiple subtypes, the pruner is cached.
          */
         private const val PRUNER_CACHE_SIZE = 10  // Increased from 5 to 10
+        
+        // Early termination threshold for faster word matching
+        private const val CONFIDENCE_THRESHOLD = 0.001f
     }
 
     override fun addGesturePoint(position: GlideTypingGesture.Detector.Position) {
@@ -236,7 +249,7 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
         }
     }
 
-    private val lruSuggestionCache = LruCache<Pair<Gesture, Int>, List<String>>(SUGGESTION_CACHE_SIZE)
+    private val lruSuggestionCache = LruCache<Pair<Gesture, Int>, List<String>>(optimizedSuggestionCacheSize)
     override fun getSuggestions(maxSuggestionCount: Int, gestureCompleted: Boolean): List<String> {
         // flogDebug { "getSuggestions called with maxSuggestionCount: $maxSuggestionCount, gestureCompleted: $gestureCompleted" }
         return when (val cached = lruSuggestionCache.get(Pair(this.gesture, maxSuggestionCount))) {
@@ -263,13 +276,16 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
         // flogDebug { "Pruning by extremities" }
         var remainingWords = pruner.pruneByExtremities(gesture, this.keys)
         // flogDebug { "After pruning by extremities, ${remainingWords.size} words remain" }
-        val userGesture = gesture.resample(SAMPLING_POINTS)
+        val userGesture = gesture.resample(optimizedSamplingPoints)
         val normalizedUserGesture: Gesture = userGesture.normalizeByBoxSide()
         // flogDebug { "Pruning by length" }
         remainingWords = pruner.pruneByLength(gesture, remainingWords, keysByCharacter, keys)
         // flogDebug { "After pruning by length, ${remainingWords.size} words remain" }
 
-        for (i in remainingWords.indices) {
+        // Limit the number of words processed to improve performance (even on newer devices)
+        val maxWordsToProcess = min(remainingWords.size, 300)
+
+        for (i in 0 until min(remainingWords.size, maxWordsToProcess)) {
             val word = remainingWords[i]
             // Log first 10 words for debugging
             if (i < 10) {
@@ -278,7 +294,7 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
             val idealGestures = Gesture.generateIdealGestures(word, keysByCharacter)
 
             for (idealGesture in idealGestures) {
-                val wordGesture = idealGesture.resample(SAMPLING_POINTS)
+                val wordGesture = idealGesture.resample(optimizedSamplingPoints)
                 val normalizedGesture: Gesture = wordGesture.normalizeByBoxSide()
                 val shapeDistance = calcShapeDistance(normalizedGesture, normalizedUserGesture)
                 val locationDistance = calcLocationDistance(wordGesture, userGesture)
@@ -287,26 +303,29 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
                 val frequency = 255f * nlpManager.getFrequencyForWord(currentSubtype!!, word).toFloat()
                 val confidence = 1.0f / (shapeProbability * locationProbability * frequency)
 
-                var candidateDistanceSortedIndex = 0
-                var duplicateIndex = Int.MAX_VALUE
+                // Early termination: if confidence is too low, skip adding to candidates
+                if (confidence > CONFIDENCE_THRESHOLD) {
+                    var candidateDistanceSortedIndex = 0
+                    var duplicateIndex = Int.MAX_VALUE
 
-                while (candidateDistanceSortedIndex < candidateWeights.size
-                    && candidateWeights[candidateDistanceSortedIndex] <= confidence
-                ) {
-                    if (candidates[candidateDistanceSortedIndex].contentEquals(word)) duplicateIndex =
-                        candidateDistanceSortedIndex
-                    candidateDistanceSortedIndex++
-                }
-                if (candidateDistanceSortedIndex < maxSuggestionCount && candidateDistanceSortedIndex <= duplicateIndex) {
-                    if (duplicateIndex < Int.MAX_VALUE) {
-                        candidateWeights.removeAt(duplicateIndex)
-                        candidates.removeAt(duplicateIndex)
+                    while (candidateDistanceSortedIndex < candidateWeights.size
+                        && candidateWeights[candidateDistanceSortedIndex] <= confidence
+                    ) {
+                        if (candidates[candidateDistanceSortedIndex].contentEquals(word)) duplicateIndex =
+                            candidateDistanceSortedIndex
+                        candidateDistanceSortedIndex++
                     }
-                    candidateWeights.add(candidateDistanceSortedIndex, confidence)
-                    candidates.add(candidateDistanceSortedIndex, word)
-                    if (candidateWeights.size > maxSuggestionCount) {
-                        candidateWeights.removeAt(maxSuggestionCount)
-                        candidates.removeAt(maxSuggestionCount)
+                    if (candidateDistanceSortedIndex < maxSuggestionCount && candidateDistanceSortedIndex <= duplicateIndex) {
+                        if (duplicateIndex < Int.MAX_VALUE) {
+                            candidateWeights.removeAt(duplicateIndex)
+                            candidates.removeAt(duplicateIndex)
+                        }
+                        candidateWeights.add(candidateDistanceSortedIndex, confidence)
+                        candidates.add(candidateDistanceSortedIndex, word)
+                        if (candidateWeights.size > maxSuggestionCount) {
+                            candidateWeights.removeAt(maxSuggestionCount)
+                            candidates.removeAt(maxSuggestionCount)
+                        }
                     }
                 }
             }
@@ -323,7 +342,7 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
 
     private fun calcLocationDistance(gesture1: Gesture, gesture2: Gesture): Float {
         var totalDistance = 0.0f
-        for (i in 0 until SAMPLING_POINTS) {
+        for (i in 0 until optimizedSamplingPoints) {
             val x1 = gesture1.getX(i)
             val x2 = gesture2.getX(i)
             val y1 = gesture1.getY(i)
@@ -331,7 +350,7 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
             val distance = abs(x1 - x2) + abs(y1 - y2)
             totalDistance += distance
         }
-        return totalDistance / SAMPLING_POINTS / 2
+        return totalDistance / optimizedSamplingPoints / 2
     }
 
     private fun calcGaussianProbability(value: Float, mean: Float, standardDeviation: Float): Float {
@@ -344,7 +363,7 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
     private fun calcShapeDistance(gesture1: Gesture, gesture2: Gesture): Float {
         var distance: Float
         var totalDistance = 0.0f
-        for (i in 0 until SAMPLING_POINTS) {
+        for (i in 0 until optimizedSamplingPoints) {
             val x1 = gesture1.getX(i)
             val x2 = gesture2.getX(i)
             val y1 = gesture1.getY(i)
@@ -399,8 +418,8 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
             val startY = userGesture.getFirstY()
             val endX = userGesture.getLastX()
             val endY = userGesture.getLastY()
-            val startKeys = findNClosestKeys(startX, startY, 2, keys)
-            val endKeys = findNClosestKeys(endX, endY, 2, keys)
+            val startKeys = findNClosestKeys(startX, startY, 3, keys) // Increased from 2 to 3 for better accuracy
+            val endKeys = findNClosestKeys(endX, endY, 3, keys) // Increased from 2 to 3 for better accuracy
             // flogDebug { "Start keys: $startKeys, End keys: $endKeys" }
             for (startKey in startKeys) {
                 for (endKey in endKeys) {
@@ -627,7 +646,7 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
 
             // otherwise nothing happens if size is only 1:
             if (this.size == 1) {
-                for (i in 0 until SAMPLING_POINTS) {
+                for (i in 0 until numPoints) {
                     resampledGesture.addPoint(xs[0], ys[0])
                 }
             }

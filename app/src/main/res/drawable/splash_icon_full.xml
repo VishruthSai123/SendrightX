@@ -7,7 +7,7 @@
         </shape>
     </item>
     <item android:gravity="center">
-        <bitmap android:src="@drawable/ic_launcher_playstore" 
+        <bitmap android:src="@mipmap/ic_launcher" 
             android:gravity="center" />
     </item>
 </layer-list>

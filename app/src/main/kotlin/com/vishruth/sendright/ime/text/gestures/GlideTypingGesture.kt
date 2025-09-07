@@ -17,12 +17,14 @@
 package com.vishruth.key1.ime.text.gestures
 
 import android.content.Context
+import android.os.Build
 import android.view.MotionEvent
 import com.vishruth.key1.R
 import com.vishruth.key1.ime.text.key.KeyCode
 import com.vishruth.key1.ime.text.keyboard.TextKey
 import com.vishruth.key1.lib.devtools.flogDebug
 import com.vishruth.key1.lib.util.ViewUtils
+import org.florisboard.lib.android.AndroidVersion
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -40,9 +42,12 @@ class GlideTypingGesture {
         private val listeners: ArrayList<Listener> = arrayListOf()
         private var pointerId: Int = -1
 
+        // Ultra-fast processing for all devices
+        private val optimizedHistoryProcessing = 3  // Process every 3rd historical point for maximum speed
+
         companion object {
-            private const val MAX_DETECT_TIME = 500
-            private const val VELOCITY_THRESHOLD = 0.10 // dp per ms
+            private const val MAX_DETECT_TIME = 300  // Reduced from 500ms for faster detection
+            private const val VELOCITY_THRESHOLD = 0.05 // Reduced threshold for more sensitive detection
             private val SWIPE_GESTURE_KEYS = arrayOf(KeyCode.DELETE, KeyCode.SHIFT, KeyCode.SPACE, KeyCode.CJK_SPACE)
         }
 
@@ -77,7 +82,12 @@ class GlideTypingGesture {
                     }
 
                     val pointerIndex = event.findPointerIndex(pointerId)
-                    for (i in 0..event.historySize) {
+                    // Ultra-fast processing: process historical points less frequently for maximum speed
+                    val historyStep = optimizedHistoryProcessing
+                    
+                    // Only process the last few historical points for better performance
+                    val startIdx = maxOf(0, event.historySize - 5)
+                    for (i in startIdx..event.historySize step historyStep) {
                         val pos = when (i) {
                             event.historySize -> Position(event.getX(pointerIndex), event.getY(pointerIndex))
                             else -> Position(event.getHistoricalX(pointerIndex, i), event.getHistoricalY(pointerIndex, i))
@@ -87,7 +97,7 @@ class GlideTypingGesture {
                             // evaluate whether is actually a gesture
                             val dist = ViewUtils.px2dp(pointerData.positions[0].dist(pos))
                             val time = (System.currentTimeMillis() - pointerData.startTime) + 1
-                            flogDebug { "Distance glided: $dist dp with velocity: ${dist / time} dp/ms" }
+                            // flogDebug { "Distance glided: $dist dp with velocity: ${dist / time} dp/ms" }
                             if (dist > keySize && (dist / time) > VELOCITY_THRESHOLD && (initialKey?.computedData?.code !in SWIPE_GESTURE_KEYS)) {
                                 pointerData.isActuallyGesture = true
                                 // Let listener know all those points need to be added.

@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.florisboard.lib.android.AndroidVersion
 import kotlin.math.min
 
 /**
@@ -37,6 +38,8 @@ import kotlin.math.min
 class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
     companion object {
         private const val MAX_SUGGESTION_COUNT = 8
+        // Even faster preview refresh for all devices
+        private const val OPTIMIZED_PREVIEW_REFRESH_DELAY = 50L  // Reduced from 150/250ms to 50ms
     }
 
     private val prefs by FlorisPreferenceStore
@@ -65,8 +68,9 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
         this.glideTypingClassifier.addGesturePoint(normalized)
 
         val time = System.currentTimeMillis()
-        if (prefs.glide.showPreview.get() && time - lastTime > prefs.glide.previewRefreshDelay.get()) {
-            updateSuggestionsAsync(1, false) {}
+        // Use ultra-fast preview refresh for instant suggestions
+        if (prefs.glide.showPreview.get() && time - lastTime > OPTIMIZED_PREVIEW_REFRESH_DELAY) {
+            updateSuggestionsAsync(3, false) {}  // Show more preview suggestions
             lastTime = time
         }
     }
@@ -113,7 +117,7 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
             withContext(Dispatchers.Main) {
                 val suggestionList = buildList {
                     suggestions.subList(
-                        1.coerceAtMost(min(commit.compareTo(false), suggestions.size)),
+                        0,  // Start from index 0 for immediate suggestions
                         maxSuggestionsToShow.coerceAtMost(suggestions.size)
                     ).map { keyboardManager.fixCase(it) }.forEach {
                         add(WordSuggestionCandidate(it, confidence = 1.0))
