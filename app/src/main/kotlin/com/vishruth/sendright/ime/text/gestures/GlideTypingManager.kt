@@ -38,8 +38,11 @@ import kotlin.math.min
 class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
     companion object {
         private const val MAX_SUGGESTION_COUNT = 8
-        // Even faster preview refresh for all devices
-        private const val OPTIMIZED_PREVIEW_REFRESH_DELAY = 50L  // Reduced from 150/250ms to 50ms
+        // Balanced preview refresh for all devices
+        private const val OPTIMIZED_PREVIEW_REFRESH_DELAY_OLD = 100L
+        private const val OPTIMIZED_PREVIEW_REFRESH_DELAY_NEW = 75L
+        // Minimum delay between preview updates to prevent flickering
+        private const val MIN_PREVIEW_UPDATE_DELAY = 50L
     }
 
     private val prefs by FlorisPreferenceStore
@@ -50,6 +53,7 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var glideTypingClassifier = StatisticalGlideTypingClassifier(context)
     private var lastTime = System.currentTimeMillis()
+    private var lastPreviewUpdateTime = System.currentTimeMillis()
 
     override fun onGlideComplete(data: GlideTypingGesture.Detector.PointerData) {
         // flogDebug { "onGlideComplete called" }
@@ -68,10 +72,16 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
         this.glideTypingClassifier.addGesturePoint(normalized)
 
         val time = System.currentTimeMillis()
-        // Use ultra-fast preview refresh for instant suggestions
-        if (prefs.glide.showPreview.get() && time - lastTime > OPTIMIZED_PREVIEW_REFRESH_DELAY) {
-            updateSuggestionsAsync(3, false) {}  // Show more preview suggestions
+        // Use balanced preview refresh for consistent experience
+        val previewRefreshDelay = if (AndroidVersion.ATMOST_API29_Q) OPTIMIZED_PREVIEW_REFRESH_DELAY_OLD else OPTIMIZED_PREVIEW_REFRESH_DELAY_NEW
+        val userPreviewDelay = prefs.glide.previewRefreshDelay.get().toLong()
+        val actualPreviewDelay = if (AndroidVersion.ATMOST_API29_Q) previewRefreshDelay else userPreviewDelay
+        
+        // Add debounce to prevent flickering during gesture
+        if (prefs.glide.showPreview.get() && time - lastTime > actualPreviewDelay && time - lastPreviewUpdateTime > MIN_PREVIEW_UPDATE_DELAY) {
+            updateSuggestionsAsync(2, false) {}  // Balanced preview suggestions
             lastTime = time
+            lastPreviewUpdateTime = time
         }
     }
 
@@ -115,6 +125,7 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
             // flogDebug { "Got ${suggestions.size} suggestions from classifier" }
 
             withContext(Dispatchers.Main) {
+                // Create the full suggestion list for smartbar
                 val suggestionList = buildList {
                     suggestions.subList(
                         0,  // Start from index 0 for immediate suggestions
@@ -125,10 +136,14 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
                 }
                 // flogDebug { "Sending ${suggestionList.size} suggestions to NLP manager" }
 
+                // Send all suggestions to smartbar
                 nlpManager.suggestDirectly(suggestionList)
+                
+                // Commit the most confident suggestion if requested
                 if (commit && suggestions.isNotEmpty()) {
                     keyboardManager.commitGesture(suggestions.first())
                 }
+                
                 callback.invoke(true)
             }
         }

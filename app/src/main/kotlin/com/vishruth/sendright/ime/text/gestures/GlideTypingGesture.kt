@@ -42,12 +42,14 @@ class GlideTypingGesture {
         private val listeners: ArrayList<Listener> = arrayListOf()
         private var pointerId: Int = -1
 
-        // Ultra-fast processing for all devices
-        private val optimizedHistoryProcessing = 3  // Process every 3rd historical point for maximum speed
+        // For Android 10 and below: Process every 2nd point for smoother performance
+        // For Android 11 and above: Process every point for better accuracy
+        private val optimizedHistoryProcessing get() = if (AndroidVersion.ATMOST_API29_Q) 2 else 1
 
         companion object {
-            private const val MAX_DETECT_TIME = 300  // Reduced from 500ms for faster detection
-            private const val VELOCITY_THRESHOLD = 0.05 // Reduced threshold for more sensitive detection
+            private const val MAX_DETECT_TIME_OLD = 400
+            private const val MAX_DETECT_TIME_NEW = 300
+            private const val VELOCITY_THRESHOLD = 0.08f // Balanced threshold for all devices
             private val SWIPE_GESTURE_KEYS = arrayOf(KeyCode.DELETE, KeyCode.SHIFT, KeyCode.SPACE, KeyCode.CJK_SPACE)
         }
 
@@ -82,11 +84,12 @@ class GlideTypingGesture {
                     }
 
                     val pointerIndex = event.findPointerIndex(pointerId)
-                    // Ultra-fast processing: process historical points less frequently for maximum speed
+                    // Balanced processing: process historical points with appropriate frequency
                     val historyStep = optimizedHistoryProcessing
                     
-                    // Only process the last few historical points for better performance
-                    val startIdx = maxOf(0, event.historySize - 5)
+                    // For Android 10 and below: Process last 3 historical points for smoother performance
+                    // For Android 11 and above: Process all historical points for better accuracy
+                    val startIdx = if (AndroidVersion.ATMOST_API29_Q) maxOf(0, event.historySize - 3) else 0
                     for (i in startIdx..event.historySize step historyStep) {
                         val pos = when (i) {
                             event.historySize -> Position(event.getX(pointerIndex), event.getY(pointerIndex))
@@ -98,6 +101,7 @@ class GlideTypingGesture {
                             val dist = ViewUtils.px2dp(pointerData.positions[0].dist(pos))
                             val time = (System.currentTimeMillis() - pointerData.startTime) + 1
                             // flogDebug { "Distance glided: $dist dp with velocity: ${dist / time} dp/ms" }
+                            val maxDetectTime = if (AndroidVersion.ATMOST_API29_Q) MAX_DETECT_TIME_OLD else MAX_DETECT_TIME_NEW
                             if (dist > keySize && (dist / time) > VELOCITY_THRESHOLD && (initialKey?.computedData?.code !in SWIPE_GESTURE_KEYS)) {
                                 pointerData.isActuallyGesture = true
                                 // Let listener know all those points need to be added.
@@ -106,7 +110,7 @@ class GlideTypingGesture {
                                         it.onGlideAddPoint(point)
                                     }
                                 }
-                            } else if (time > MAX_DETECT_TIME) {
+                            } else if (time > maxDetectTime) {
                                 pointerData.isActuallyGesture = false
                             }
 

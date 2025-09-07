@@ -72,13 +72,15 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
      */
     private var distanceThresholdSquared = 0
 
-    // Performance optimizations for all devices
-    // Reduce sampling points for better performance across all devices
-    private val optimizedSamplingPoints = SAMPLING_POINTS / 4  // Reduced from 200 to 50
+    // Performance optimizations with balanced approach for all devices
+    // Moderate sampling points for balanced performance and accuracy
+    // For Android 10 and below: Use half the sampling points for smoother performance
+    // For Android 11 and above: Use full sampling points for better accuracy
+    private val optimizedSamplingPoints = if (AndroidVersion.ATMOST_API29_Q) SAMPLING_POINTS / 2 else SAMPLING_POINTS
     
-    // Increase cache sizes for better performance
-    private val optimizedSuggestionCacheSize = SUGGESTION_CACHE_SIZE * 2  // Increased from 5 to 10
-    private val optimizedPrunerCacheSize = PRUNER_CACHE_SIZE * 2  // Increased from 10 to 20
+    // Balanced cache sizes for all devices
+    private val optimizedSuggestionCacheSize = if (AndroidVersion.ATMOST_API29_Q) SUGGESTION_CACHE_SIZE else SUGGESTION_CACHE_SIZE * 2
+    private val optimizedPrunerCacheSize = if (AndroidVersion.ATMOST_API29_Q) PRUNER_CACHE_SIZE else PRUNER_CACHE_SIZE * 2
 
     companion object {
         /**
@@ -115,10 +117,10 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
         /**
          * For multiple subtypes, the pruner is cached.
          */
-        private const val PRUNER_CACHE_SIZE = 10  // Increased from 5 to 10
+        private const val PRUNER_CACHE_SIZE = 10
         
-        // Early termination threshold for faster word matching
-        private const val CONFIDENCE_THRESHOLD = 0.001f
+        // Balanced early termination threshold for accuracy
+        private const val CONFIDENCE_THRESHOLD = 0.0001f
     }
 
     override fun addGesturePoint(position: GlideTypingGesture.Detector.Position) {
@@ -282,8 +284,9 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
         remainingWords = pruner.pruneByLength(gesture, remainingWords, keysByCharacter, keys)
         // flogDebug { "After pruning by length, ${remainingWords.size} words remain" }
 
-        // Limit the number of words processed to improve performance (even on newer devices)
-        val maxWordsToProcess = min(remainingWords.size, 300)
+        // For Android 10 and below: Process fewer words for better performance
+        // For Android 11 and above: Process more words for better accuracy
+        val maxWordsToProcess = if (AndroidVersion.ATMOST_API29_Q) min(remainingWords.size, 200) else min(remainingWords.size, 400)
 
         for (i in 0 until min(remainingWords.size, maxWordsToProcess)) {
             val word = remainingWords[i]
@@ -303,7 +306,7 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
                 val frequency = 255f * nlpManager.getFrequencyForWord(currentSubtype!!, word).toFloat()
                 val confidence = 1.0f / (shapeProbability * locationProbability * frequency)
 
-                // Early termination: if confidence is too low, skip adding to candidates
+                // Balanced early termination: if confidence is too low, skip adding to candidates
                 if (confidence > CONFIDENCE_THRESHOLD) {
                     var candidateDistanceSortedIndex = 0
                     var duplicateIndex = Int.MAX_VALUE
@@ -418,8 +421,8 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
             val startY = userGesture.getFirstY()
             val endX = userGesture.getLastX()
             val endY = userGesture.getLastY()
-            val startKeys = findNClosestKeys(startX, startY, 3, keys) // Increased from 2 to 3 for better accuracy
-            val endKeys = findNClosestKeys(endX, endY, 3, keys) // Increased from 2 to 3 for better accuracy
+            val startKeys = findNClosestKeys(startX, startY, if (AndroidVersion.ATMOST_API29_Q) 2 else 3, keys)
+            val endKeys = findNClosestKeys(endX, endY, if (AndroidVersion.ATMOST_API29_Q) 2 else 3, keys)
             // flogDebug { "Start keys: $startKeys, End keys: $endKeys" }
             for (startKey in startKeys) {
                 for (endKey in endKeys) {

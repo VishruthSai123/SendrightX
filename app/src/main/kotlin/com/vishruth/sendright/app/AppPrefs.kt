@@ -345,7 +345,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val trailDuration = int(
             key = "glide__trail_fade_duration",
-            default = 100,  // Reduced from 200 for faster fading
+            default = 150,  // Balanced fading duration
         )
         val showPreview = boolean(
             key = "glide__show_preview",
@@ -353,7 +353,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val previewRefreshDelay = int(
             key = "glide__preview_refresh_delay",
-            default = 50,  // Ultra-fast refresh for all devices
+            default = 100,  // Balanced refresh for all devices
         )
         val immediateBackspaceDeletesWord = boolean(
             key = "glide__immediate_backspace_deletes_word",
