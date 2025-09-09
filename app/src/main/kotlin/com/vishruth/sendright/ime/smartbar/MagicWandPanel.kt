@@ -55,6 +55,7 @@ import com.vishruth.key1.ime.keyboard.FlorisImeSizing
 import com.vishruth.key1.ime.theme.FlorisImeTheme
 import com.vishruth.key1.ime.theme.FlorisImeUi
 import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.devtools.flogDebug
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
@@ -246,18 +247,18 @@ private suspend fun handleMagicWandButtonClick(
     try {
         // Special handling for Chat button
         if (buttonTitle == "Chat") {
-            // Get selected text or current word
+            // Get all text from the input field (same as other AI actions)
             val activeContent = editorInstance.activeContent
-            val selectedText = activeContent.selectedText
-            val textToProcess = if (selectedText.isNotBlank()) {
-                selectedText
-            } else {
-                // If no text selected, get the current word
-                editorInstance.getCurrentWord()
+            val allText = buildString {
+                append(activeContent.textBeforeSelection)
+                append(activeContent.selectedText)
+                append(activeContent.textAfterSelection)
             }
             
-            if (textToProcess.isBlank()) {
-                context.showShortToast("Please select some text or position cursor in a word to chat about")
+            flogDebug { "Chat - All text: '$allText'" }
+            
+            if (allText.isBlank()) {
+                context.showShortToast("Please type some text first")
                 return
             }
             
@@ -268,21 +269,23 @@ private suspend fun handleMagicWandButtonClick(
             val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
             
             // Call Gemini API with chat instruction
-            val result = GeminiApiService.transformText(textToProcess, instruction)
+            val result = GeminiApiService.transformText(allText, instruction)
             
             result.onSuccess { responseText ->
-                // Replace selected text with chat response
-                if (selectedText.isNotBlank()) {
-                    editorInstance.deleteSelectedText()
-                } else {
-                    // If no selection, select current word first
-                    editorInstance.selectCurrentWord()
-                    editorInstance.deleteSelectedText()
-                }
+                flogDebug { "Chat response: '$responseText'" }
+                // Replace all text with chat response (same as other AI actions)
+                val activeContent = editorInstance.activeContent
+                val totalTextLength = activeContent.textBeforeSelection.length + 
+                                     activeContent.selectedText.length + 
+                                     activeContent.textAfterSelection.length
+                
+                // Select all text by setting selection from 0 to total length
+                editorInstance.setSelection(0, totalTextLength)
+                editorInstance.deleteSelectedText()
                 editorInstance.commitText(responseText)
                 context.showShortToast("Response received!")
             }.onFailure { error ->
-                context.showShortToast(error.message ?: "Something went wrong")
+                context.showShortToast("Chat error: ${error.message ?: "Something went wrong"}")
             }
             
             return

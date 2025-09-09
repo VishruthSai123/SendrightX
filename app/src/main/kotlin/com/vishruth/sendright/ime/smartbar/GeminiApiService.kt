@@ -210,6 +210,18 @@ object GeminiApiService {
     }
     
     private fun buildPrompt(inputText: String, instruction: String): String {
+        // Special handling for chat functionality - treat as direct conversation
+        if (instruction == MagicWandInstructions.CHAT) {
+            return """
+                $instruction
+                
+                User message: "$inputText"
+                
+                Respond naturally and directly to the user's input without any prefixes or extra text. Provide helpful, concise responses.
+            """.trimIndent()
+        }
+        
+        // Standard prompt for text transformation features
         return """
             $instruction
             
