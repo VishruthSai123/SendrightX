@@ -79,15 +79,19 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         
         return wordData.withLock { wordData ->
             when {
+                // Check for exact match first (case-insensitive)
                 wordData.containsKey(wordLower) || wordData.containsKey(word) -> {
                     SpellingResult.validWord()
                 }
+                // For longer words, check for typos using edit distance
                 wordLower.length > 2 -> {
                     val suggestions = mutableListOf<String>()
                     
+                    // More sophisticated typo detection
                     wordData.keys.forEach { dictWord ->
                         val distance = calculateEditDistance(wordLower, dictWord.lowercase())
-                        if (distance <= 2 && distance > 0) {
+                        // Only consider words with edit distance <= 2 and length difference <= 2
+                        if (distance <= 2 && kotlin.math.abs(wordLower.length - dictWord.length) <= 2) {
                             suggestions.add(dictWord)
                         }
                     }
@@ -100,9 +104,12 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                     if (sortedSuggestions.isNotEmpty()) {
                         SpellingResult.typo(sortedSuggestions)
                     } else {
+                        // For very short words or words that are likely valid but not in dictionary,
+                        // we'll treat them as valid to avoid false positives
                         SpellingResult.validWord()
                     }
                 }
+                // For very short words (1-2 characters), be more lenient
                 else -> SpellingResult.validWord()
             }
         }
@@ -111,6 +118,9 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
     private fun calculateEditDistance(s1: String, s2: String): Int {
         val len1 = s1.length
         val len2 = s2.length
+        
+        // Early exit for very different lengths
+        if (kotlin.math.abs(len1 - len2) > 2) return 3 // Return a value > 2 to indicate too different
         
         val matrix = Array(len1 + 1) { IntArray(len2 + 1) }
         
@@ -140,7 +150,8 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         allowPossiblyOffensive: Boolean,
         isPrivateSession: Boolean,
     ): List<SuggestionCandidate> {
-        val composingText = content.composingText.toString().lowercase().trim()
+        val composingText = content.composingText.toString() // Keep original case
+        val composingTextLower = composingText.lowercase().trim() // For matching purposes
         
         flogDebug { "suggest called with composingText: '$composingText', maxCandidateCount: $maxCandidateCount" }
         
@@ -158,9 +169,9 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
             
             if (userDictionaryDao != null) {
                 // Query all words from the user dictionary for this subtype
-                // Give user words a slightly higher frequency to prioritize them
+                // Give user words a significantly higher frequency to prioritize them
                 val userData = userDictionaryDao.queryAll(subtype.primaryLocale).associate { 
-                    it.word to kotlin.math.min(it.freq + 10, FREQUENCY_MAX)  // Boost user word frequency slightly
+                    it.word to kotlin.math.min(it.freq + 30, FREQUENCY_MAX)  // Increased boost for user words
                 }
                 flogDebug { "Retrieved ${userData.size} words from user dictionary" }
                 flogDebug { "User dictionary words: ${userData.keys.take(20).toList()}" }  // Log first 20 user words for debugging
@@ -202,39 +213,115 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         val exactMatches = mutableListOf<WordSuggestionCandidate>()
         val prefixMatches = mutableListOf<WordSuggestionCandidate>()
         val fuzzyMatches = mutableListOf<WordSuggestionCandidate>()
+        val contextMatches = mutableListOf<WordSuggestionCandidate>() // For context-aware suggestions
         
         combinedWordData.forEach { (word, frequency) ->
             val wordLower = word.lowercase()
             val confidence = frequency / 255.0
             
             when {
-                wordLower == composingText -> {
+                wordLower == composingTextLower -> {
+                    // Preserve original case when matching exactly
+                    val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
+                        // If the first character of the input is uppercase, capitalize the suggestion
+                        word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
+                    } else {
+                        word
+                    }
+                    
                     exactMatches.add(WordSuggestionCandidate(
-                        text = word,
-                        confidence = confidence * 0.9, // Reduced from 1.0 to 0.9 to be more conservative
+                        text = finalWord,
+                        confidence = 1.0, // Full confidence for exact matches
                         isEligibleForAutoCommit = true,
                         sourceProvider = this@LatinLanguageProvider,
                     ))
                 }
-                wordLower.startsWith(composingText) -> {
+                wordLower.startsWith(composingTextLower) -> {
+                    // More sophisticated prefix matching with adaptive confidence
+                    val prefixLengthRatio = composingTextLower.length.toDouble() / wordLower.length.toDouble()
+                    val adjustedConfidence = when {
+                        prefixLengthRatio >= 0.8 -> confidence * 0.95 // Very close match
+                        prefixLengthRatio >= 0.6 -> confidence * 0.85 // Good match
+                        prefixLengthRatio >= 0.4 -> confidence * 0.75 // Fair match
+                        else -> confidence * 0.65 // Weak match
+                    }
+                    
+                    // Longer composing texts make matches more confident
+                    val lengthBoost = when {
+                        composingTextLower.length >= 5 -> 1.1
+                        composingTextLower.length >= 3 -> 1.05
+                        else -> 1.0
+                    }
+                    
+                    val finalConfidence = (adjustedConfidence * lengthBoost).coerceAtMost(1.0)
+                    
+                    // Preserve case for prefix matches
+                    val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
+                        // If the first character of the input is uppercase, capitalize the suggestion
+                        word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
+                    } else {
+                        word
+                    }
+                    
                     prefixMatches.add(WordSuggestionCandidate(
-                        text = word,
-                        confidence = confidence * 0.9,
+                        text = finalWord,
+                        confidence = finalConfidence,
+                        // Make prefix matches eligible for auto-commit based on confidence and length
+                        isEligibleForAutoCommit = composingTextLower.length >= 3 && finalConfidence > 0.8,
+                        sourceProvider = this@LatinLanguageProvider,
+                    ))
+                }
+                // More lenient fuzzy matching for better correction suggestions
+                wordLower.contains(composingTextLower) && composingTextLower.length > 1 -> {
+                    // Calculate position-based confidence boost
+                    val position = wordLower.indexOf(composingTextLower)
+                    val positionBoost = if (position == 0) 1.1 else 1.0 // Beginning match gets boost
+                    
+                    // Preserve case for fuzzy matches
+                    val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
+                        // If the first character of the input is uppercase, capitalize the suggestion
+                        word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
+                    } else {
+                        word
+                    }
+                    
+                    fuzzyMatches.add(WordSuggestionCandidate(
+                        text = finalWord,
+                        confidence = (confidence * 0.7 * positionBoost).coerceAtMost(0.9),
                         isEligibleForAutoCommit = false,
                         sourceProvider = this@LatinLanguageProvider,
                     ))
                 }
-                wordLower.contains(composingText) && composingText.length > 2 -> {
-                    fuzzyMatches.add(WordSuggestionCandidate(
-                        text = word,
-                        confidence = confidence * 0.7,
-                        isEligibleForAutoCommit = false,
-                        sourceProvider = this@LatinLanguageProvider,
-                    ))
+                // Levenshtein distance-based fuzzy matching for typo correction
+                composingTextLower.length > 2 && wordLower.length > 2 -> {
+                    val distance = calculateEditDistance(composingTextLower, wordLower)
+                    val maxLength = kotlin.math.max(composingTextLower.length, wordLower.length)
+                    val similarity = 1.0 - (distance.toDouble() / maxLength.toDouble())
+                    
+                    // Only consider words with high similarity (80% or better)
+                    if (similarity > 0.8) {
+                        val adjustedConfidence = (confidence * similarity * 0.8).coerceAtMost(0.95)
+                        
+                        // Preserve case for typo corrections
+                        val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
+                            // If the first character of the input is uppercase, capitalize the suggestion
+                            word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
+                        } else {
+                            word
+                        }
+                        
+                        fuzzyMatches.add(WordSuggestionCandidate(
+                            text = finalWord,
+                            confidence = adjustedConfidence,
+                            isEligibleForAutoCommit = adjustedConfidence > 0.9, // High confidence typos can auto-commit
+                            sourceProvider = this@LatinLanguageProvider,
+                        ))
+                    }
                 }
             }
         }
         
+        // Sort matches by confidence
         val allMatches = buildList {
             addAll(exactMatches.sortedByDescending { it.confidence })
             addAll(prefixMatches.sortedByDescending { it.confidence })
@@ -277,10 +364,11 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         
                         if (existingEntries != null && existingEntries.isEmpty()) {
                             // Word doesn't exist in user dictionary, so add it with a higher frequency
+                            // Increase frequency boost for accepted suggestions
                             val entry = UserDictionaryEntry(
                                 id = 0, // 0 means auto-generate ID
                                 word = word,
-                                freq = kotlin.math.min(FREQUENCY_DEFAULT + 20, FREQUENCY_MAX), // Boost frequency for accepted suggestions
+                                freq = kotlin.math.min(FREQUENCY_DEFAULT + 35, FREQUENCY_MAX), // Higher boost for accepted suggestions
                                 locale = subtype.primaryLocale.localeTag(),
                                 shortcut = null
                             )
@@ -302,6 +390,25 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                             // Word exists, potentially update frequency or other properties
                             // For now, we'll just log that the word already exists
                             flogDebug { "Word already exists in user dictionary: $word" }
+                            
+                            // Try to increase the frequency of existing words to improve suggestions
+                            try {
+                                val existingEntry = existingEntries.first()
+                                val newFreq = kotlin.math.min(existingEntry.freq + 10, FREQUENCY_MAX)
+                                if (newFreq > existingEntry.freq) {
+                                    val updatedEntry = existingEntry.copy(freq = newFreq)
+                                    userDictionaryDao.update(updatedEntry)
+                                    flogDebug { "Updated frequency for existing word '$word' from ${existingEntry.freq} to $newFreq" }
+                                    
+                                    // Refresh glide typing data
+                                    val context = appContext
+                                    val glideTypingManager = context.glideTypingManager
+                                    glideTypingManager.value.refreshWordData()
+                                    flogDebug { "Refreshed glide typing classifier after frequency update for word: $word" }
+                                }
+                            } catch (e: Exception) {
+                                flogDebug { "Failed to update frequency for existing word '$word': ${e.message}" }
+                            }
                         } else {
                             flogDebug { "Failed to query user dictionary for word: $word" }
                         }

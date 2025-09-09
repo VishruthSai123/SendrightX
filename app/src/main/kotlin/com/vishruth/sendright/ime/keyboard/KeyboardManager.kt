@@ -240,6 +240,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             nlpManager.clearSuggestions()
             return
         }
+        // Always trigger suggestion update, even if composing might be disabled temporarily
         nlpManager.suggest(subtypeManager.activeSubtype, content)
     }
 
@@ -550,9 +551,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      */
     fun handleHardwareKeyboardSpace() {
         val candidate = nlpManager.getAutoCommitCandidate()
-        // Only auto-commit if the confidence is high enough (above 0.8)
-        // This prevents drastic word changes when the user just wants to type normally
-        if (candidate != null && candidate.confidence > 0.8) {
+        // Auto-commit if we have a candidate that's explicitly eligible for auto-commit
+        // Only auto-commit for high-confidence candidates to prevent unwanted changes
+        // This prevents issues where "the" gets inserted when space is pressed
+        if (candidate != null && candidate.isEligibleForAutoCommit && candidate.confidence > 0.9) {
             commitCandidate(candidate)
         }
         // Skip handling changing to characters keyboard and double space periods
@@ -570,9 +572,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private fun handleSpace(data: KeyData) {
         val candidate = nlpManager.getAutoCommitCandidate()
         
-        // Only auto-commit if the confidence is high enough (above 0.8)
-        // This prevents drastic word changes when the user just wants to type normally
-        if (candidate != null && candidate.confidence > 0.8) {
+        // Auto-commit if we have a candidate that's explicitly eligible for auto-commit
+        // Only auto-commit for high-confidence candidates to prevent unwanted changes
+        // This prevents issues where "the" gets inserted when space is pressed
+        if (candidate != null && candidate.isEligibleForAutoCommit && candidate.confidence > 0.9) {
             commitCandidate(candidate)
         }
         
@@ -632,8 +635,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 
                 flogDebug { "Autosave debug - textBeforeCursor: '$textBeforeCursor', lastWord: '$lastWord'" }
                 
-                // Only save non-empty words that contain at least one letter
-                if (lastWord.isNotEmpty() && lastWord.any { it.isLetter() }) {
+                // Only save non-empty words that contain at least one letter and are longer than 1 character
+                if (lastWord.isNotEmpty() && lastWord.length > 1 && lastWord.any { it.isLetter() }) {
                     // Get the dictionary manager and check if word exists in static dictionary
                     val dictionaryManager = DictionaryManager.default()
                     dictionaryManager.loadUserDictionariesIfNecessary()
@@ -662,7 +665,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                             val entry = UserDictionaryEntry(
                                 id = 0, // 0 means auto-generate ID
                                 word = lastWord,
-                                freq = kotlin.math.min(FREQUENCY_DEFAULT + 20, FREQUENCY_MAX), // Boost frequency for recently used words
+                                freq = kotlin.math.min(FREQUENCY_DEFAULT + 35, FREQUENCY_MAX), // Higher boost for recently used words
                                 locale = subtypeManager.activeSubtype.primaryLocale.localeTag(),
                                 shortcut = null
                             )
@@ -682,8 +685,26 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                                 e.printStackTrace()
                             }
                         } else if (existingEntries != null && existingEntries.isNotEmpty()) {
-                            // Word exists, log that it already exists
+                            // Word exists, try to increase its frequency
                             flogDebug { "Previous word already exists in user dictionary: $lastWord" }
+                            
+                            // Try to increase the frequency of existing words to improve suggestions
+                            try {
+                                val existingEntry = existingEntries.first()
+                                val newFreq = kotlin.math.min(existingEntry.freq + 10, FREQUENCY_MAX)
+                                if (newFreq > existingEntry.freq) {
+                                    val updatedEntry = existingEntry.copy(freq = newFreq)
+                                    userDictionaryDao.update(updatedEntry)
+                                    flogDebug { "Updated frequency for existing word '$lastWord' from ${existingEntry.freq} to $newFreq" }
+                                    
+                                    // Refresh glide typing data
+                                    val glideTypingManager = appContext.glideTypingManager
+                                    glideTypingManager.value.refreshWordData()
+                                    flogDebug { "Refreshed glide typing classifier after frequency update for word: $lastWord" }
+                                }
+                            } catch (e: Exception) {
+                                flogDebug { "Failed to update frequency for existing word '$lastWord': ${e.message}" }
+                            }
                         } else {
                             flogDebug { "User dictionary DAO is null or query failed" }
                         }
@@ -691,7 +712,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                         flogDebug { "Word already exists in static dictionary: $lastWord" }
                     }
                 } else {
-                    flogDebug { "Word is empty or contains no letters: '$lastWord'" }
+                    flogDebug { "Word is empty, too short, or contains no letters: '$lastWord'" }
                 }
             } catch (e: Exception) {
                 flogDebug { "Failed to autosave previous word: ${e.message}" }
@@ -1085,9 +1106,15 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                     else -> when (data.type) {
                         KeyType.CHARACTER, KeyType.NUMERIC ->{
                             val text = data.asString(isForDisplay = false)
-                            if (!UCharacter.isUAlphabetic(UCharacter.codePointAt(text, 0))) {
+                            // Only auto-commit for space or punctuation characters, not for all non-alphabetic characters
+                            // But be more selective about when to auto-commit to prevent unwanted changes
+                            if (!UCharacter.isUAlphabetic(UCharacter.codePointAt(text, 0)) && 
+                                (text == " " || text in ",.!?;:")) {
                                 val candidate = nlpManager.getAutoCommitCandidate()
-                                if (candidate != null && candidate.confidence > 0.8) {
+                                // Be more careful about auto-commit to prevent drastic word changes
+                                // Only auto-commit for high-confidence candidates that are explicitly eligible
+                                // This prevents unwanted changes like inserting "the" when space is pressed
+                                if (candidate != null && candidate.isEligibleForAutoCommit && candidate.confidence > 0.9) {
                                     commitCandidate(candidate)
                                 }
                             }

@@ -74,8 +74,10 @@ class NlpManager(context: Context) {
     private val providersForceSuggestionOn = mutableMapOf<String, Boolean>()
 
     private val internalSuggestionsGuard = Mutex()
-    private var internalSuggestions by Delegates.observable(SystemClock.uptimeMillis() to listOf<SuggestionCandidate>()) { _, _, _ ->
-        scope.launch { assembleCandidates() }
+    private var internalSuggestions by Delegates.observable(SystemClock.uptimeMillis() to listOf<SuggestionCandidate>()) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            scope.launch { assembleCandidates() }
+        }
     }
 
     private val _activeCandidatesFlow = MutableStateFlow(listOf<SuggestionCandidate>())
@@ -292,7 +294,17 @@ class NlpManager(context: Context) {
         if (!prefs.correction.autoCorrectEnabled.get()) {
             return null
         }
-        return activeCandidates.firstOrNull { it.isEligibleForAutoCommit }
+        
+        // First try to find a candidate that's explicitly eligible for auto-commit
+        val explicitCandidate = activeCandidates.firstOrNull { it.isEligibleForAutoCommit }
+        if (explicitCandidate != null) {
+            return explicitCandidate
+        }
+        
+        // If no explicit candidate, check if we have any high-confidence candidates
+        // This helps with cases where the exact matching isn't working properly
+        // Lower the threshold to make auto-correction more responsive but still selective
+        return activeCandidates.firstOrNull { it.confidence > 0.8 }
     }
 
     fun removeSuggestion(subtype: Subtype, candidate: SuggestionCandidate): Boolean {
@@ -339,7 +351,12 @@ class NlpManager(context: Context) {
                 }
                 else -> emptyList()
             }
-            activeCandidates = candidates
+            // Only update active candidates if they actually changed
+            // This prevents unnecessary UI updates and improves performance
+            // Also check if the content has actually changed to prevent flickering
+            if (activeCandidates != candidates) {
+                activeCandidates = candidates
+            }
             autoExpandCollapseSmartbarActions(candidates, NlpInlineAutofill.suggestions.value)
         }
     }

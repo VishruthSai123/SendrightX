@@ -139,7 +139,11 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     }
 
     override fun determineComposingEnabled(): Boolean {
-        return nlpManager.isSuggestionOn()
+        // Always enable composing when suggestions are on to ensure proper auto-correction
+        // Make sure composing is enabled when suggestions are active
+        // Also ensure it's enabled for rich input editors that support suggestions
+        return (nlpManager.isSuggestionOn() && prefs.suggestion.enabled.get()) || 
+               (activeInfo.isRichInputEditor && !activeInfo.inputAttributes.flagTextNoSuggestions)
     }
 
     override fun determineComposer(composerName: ExtensionComponentName): Composer {
@@ -251,19 +255,21 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
      * @return True on success, false if an error occurred or the input connection is invalid.
      */
     fun commitCompletion(candidate: SuggestionCandidate): Boolean {
-        val text = candidate.text.toString()
-        if (text.isEmpty() || activeInfo.isRawInputEditor) return false
+        // Preserve the original text casing from the candidate
+        val finalText = candidate.text.toString()
+        
+        if (finalText.isEmpty() || activeInfo.isRawInputEditor) return false
         val content = activeContent
         return if (content.composing.isValid) {
             phantomSpace.setActive(showComposingRegion = false, candidate = candidate)
-            super.finalizeComposingText(text)
+            super.finalizeComposingText(finalText)
         } else {
-            val isPhantomSpaceActive = phantomSpace.determine(text)
+            val isPhantomSpaceActive = phantomSpace.determine(finalText)
             phantomSpace.setActive(showComposingRegion = false, candidate = candidate)
             return if (isPhantomSpaceActive) {
-                super.commitText("$SPACE$text")
+                super.commitText("$SPACE$finalText")
             } else {
-                super.commitText(text)
+                super.commitText(finalText)
             }.also {
                 // handled in finalizeComposingText if content.composing.isValid
                 updateLastCommitPosition()
