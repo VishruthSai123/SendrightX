@@ -2,6 +2,18 @@
 
 SendRight is an AI-enhanced Android keyboard built upon the solid foundation of FlorisBoard. This changelog documents the modifications and enhancements made to create SendRight.
 
+## Version 2.8 - Magic Wand Chat Improvements
+
+### 🪄 Magic Wand Enhancements
+- **Consistent Chat Behavior**: Chat functionality now processes all text in the input field like other AI actions for a uniform experience
+- **Improved Text Processing**: Enhanced chat response handling with better text replacement mechanisms
+- **Unified Workflow**: Streamlined processing workflow aligning chat with other Magic Wand features
+
+### 🛠️ Technical Updates
+- **Version Update**: App version bumped to 2.8 with corresponding version code 280
+- **Code Consistency**: Improved code consistency across Magic Wand actions
+- **Debugging Enhancements**: Added better logging for troubleshooting Magic Wand features
+
 ## Version 2.7 - Magic Wand Enhancements Release
 
 ### 🪄 Magic Wand Improvements
