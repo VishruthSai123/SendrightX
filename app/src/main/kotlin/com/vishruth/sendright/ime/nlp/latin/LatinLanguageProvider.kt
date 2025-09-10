@@ -195,6 +195,7 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         flogDebug { "User word data keys: ${userWordData.keys.take(10)}" }  // Log first 10 user words for debugging
         
         if (composingText.isEmpty()) {
+            // When there's no composing text, provide diverse high-frequency suggestions
             val candidates = combinedWordData.entries
                 .sortedByDescending { it.value }
                 .take(maxCandidateCount)
@@ -318,6 +319,23 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         ))
                     }
                 }
+                // When there are no good matches, still provide some diverse suggestions
+                // but only if we don't have many good matches already
+                else -> {
+                    // Add some high-frequency words as fallback when there are very few matches
+                    // This helps ensure we always have some suggestions even for non-matching text
+                    if (exactMatches.size + prefixMatches.size + fuzzyMatches.size < 2) {
+                        // Only add if the word is reasonably common (frequency > 100)
+                        if (frequency > 100) {
+                            contextMatches.add(WordSuggestionCandidate(
+                                text = word,
+                                confidence = confidence * 0.3, // Low confidence for fallback suggestions
+                                isEligibleForAutoCommit = false,
+                                sourceProvider = this@LatinLanguageProvider,
+                            ))
+                        }
+                    }
+                }
             }
         }
         
@@ -326,6 +344,10 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
             addAll(exactMatches.sortedByDescending { it.confidence })
             addAll(prefixMatches.sortedByDescending { it.confidence })
             addAll(fuzzyMatches.sortedByDescending { it.confidence })
+            // Add context matches only if we don't have enough good matches
+            if (exactMatches.size + prefixMatches.size + fuzzyMatches.size < 3) {
+                addAll(contextMatches.sortedByDescending { it.confidence }.take(3 - (exactMatches.size + prefixMatches.size + fuzzyMatches.size)))
+            }
         }
         
         val result = allMatches.take(maxCandidateCount)

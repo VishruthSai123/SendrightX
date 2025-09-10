@@ -222,10 +222,20 @@ class NlpManager(context: Context) {
                 }
                 else -> {
                     // Allow word suggestions when no emoji suggestions or when using inline text mode
+                    // Respect classic mode limit when determining max candidate count
+                    val isClassicMode = prefs.suggestion.displayMode.get() == CandidatesDisplayMode.CLASSIC
+                    val maxWordSuggestions = if (isClassicMode) {
+                        // In classic mode, limit to 3 suggestions total
+                        3
+                    } else {
+                        // In other modes, leave space for emoji suggestions if needed
+                        if (emojiSuggestions.isNotEmpty()) 5 else 8
+                    }
+                    
                     getSuggestionProvider(subtype).suggest(
                         subtype = subtype,
                         content = content,
-                        maxCandidateCount = if (emojiSuggestions.isNotEmpty()) 5 else 8, // Leave space for emoji suggestions
+                        maxCandidateCount = maxWordSuggestions,
                         allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
                     )
@@ -250,7 +260,7 @@ class NlpManager(context: Context) {
 
     /**
      * Builds the final suggestions list considering display mode constraints.
-     * In classic mode, when emojis are present, limit to 2 emoji + 1 word suggestion.
+     * In classic mode, when emojis are present, limit to 1 emoji + 2 word suggestions.
      */
     private fun buildSuggestionsForDisplayMode(
         emojiSuggestions: List<SuggestionCandidate>,
@@ -267,12 +277,12 @@ class NlpManager(context: Context) {
                 }
             }
             emojiSuggestions.isNotEmpty() -> {
-                // Classic mode with emoji suggestions: limit to 2 emojis + 1 word
+                // Classic mode with emoji suggestions: limit to 1 emoji + 2 words
                 buildList {
-                    // Add up to 2 emoji suggestions
-                    addAll(emojiSuggestions.take(2))
-                    // Add 1 word suggestion if available
-                    wordSuggestions.firstOrNull()?.let { add(it) }
+                    // Add up to 1 emoji suggestion (changed from 2 to 1)
+                    addAll(emojiSuggestions.take(1))
+                    // Add up to 2 word suggestions if available
+                    addAll(wordSuggestions.take(2))
                 }
             }
             else -> {
@@ -335,10 +345,14 @@ class NlpManager(context: Context) {
         runBlocking {
             val candidates = when {
                 isSuggestionOn() -> {
+                    // Respect classic mode limit for clipboard suggestions
+                    val isClassicMode = prefs.suggestion.displayMode.get() == CandidatesDisplayMode.CLASSIC
+                    val maxClipboardSuggestions = if (isClassicMode) 3 else 8
+                    
                     clipboardSuggestionProvider.suggest(
                         subtype = Subtype.DEFAULT,
                         content = editorInstance.activeContent,
-                        maxCandidateCount = 8,
+                        maxCandidateCount = maxClipboardSuggestions,
                         allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
                     ).ifEmpty {

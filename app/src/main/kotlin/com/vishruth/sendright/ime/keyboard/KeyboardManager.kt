@@ -57,6 +57,7 @@ import com.vishruth.key1.ime.text.key.KeyType
 import com.vishruth.key1.ime.text.key.UtilityKeyAction
 import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import com.vishruth.key1.ime.text.keyboard.TextKeyboardCache
+import com.vishruth.key1.ime.media.emoji.Emoji
 import com.vishruth.key1.lib.devtools.LogTopic
 import com.vishruth.key1.lib.devtools.flogError
 import com.vishruth.key1.lib.ext.ExtensionComponentName
@@ -1078,12 +1079,23 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.VIEW_SYMBOLS2 -> activeState.keyboardMode = KeyboardMode.SYMBOLS2
             else -> {
                 if (activeState.imeUiMode == ImeUiMode.MEDIA) {
-                    val candidate = nlpManager.getAutoCommitCandidate()
-                    if (candidate != null && candidate.confidence > 0.8) {
-                        commitCandidate(candidate)
+                    // Special handling for emojis to prevent auto-correction
+                    if (data is Emoji) {
+                        // For emojis, we should commit directly without triggering auto-correction
+                        editorInstance.commitText(data.asString(isForDisplay = false))
+                        // Reset shift state after emoji input
+                        if (activeState.inputShiftState != InputShiftState.CAPS_LOCK && !inputEventDispatcher.isPressed(KeyCode.SHIFT)) {
+                            activeState.inputShiftState = InputShiftState.UNSHIFTED
+                        }
+                        return@batchEdit
+                    } else {
+                        val candidate = nlpManager.getAutoCommitCandidate()
+                        if (candidate != null && candidate.confidence > 0.8) {
+                            commitCandidate(candidate)
+                        }
+                        editorInstance.commitText(data.asString(isForDisplay = false))
+                        return@batchEdit
                     }
-                    editorInstance.commitText(data.asString(isForDisplay = false))
-                    return@batchEdit
                 }
                 when (activeState.keyboardMode) {
                     KeyboardMode.NUMERIC,
@@ -1106,19 +1118,30 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                     else -> when (data.type) {
                         KeyType.CHARACTER, KeyType.NUMERIC ->{
                             val text = data.asString(isForDisplay = false)
-                            // Only auto-commit for space or punctuation characters, not for all non-alphabetic characters
-                            // But be more selective about when to auto-commit to prevent unwanted changes
-                            if (!UCharacter.isUAlphabetic(UCharacter.codePointAt(text, 0)) && 
-                                (text == " " || text in ",.!?;:")) {
-                                val candidate = nlpManager.getAutoCommitCandidate()
-                                // Be more careful about auto-commit to prevent drastic word changes
-                                // Only auto-commit for high-confidence candidates that are explicitly eligible
-                                // This prevents unwanted changes like inserting "the" when space is pressed
-                                if (candidate != null && candidate.isEligibleForAutoCommit && candidate.confidence > 0.9) {
-                                    commitCandidate(candidate)
+                            // Special handling for emojis to prevent auto-correction
+                            if (data is Emoji) {
+                                // For emojis, we should commit directly without triggering auto-correction
+                                editorInstance.commitText(text)
+                                // Reset shift state after emoji input
+                                if (activeState.inputShiftState != InputShiftState.CAPS_LOCK && !inputEventDispatcher.isPressed(KeyCode.SHIFT)) {
+                                    activeState.inputShiftState = InputShiftState.UNSHIFTED
                                 }
+                                return@batchEdit
+                            } else {
+                                // Only auto-commit for space or punctuation characters, not for all non-alphabetic characters
+                                // But be more selective about when to auto-commit to prevent unwanted changes
+                                if (!UCharacter.isUAlphabetic(UCharacter.codePointAt(text, 0)) && 
+                                    (text == " " || text in ",.!?;:")) {
+                                    val candidate = nlpManager.getAutoCommitCandidate()
+                                    // Be more careful about auto-commit to prevent drastic word changes
+                                    // Only auto-commit for high-confidence candidates that are explicitly eligible
+                                    // This prevents unwanted changes like inserting "the" when space is pressed
+                                    if (candidate != null && candidate.isEligibleForAutoCommit && candidate.confidence > 0.9) {
+                                        commitCandidate(candidate)
+                                    }
+                                }
+                                editorInstance.commitChar(text)
                             }
-                            editorInstance.commitChar(text)
                         }
                         else -> {
                             flogError(LogTopic.KEY_EVENTS) { "Received unknown key: $data" }
