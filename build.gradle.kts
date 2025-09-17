@@ -25,4 +25,12 @@ plugins {
     alias(libs.plugins.kotlinx.kover) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.mikepenz.aboutlibraries) apply false
+    id("com.google.gms.google-services") version "4.4.2" apply false
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
 }

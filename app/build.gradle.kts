@@ -24,6 +24,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.mikepenz.aboutlibraries)
+    id("com.google.gms.google-services")
 }
 
 // Load local.properties
@@ -68,7 +69,7 @@ android {
 
     defaultConfig {
         applicationId = "com.vishruth.key1"
-        minSdk = projectMinSdk.toInt()
+        minSdk = 26
         targetSdk = projectTargetSdk.toInt()
         versionCode = projectVersionCode.toInt()
         versionName = projectVersionName.substringBefore("-")
@@ -113,7 +114,6 @@ android {
 
     buildTypes {
         named("debug") {
-            applicationIdSuffix = ".debug"
             versionNameSuffix = "+${getGitCommitHash(short = true)}"
 
             isDebuggable = true
@@ -154,6 +154,27 @@ android {
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
             resValue("mipmap", "sendright_app_icon_foreground", "@mipmap/ic_launcher_foreground")
             resValue("string", "sendright_app_name", "SendRight Beta")
+        }
+
+        create("fastrelease") {
+            // Use base application ID to match google-services.json
+            versionNameSuffix = projectVersionNameSuffix + ".fast"
+
+            // FAST BUILD: Minimal optimization for testing billing functionality
+            isMinifyEnabled = false  // Skip code obfuscation for speed
+            isShrinkResources = false  // Skip resource shrinking for speed
+            isDebuggable = false  // Still production-like for Play Store testing
+
+            // Add Gemini API key to BuildConfig
+            buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
+
+            resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
+            resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
+            resValue("mipmap", "sendright_app_icon_foreground", "@mipmap/ic_launcher_foreground")
+            resValue("string", "sendright_app_name", "SendRight Fast")
         }
 
         named("release") {
@@ -241,6 +262,13 @@ dependencies {
     ksp(libs.patrickgold.jetpref.datastore.model.processor)
     implementation(libs.patrickgold.jetpref.datastore.ui)
     implementation(libs.patrickgold.jetpref.material.ui)
+    implementation(libs.google.mobile.ads)
+    implementation(libs.google.auth)
+    implementation(libs.google.billing)
+    implementation("com.google.android.play:integrity:1.5.0")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
 
     implementation(project(":lib:android"))
     implementation(project(":lib:color"))

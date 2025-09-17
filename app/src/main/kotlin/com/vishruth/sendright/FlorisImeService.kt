@@ -80,6 +80,7 @@ import com.vishruth.key1.app.devtools.DevtoolsOverlay
 import com.vishruth.key1.ime.ImeUiMode
 import com.vishruth.key1.ime.clipboard.ClipboardInputLayout
 import com.vishruth.key1.ime.core.SelectSubtypePanel
+import com.vishruth.key1.ime.core.SubtypeManager
 import com.vishruth.key1.ime.core.isSubtypeSelectionShowing
 import com.vishruth.key1.ime.editor.EditorRange
 import com.vishruth.key1.ime.editor.FlorisEditorInfo

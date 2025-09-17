@@ -21,17 +21,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import com.vishruth.key1.R
 import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.smartbar.AiLimitPanel
+import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.ime.smartbar.IncognitoDisplayMode
 import com.vishruth.key1.ime.smartbar.InlineSuggestionsStyleCache
 import com.vishruth.key1.ime.smartbar.MagicWandPanel
@@ -67,7 +70,21 @@ fun TextInputLayout(
             if (state.isActionsOverflowVisible) {
                 QuickActionsOverflowPanel()
             } else if (state.isMagicWandPanelVisible) {
-                MagicWandPanel()
+                // Check if AI limit is reached
+                val aiUsageTracker = remember { AiUsageTracker.getInstance() }
+                val usageStats by aiUsageTracker.usageStats.collectAsState()
+                // Check if limit is reached without blocking
+                val isLimitReached = usageStats.remainingActions() == 0 && !usageStats.isRewardWindowActive
+                
+                if (isLimitReached) {
+                    AiLimitPanel(
+                        onDismiss = {
+                            keyboardManager.closeMagicWandPanel()
+                        }
+                    )
+                } else {
+                    MagicWandPanel()
+                }
             } else {
                 Box {
                     val incognitoDisplayMode by prefs.keyboard.incognitoDisplayMode.observeAsState()

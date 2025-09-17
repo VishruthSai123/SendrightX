@@ -18,26 +18,33 @@ package com.vishruth.key1.app.settings
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Gesture
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.RateReview
-import androidx.compose.material.icons.filled.SmartButton
-import androidx.compose.material.icons.filled.Spellcheck
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.SmartButton
+import androidx.compose.material.icons.outlined.Spellcheck
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.vishruth.key1.R
 import com.vishruth.key1.app.LocalNavController
 import com.vishruth.key1.app.Routes
+import com.vishruth.key1.clipboardManager
 import com.vishruth.key1.lib.compose.FlorisScreen
 import com.vishruth.key1.lib.util.InputMethodUtils
+import com.vishruth.key1.user.AuthState
+import com.vishruth.key1.user.UserManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import dev.patrickgold.jetpref.datastore.ui.Preference
+import org.florisboard.lib.android.stringRes
 import org.florisboard.lib.compose.FlorisErrorCard
 import org.florisboard.lib.compose.FlorisWarningCard
 import org.florisboard.lib.compose.stringRes
@@ -53,6 +60,11 @@ fun HomeScreen() = FlorisScreen {
 
     content {
         val isCollapsed by prefs.internal.homeIsBetaToolboxCollapsed.observeAsState()
+
+        // User authentication state
+        val userManager = remember { UserManager.getInstance() }
+        val authState by userManager.authState.collectAsState()
+        val userData by userManager.userData.collectAsState()
 
         val isFlorisBoardEnabled by InputMethodUtils.observeIsFlorisboardEnabled(foregroundOnly = true)
         val isFlorisBoardSelected by InputMethodUtils.observeIsFlorisboardSelected(foregroundOnly = true)
@@ -103,7 +115,7 @@ fun HomeScreen() = FlorisScreen {
             }
         }*/
         Preference(
-            icon = Icons.Default.Language,
+            icon = Icons.Filled.Language,
             title = stringRes(R.string.settings__localization__title),
             onClick = { navController.navigate(Routes.Settings.Localization) },
         )
@@ -118,24 +130,44 @@ fun HomeScreen() = FlorisScreen {
             onClick = { navController.navigate(Routes.Settings.Keyboard) },
         )
         Preference(
-            icon = Icons.Default.SmartButton,
+            icon = Icons.Outlined.SmartButton,
             title = stringRes(R.string.settings__smartbar__title),
             onClick = { navController.navigate(Routes.Settings.Smartbar) },
         )
         Preference(
-            icon = Icons.Default.Spellcheck,
+            icon = Icons.Outlined.Spellcheck,
             title = stringRes(R.string.settings__typing__title),
             onClick = { navController.navigate(Routes.Settings.Typing) },
-        )
-        Preference(
-            icon = Icons.Default.Gesture,
-            title = stringRes(R.string.settings__gestures__title),
-            onClick = { navController.navigate(Routes.Settings.Gestures) },
         )
         Preference(
             icon = Icons.Default.RateReview,
             title = "Report & Feedback",
             onClick = { navController.navigate(Routes.Settings.ReportFeedback) },
+        )
+        
+        // Account option - shows auth screen if not authenticated, account screen if authenticated
+        Preference(
+            icon = Icons.Default.AccountCircle,
+            title = "Account",
+            summary = when (authState) {
+                is AuthState.Authenticated -> userData?.email ?: userData?.displayName ?: "Signed In"
+                is AuthState.Loading -> "Loading..."
+                is AuthState.Error -> "Sign in to access your account"
+                is AuthState.Unauthenticated -> "Sign in to access your account"
+            },
+            onClick = { 
+                when (authState) {
+                    is AuthState.Authenticated -> navController.navigate(Routes.Auth.Account)
+                    is AuthState.Loading -> {} // Do nothing while loading
+                    is AuthState.Error, is AuthState.Unauthenticated -> navController.navigate(Routes.Auth.Screen)
+                }
+            },
+        )
+        
+        Preference(
+            icon = Icons.Default.Star,
+            title = "Upgrade to Pro",
+            onClick = { navController.navigate(Routes.Subscription.Screen) },
         )
         Preference(
             icon = Icons.Outlined.Build,

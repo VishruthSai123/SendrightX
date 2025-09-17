@@ -36,12 +36,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,11 +63,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vishruth.key1.editorInstance
+import com.vishruth.key1.ime.ai.AiUsageTracker
+import com.vishruth.key1.ime.ai.AiUsageStats
 import com.vishruth.key1.ime.keyboard.FlorisImeSizing
 import com.vishruth.key1.ime.theme.FlorisImeTheme
 import com.vishruth.key1.ime.theme.FlorisImeUi
 import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.lib.ads.RewardedAdManager
 import com.vishruth.key1.lib.devtools.flogDebug
+import com.vishruth.key1.user.UserManager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
@@ -81,6 +100,18 @@ fun MagicWandPanel(
     val keyboardManager by context.keyboardManager()
     val editorInstance by context.editorInstance()
     val scope = rememberCoroutineScope()
+    
+    // AI Usage Tracking
+    val aiUsageTracker = remember { AiUsageTracker.getInstance() }
+    val aiUsageStats by aiUsageTracker.usageStats.collectAsState()
+    
+    // User Manager for subscription status
+    val userManager = remember { UserManager.getInstance() }
+    val userData by userManager.userData.collectAsState()
+    
+    // Rewarded Ad Manager
+    val rewardedAdManager = remember { RewardedAdManager(context) }
+    var showLimitDialog by remember { mutableStateOf(false) }
     
     // State for managing expanded sections
     val expandedSections = remember { mutableStateMapOf<String, Boolean>() }
@@ -118,27 +149,383 @@ fun MagicWandPanel(
             .fillMaxWidth()
             .height(FlorisImeSizing.keyboardUiHeight())
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        Column(
+            modifier = Modifier.fillMaxSize()
+            .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(magicWandSections) { section ->
-                MagicWandSectionItem(
-                    section = section,
-                    onButtonClick = { buttonTitle ->
-                        scope.launch {
-                            handleMagicWandButtonClick(
-                                buttonTitle = buttonTitle,
-                                editorInstance = editorInstance,
-                                context = context
+            // Update the UI based on subscription status
+            val isProUser = userData?.subscriptionStatus == "pro"
+            val canUseRewardedAd = userManager.canUseRewardedAd()
+            
+            // Show different UI based on subscription status
+            if (!isProUser) {
+                // Show usage info for free users
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (aiUsageStats.isRewardWindowActive) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.secondaryContainer
+                        }
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        if (aiUsageStats.isRewardWindowActive) {
+                            // Reward window active
+                            Text(
+                                text = "Unlimited AI Mode",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Enjoy unlimited AI actions for the next ${aiUsageStats.rewardWindowTimeRemaining() / 1000 / 60} minutes",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        } else {
+                            // Normal usage
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "AI Usage: ${aiUsageStats.dailyActionCount} / ${AiUsageStats.DAILY_LIMIT}",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                if (aiUsageStats.dailyActionCount >= AiUsageStats.DAILY_LIMIT - 2) {
+                                    // Show ad option when user is close to limit
+                                    Text(
+                                        text = if (canUseRewardedAd) "Watch Ad" else "Ad Used This Month",
+                                        color = if (canUseRewardedAd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                            
+                            // Progress bar
+                            LinearProgressIndicator(
+                                progress = { (aiUsageStats.dailyActionCount.toFloat() / AiUsageStats.DAILY_LIMIT).coerceIn(0f, 1f) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                color = if (aiUsageStats.dailyActionCount >= AiUsageStats.DAILY_LIMIT) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                }
                             )
                         }
-                    },
-                    onToggleExpand = { sectionTitle ->
-                        expandedSections[sectionTitle] = !(expandedSections[sectionTitle] ?: false)
                     }
+                }
+            } else {
+                // Show usage info for pro users
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Text(
+                            text = "Pro User",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Enjoy unlimited AI actions with no restrictions",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+            
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(magicWandSections) { section ->
+                    MagicWandSectionItem(
+                        section = section,
+                        onButtonClick = { buttonTitle ->
+                            scope.launch {
+                                // Check AI usage before processing
+                                val isAllowed = aiUsageTracker.recordAiAction()
+                                // Force refresh the UI by getting the latest stats
+                                val updatedStats = aiUsageTracker.getUsageStats()
+                                
+                                if (isAllowed) {
+                                    handleMagicWandButtonClick(
+                                        buttonTitle = buttonTitle,
+                                        editorInstance = editorInstance,
+                                        context = context
+                                    )
+                                } else {
+                                    // Show limit reached message
+                                    if (updatedStats.remainingActions() == 0) {
+                                        context.showShortToast("Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI.")
+                                        showLimitDialog = true
+                                    }
+                                }
+                            }
+                        },
+                        onToggleExpand = { sectionTitle ->
+                            expandedSections[sectionTitle] = !(expandedSections[sectionTitle] ?: false)
+                        }
+                    )
+                }
+            }
+        }
+    }
+    
+    // Limit Reached Panel - will be handled by a separate panel component
+    // This section is intentionally left empty as the AI limit panel will be shown instead
+}
+
+@Composable
+private fun AiUsageStatsHeader(
+    usageStats: AiUsageStats,
+    onWatchAdClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    ) {
+        if (usageStats.isRewardWindowActive) {
+            // Reward window active - show timer text only (remove the extend button)
+            // This avoids SpaceBetween arrangement issues
+            
+            // Real-time timer state
+            var displayMinutes by remember { mutableStateOf(0) }
+            var displaySeconds by remember { mutableStateOf(0) }
+            
+            // Initialize timer values
+            LaunchedEffect(usageStats.isRewardWindowActive) {
+                val timeRemaining = usageStats.rewardWindowTimeRemaining()
+                displayMinutes = (timeRemaining / 60000).toInt()
+                displaySeconds = ((timeRemaining % 60000) / 1000).toInt()
+            }
+            
+            // Update timer every second
+            LaunchedEffect(usageStats.isRewardWindowActive) {
+                if (usageStats.isRewardWindowActive) {
+                    while (true) {
+                        delay(1000) // Update every second
+                        val updatedTimeRemaining = usageStats.rewardWindowTimeRemaining()
+                        displayMinutes = (updatedTimeRemaining / 60000).toInt()
+                        displaySeconds = ((updatedTimeRemaining % 60000) / 1000).toInt()
+                        
+                        // Break if reward window is no longer active
+                        if (!usageStats.isRewardWindowActive || updatedTimeRemaining <= 0) {
+                            break
+                        }
+                    }
+                }
+            }
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Timer,
+                    contentDescription = "Timer",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
+                Spacer(modifier = Modifier.width(4.dp))
+                SnyggText(
+                    elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                    text = "Unlimited AI - ${displayMinutes}:${String.format("%02d", displaySeconds)}",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        } else {
+            // Regular usage stats
+            val remaining = usageStats.remainingActions()
+            
+            // Always show the usage text
+            SnyggText(
+                elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                text = "AI Actions: $remaining/${AiUsageStats.DAILY_LIMIT}"
+            )
+            
+            // Show button only when all actions are used up (remaining == 0)
+            // Button will be placed below the progress bar now
+        }
+        
+        // Progress bar for usage - always shown
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            val progress = if (usageStats.isRewardWindowActive) {
+                1f // Full bar when in reward window
+            } else {
+                1f - (usageStats.remainingActions().toFloat() / AiUsageStats.DAILY_LIMIT)
+            }
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress.coerceIn(0f, 1f))
+                    .height(4.dp)
+                    .background(
+                        if (usageStats.isRewardWindowActive) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.secondary
+                        }
+                    )
+            )
+        }
+        
+        // Show button only when all actions are used up (remaining == 0)
+        // This is now placed below the progress bar
+        val remaining = usageStats.remainingActions()
+        if (remaining == 0 && !usageStats.isRewardWindowActive) {
+            Spacer(modifier = Modifier.height(4.dp))
+            SnyggButton(
+                elementName = FlorisImeUi.SmartbarActionTile.elementName,
+                onClick = onWatchAdClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)  // Consistent height with other buttons
+                    .clip(RoundedCornerShape(6.dp))
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Watch Ad",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        SnyggText(
+                            elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                            text = "Watch Ad"
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AiLimitDialog(
+    usageStats: AiUsageStats,
+    onWatchAd: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SnyggBox(
+        elementName = FlorisImeUi.SmartbarActionsOverflow.elementName,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clip(RoundedCornerShape(12.dp))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Info",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                SnyggText(
+                    elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                    text = "AI Limit Reached"
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            SnyggText(
+                elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                text = "You've used all ${AiUsageStats.DAILY_LIMIT} free AI actions for today.",
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            SnyggText(
+                elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                text = "Watch a short ad to unlock 60 minutes of unlimited AI actions!",
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                SnyggButton(
+                    elementName = FlorisImeUi.SmartbarActionTile.elementName,
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                ) {
+                    SnyggText(
+                        elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                        text = "Later"
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                SnyggButton(
+                    elementName = FlorisImeUi.SmartbarActionTile.elementName,
+                    onClick = onWatchAd,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Watch Ad",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        SnyggText(
+                            elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                            text = "Watch Ad"
+                        )
+                    }
+                }
             }
         }
     }
@@ -186,25 +573,36 @@ private fun MagicWandSectionItem(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val chunks = section.buttons.chunked(2)
-                chunks.forEach { rowButtons ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        rowButtons.forEach { buttonTitle ->
+                // Process buttons in rows of 2, but handle odd numbers correctly
+                for (i in section.buttons.indices step 2) {
+                    if (i + 1 < section.buttons.size) {
+                        // Two buttons in this row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             MagicWandButton(
-                                button = MagicWandButton(title = buttonTitle),
-                                onClick = { onButtonClick(buttonTitle) },
+                                button = MagicWandButton(title = section.buttons[i]),
+                                onClick = { onButtonClick(section.buttons[i]) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            MagicWandButton(
+                                button = MagicWandButton(title = section.buttons[i + 1]),
+                                onClick = { onButtonClick(section.buttons[i + 1]) },
                                 modifier = Modifier.weight(1f)
                             )
                         }
-                        // Fill remaining space if odd number of buttons
-                        if (rowButtons.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                    } else {
+                        // Single button in this row - take full width without extra spacing
+                        MagicWandButton(
+                            button = MagicWandButton(title = section.buttons[i]),
+                            onClick = { onButtonClick(section.buttons[i]) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp)
+                        )
                     }
                 }
             }

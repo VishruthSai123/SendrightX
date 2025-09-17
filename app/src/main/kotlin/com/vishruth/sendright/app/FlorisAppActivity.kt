@@ -141,6 +141,21 @@ class FlorisAppActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        
+        // Check for any pending purchases as per reference Step 4
+        // This ensures that if a user subscribes on one device, their access is activated when they open the app on another
+        try {
+            val userManager = com.vishruth.key1.user.UserManager.getInstance()
+            val billingManager = userManager.getBillingManager()
+            billingManager?.checkForExistingPurchases()
+        } catch (e: Exception) {
+            // Log error but don't crash the app
+            android.util.Log.w("FlorisAppActivity", "Error checking purchases on resume", e)
+        }
+    }
+
     override fun onPause() {
         super.onPause()
 

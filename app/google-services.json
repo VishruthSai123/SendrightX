@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "715038887430",
+    "project_id": "sendright-25",
+    "storage_bucket": "sendright-25.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:715038887430:android:c89eca35076f602d313d87",
+        "android_client_info": {
+          "package_name": "com.vishruth.key1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "715038887430-m13s6afg3i20sdjlcis9nn8t7pllgp18.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vishruth.key1",
+            "certificate_hash": "9348b94e087aba6b270d650e2f87124e3815f35d"
+          }
+        },
+        {
+          "client_id": "715038887430-tuqgoe89plbe7t8378058uvdpg0sre9m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vishruth.key1",
+            "certificate_hash": "492102887324a7f4012892601861f46f8c8540dc"
+          }
+        },
+        {
+          "client_id": "715038887430-kv5jungt3cpgv09agb0jc4d2v11sv5gn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCye4FQRLyyz8fq72yV0pZ9jsrkz57KGrQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "715038887430-kv5jungt3cpgv09agb0jc4d2v11sv5gn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

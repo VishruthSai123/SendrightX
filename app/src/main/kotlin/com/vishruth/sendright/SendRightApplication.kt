@@ -26,27 +26,32 @@ import android.content.IntentFilter
 import android.os.Handler
 import android.util.Log
 import androidx.core.os.UserManagerCompat
+import com.google.firebase.FirebaseApp
 import com.vishruth.key1.app.FlorisPreferenceModel
 import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.ime.clipboard.ClipboardManager
-import com.vishruth.key1.ime.core.SubtypeManager
-import com.vishruth.key1.ime.dictionary.DictionaryManager
 import com.vishruth.key1.ime.editor.EditorInstance
 import com.vishruth.key1.ime.keyboard.KeyboardManager
 import com.vishruth.key1.ime.media.emoji.FlorisEmojiCompat
 import com.vishruth.key1.ime.nlp.NlpManager
 import com.vishruth.key1.ime.text.gestures.GlideTypingManager
 import com.vishruth.key1.ime.theme.ThemeManager
+import com.vishruth.key1.lib.ads.AdManager
 import com.vishruth.key1.lib.cache.CacheManager
 import com.vishruth.key1.lib.crashutility.CrashUtility
 import com.vishruth.key1.lib.devtools.Flog
 import com.vishruth.key1.lib.devtools.LogTopic
 import com.vishruth.key1.lib.devtools.flogError
 import com.vishruth.key1.lib.ext.ExtensionManager
+import com.vishruth.key1.user.UserManager
+import com.vishruth.key1.ime.dictionary.DictionaryManager
+import com.vishruth.key1.ime.core.SubtypeManager
 
 import dev.patrickgold.jetpref.datastore.runtime.initAndroid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.florisboard.lib.kotlin.io.deleteContentsRecursively
@@ -86,7 +91,7 @@ class SendRightApplication : Application() {
     val glideTypingManager = lazy { GlideTypingManager(this) }
     val keyboardManager = lazy { KeyboardManager(this) }
     val nlpManager = lazy { NlpManager(this) }
-    val subtypeManager = lazy { SubtypeManager(this) }
+    val subtypeManager: Lazy<SubtypeManager> = lazy { SubtypeManager(this) }
     val themeManager = lazy { ThemeManager(this) }
 
     override fun onCreate() {
@@ -104,6 +109,32 @@ class SendRightApplication : Application() {
             FlorisEmojiCompat.init(this)
             //flogError { "dummy result: ${dummyAdd(3,4)}" }
 
+            // Initialize Firebase
+            FirebaseApp.initializeApp(this)
+            Log.d("SendRightApplication", "Firebase initialized successfully")
+
+            // Initialize AdMob SDK asynchronously without blocking
+            Log.d("SendRightApplication", "Initializing AdMob SDK asynchronously")
+            Log.d("SendRightApplication", "Application package name: ${this.packageName}")
+            AdManager.initialize(this)
+            
+            // Don't wait for AdMob SDK initialization - let it happen in the background
+            // The ad loading code will handle waiting when needed
+            
+            // Initialize AI Usage Tracker asynchronously - delay to reduce memory pressure
+            scope.launch {
+                delay(2000) // Wait 2 seconds to reduce initial memory pressure
+                AiUsageTracker.getInstance().initialize(this@SendRightApplication)
+                // Load initial usage stats after initialization
+                AiUsageTracker.getInstance().loadInitialUsageStats()
+            }
+
+            // Initialize UserManager with more delay to prevent memory pressure
+            scope.launch {
+                delay(3000) // Wait 3 seconds before initializing UserManager
+                UserManager.getInstance().initialize(this@SendRightApplication)
+            }
+
             if (!UserManagerCompat.isUserUnlocked(this)) {
                 cacheDir?.deleteContentsRecursively()
                 extensionManager.value.init()
@@ -113,6 +144,7 @@ class SendRightApplication : Application() {
 
             init()
         } catch (e: Exception) {
+            Log.e("SendRightApplication", "Error in onCreate", e)
             CrashUtility.stageException(e)
             return
         }
