@@ -124,6 +124,14 @@ class UserManager private constructor() {
                 isInitialized = true
                 isInitializing = false
                 Log.d(TAG, "UserManager initialization completed")
+                
+                // Trigger purchase restoration if user is already authenticated
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
+                    Log.d(TAG, "User already authenticated during initialization, triggering subscription sync")
+                    syncSubscriptionState()
+                }
+                
             } catch (e: Exception) {
                 Log.e(TAG, "Error during UserManager initialization", e)
                 isInitializing = false
@@ -190,88 +198,6 @@ class UserManager private constructor() {
             Log.e(TAG, "Error initializing billing managers", e)
             billingManager = null
             subscriptionManager = null
-        }
-    }
-    
-    /**
-     * Set up Firebase auth state listener
-     */
-    private fun setupAuthStateListener() {
-        if (authStateListenerRegistered) {
-            Log.d(TAG, "Auth state listener already registered, skipping")
-            return
-        }
-        
-        try {
-            Log.d(TAG, "Setting up Firebase auth state listener")
-            
-            // Set up auth state listener
-            auth.addAuthStateListener { firebaseAuth ->
-                try {
-                    val user = firebaseAuth.currentUser
-                    Log.d(TAG, "Auth state changed - User: ${user?.uid ?: "null"}")
-                    
-                    if (user != null) {
-                        // User is signed in - update immediately and load data async
-                        Log.d(TAG, "User signed in: ${user.uid}")
-                        
-                        // Update auth state immediately for responsive UI
-                        _authState.value = AuthState.Loading
-                        
-                        // Load user data asynchronously
-                        coroutineScope.launch {
-                            try {
-                                loadUserData(user)
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error loading user data", e)
-                                // Fall back to basic authenticated state even if data loading fails
-                                val basicUserData = UserData(
-                                    userId = user.uid,
-                                    email = user.email ?: "",
-                                    displayName = user.displayName ?: "",
-                                    subscriptionStatus = "free",
-                                    lastRewardedAdDate = null,
-                                    totalAdRewardsUsed = 0
-                                )
-                                withContext(Dispatchers.Main) {
-                                    _userData.value = basicUserData
-                                    _authState.value = AuthState.Authenticated(basicUserData)
-                                    Log.d(TAG, "Auth state updated to Authenticated (fallback): ${basicUserData.email}")
-                                }
-                            }
-                        }
-                    } else {
-                        // User is signed out - update immediately
-                        Log.d(TAG, "User signed out")
-                        _userData.value = null
-                        _authState.value = AuthState.Unauthenticated
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in auth state listener", e)
-                    _authState.value = AuthState.Error(e)
-                }
-            }
-            
-            authStateListenerRegistered = true
-            
-            // Check current auth state immediately after setting up listener
-            val currentUser = auth.currentUser
-            Log.d(TAG, "Current user during listener setup: ${currentUser?.uid ?: "null"}")
-            if (currentUser != null) {
-                Log.d(TAG, "Found existing signed-in user during setup: ${currentUser.uid}")
-                // Trigger auth state update
-                _authState.value = AuthState.Loading
-                coroutineScope.launch {
-                    loadUserData(currentUser)
-                }
-            } else {
-                _authState.value = AuthState.Unauthenticated
-            }
-            
-            Log.d(TAG, "Auth state listener set up successfully")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error setting up auth state listener", e)
-            _authState.value = AuthState.Error(e)
         }
     }
     
@@ -596,6 +522,34 @@ class UserManager private constructor() {
     }
 
     /**
+     * Force refresh of user subscription status from billing manager
+     * Based on reference: checkSubscriptionStatusFromServer function
+     */
+    suspend fun refreshSubscriptionStatus() {
+        try {
+            Log.d(TAG, "Refreshing subscription status...")
+            subscriptionManager?.forceRefreshSubscriptionStatus()
+            Log.d(TAG, "Subscription status refresh completed")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error refreshing subscription status", e)
+        }
+    }
+    
+    /**
+     * Check subscription status on app resume
+     * Based on reference: onResume() method
+     */
+    suspend fun onAppResume() {
+        try {
+            Log.d(TAG, "App resumed - checking subscription status...")
+            subscriptionManager?.checkSubscriptionStatusOnResume()
+            Log.d(TAG, "App resume subscription check completed")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during app resume subscription check", e)
+        }
+    }
+
+    /**
      * Update user's subscription status
      *
      * @param status The new subscription status
@@ -611,11 +565,14 @@ class UserManager private constructor() {
                     .update("subscriptionStatus", status)
                     .await()
                 
-                // Update local user data
+                // Update local user data and force UI refresh
                 val currentData = _userData.value
                 if (currentData != null) {
                     val updatedData = currentData.copy(subscriptionStatus = status)
                     _userData.value = updatedData
+                    Log.d(TAG, "Local userData updated with subscription status: $status")
+                } else {
+                    Log.w(TAG, "No current user data to update with subscription status")
                 }
                 
                 Log.d(TAG, "Subscription status updated to: $status")
@@ -668,7 +625,7 @@ class UserManager private constructor() {
     }
     
     /**
-     * Check if user can use rewarded ad (once per month)
+     * Check if user can use rewarded ad (once per day instead of once per month)
      *
      * @return true if user can use rewarded ad, false otherwise
      */
@@ -677,9 +634,9 @@ class UserManager private constructor() {
         val lastAdDate = userData.lastRewardedAdDate ?: return true // Allow if no previous ad usage
         
         val currentTime = System.currentTimeMillis()
-        val oneMonthInMillis = 30L * 24 * 60 * 60 * 1000 // Approximate one month
+        val oneDayInMillis = 24L * 60 * 60 * 1000 // One day in milliseconds
         
-        return (currentTime - lastAdDate) > oneMonthInMillis
+        return (currentTime - lastAdDate) > oneDayInMillis
     }
     
     // MARK: - Subscription Methods
@@ -737,11 +694,174 @@ class UserManager private constructor() {
     }
     
     /**
+     * Restore purchases for the current authenticated user
+     * This should be called after successful authentication to recover subscriptions
+     */
+    fun restorePurchases(callback: (Boolean, String?) -> Unit) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Log.w(TAG, "Cannot restore purchases - user not authenticated")
+            callback(false, "User must be signed in to restore purchases")
+            return
+        }
+        
+        Log.d(TAG, "Restoring purchases for user: ${currentUser.uid}")
+        
+        billingManager?.restorePurchases { success, message ->
+            if (success) {
+                Log.d(TAG, "Purchase restoration successful")
+                // Sync with server-side entitlements
+                coroutineScope.launch {
+                    billingManager?.syncWithServerAndRestore(currentUser.uid)
+                }
+            } else {
+                Log.w(TAG, "Purchase restoration failed: $message")
+            }
+            callback(success, message)
+        }
+    }
+    
+    /**
+     * Sync subscription state with server after authentication
+     * This ensures consistent subscription state across app instances
+     */
+    suspend fun syncSubscriptionState() {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Log.w(TAG, "Cannot sync subscription state - user not authenticated")
+            return
+        }
+        
+        Log.d(TAG, "Syncing subscription state for user: ${currentUser.uid}")
+        
+        try {
+            // Sync with server and restore if needed
+            billingManager?.syncWithServerAndRestore(currentUser.uid)
+            
+            // Update local user data with latest subscription info
+            updateUserDataFromServer(currentUser.uid)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error syncing subscription state", e)
+        }
+    }
+    
+    /**
+     * Update user data from server after authentication or subscription changes
+     */
+    private suspend fun updateUserDataFromServer(userId: String) {
+        try {
+            Log.d(TAG, "Updating user data from server for user: $userId")
+            
+            val userDoc = firestore.collection("users").document(userId).get().await()
+            
+            if (userDoc.exists()) {
+                val subscriptionStatus = userDoc.getString("subscriptionStatus") ?: "free"
+                val subscriptionExpiryTime = userDoc.getLong("subscriptionExpiryTime")
+                val lastRewardedAdDate = userDoc.getLong("lastRewardedAdDate")
+                val totalAdRewardsUsed = userDoc.getLong("totalAdRewardsUsed")?.toInt() ?: 0
+                
+                val currentUserData = _userData.value
+                if (currentUserData != null) {
+                    val updatedUserData = currentUserData.copy(
+                        subscriptionStatus = subscriptionStatus,
+                        subscriptionExpiryTime = subscriptionExpiryTime,
+                        lastRewardedAdDate = lastRewardedAdDate,
+                        totalAdRewardsUsed = totalAdRewardsUsed
+                    )
+                    
+                    _userData.value = updatedUserData
+                    Log.d(TAG, "User data updated from server")
+                }
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating user data from server", e)
+        }
+    }
+    
+    /**
+     * Enhanced authentication state setup with purchase restoration
+     */
+    private fun setupAuthStateListener() {
+        if (authStateListenerRegistered) {
+            Log.d(TAG, "Auth state listener already registered")
+            return
+        }
+        
+        Log.d(TAG, "Setting up auth state listener with purchase restoration")
+        
+        auth.addAuthStateListener { firebaseAuth ->
+            coroutineScope.launch {
+                try {
+                    val user = firebaseAuth.currentUser
+                    if (user != null) {
+                        Log.d(TAG, "User authenticated: ${user.uid}")
+                        
+                        // Create user data
+                        val userData = UserData(
+                            userId = user.uid,
+                            email = user.email ?: "",
+                            displayName = user.displayName ?: ""
+                        )
+                        
+                        _userData.value = userData
+                        withContext(Dispatchers.Main) {
+                            _authState.value = AuthState.Authenticated(userData)
+                        }
+                        
+                        // Auto-sync subscription state after authentication
+                        if (isInitialized) {
+                            syncSubscriptionState()
+                        }
+                        
+                    } else {
+                        Log.d(TAG, "User signed out")
+                        _userData.value = null
+                        withContext(Dispatchers.Main) {
+                            _authState.value = AuthState.Unauthenticated
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in auth state listener", e)
+                    withContext(Dispatchers.Main) {
+                        _authState.value = AuthState.Error(e)
+                    }
+                }
+            }
+        }
+        
+        authStateListenerRegistered = true
+    }
+    
+    /**
      * Clean up resources
      */
     fun destroy() {
         subscriptionManager?.destroy()
         billingManager?.destroy()
+    }
+    
+    /**
+     * Trigger purchase restoration manually (can be called from UI)
+     * This is useful for "Restore Purchases" buttons in settings
+     */
+    fun triggerPurchaseRestoration(callback: (Boolean, String?) -> Unit) {
+        if (!isInitialized) {
+            callback(false, "UserManager not initialized")
+            return
+        }
+        
+        restorePurchases(callback)
+    }
+    
+    /**
+     * Check if current user has server-side entitlements
+     * This is useful for debugging subscription issues
+     */
+    suspend fun checkServerSideEntitlements(): Boolean {
+        val currentUser = auth.currentUser ?: return false
+        return billingManager?.verifyServerSideEntitlements(currentUser.uid) ?: false
     }
 }
 

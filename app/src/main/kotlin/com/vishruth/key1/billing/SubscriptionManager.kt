@@ -8,6 +8,7 @@ package com.vishruth.key1.billing
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.vishruth.key1.user.UserManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -24,7 +25,7 @@ class SubscriptionManager(
         private const val PREFS_NAME = "subscription_prefs"
         private const val KEY_AI_ACTIONS_USED = "ai_actions_used"
         private const val KEY_PRO_STATUS = "pro_status"
-        const val FREE_DAILY_AI_ACTIONS = 10
+        const val FREE_DAILY_AI_ACTIONS = 5
     }
     
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -49,27 +50,48 @@ class SubscriptionManager(
     init {
         loadState()
         
-        // Monitor purchase updates
+        // Monitor purchase updates and immediately check subscription status
         managerScope.launch {
             billingManager.purchaseUpdates.collect { result ->
+                Log.d(TAG, "Purchase update received: ${result.isSuccess}")
                 if (result.isSuccess) {
+                    // Force immediate subscription status check
+                    delay(1000) // Small delay to ensure purchase is processed
                     checkSubscriptionStatus()
+                    Log.d(TAG, "Subscription status checked after purchase")
+                } else {
+                    Log.w(TAG, "Purchase failed: ${result.exceptionOrNull()?.message}")
                 }
             }
+        }
+        
+        // Initial subscription check
+        managerScope.launch {
+            delay(2000) // Wait for billing client to be ready
+            checkSubscriptionStatus()
         }
     }
     
     /**
-     * Load subscription state from SharedPreferences
+     * Load subscription state from SharedPreferences and BillingManager
      */
     private fun loadState() {
+        // Load from preferences first
         _aiActionsUsed.value = prefs.getInt(KEY_AI_ACTIONS_USED, 0)
         _currentAiUsageCount.value = _aiActionsUsed.value
-        _isPro.value = prefs.getBoolean(KEY_PRO_STATUS, false)
-        _isProUser.value = _isPro.value
+        val prefsProStatus = prefs.getBoolean(KEY_PRO_STATUS, false)
+        
+        // Also check BillingManager's local state
+        val billingProStatus = billingManager.getSubscriptionState()
+        
+        // Use the most recent state (preference billing manager local state)
+        val actualProStatus = prefsProStatus || billingProStatus
+        
+        _isPro.value = actualProStatus
+        _isProUser.value = actualProStatus
         updateRemainingActions()
         
-        Log.d(TAG, "State loaded - Pro: ${_isPro.value}, Actions used: ${_aiActionsUsed.value}")
+        Log.d(TAG, "State loaded - Prefs Pro: $prefsProStatus, Billing Pro: $billingProStatus, Final Pro: $actualProStatus, Actions used: ${_aiActionsUsed.value}")
     }
     
     /**
@@ -89,14 +111,15 @@ class SubscriptionManager(
      */
     suspend fun useAiAction(): Boolean {
         return if (_isPro.value) {
-            // Pro users have unlimited access
-            incrementUsageCount()
+            // Pro users have unlimited access - don't increment counter
+            Log.d(TAG, "AI action allowed - Pro user with unlimited access")
             true
         } else {
             // Free users have daily limits
             if (_aiActionsUsed.value < FREE_DAILY_AI_ACTIONS) {
                 incrementUsageCount()
                 saveUsageToPrefs()
+                Log.d(TAG, "AI action allowed - Free user within daily limit")
                 true
             } else {
                 Log.w(TAG, "Daily AI action limit reached for free user")
@@ -126,17 +149,49 @@ class SubscriptionManager(
     
     /**
      * Check subscription status
+     * Based on reference: checkSubscriptionStatusFromServer function
      */
     suspend fun checkSubscriptionStatus() {
         try {
-            val hasActiveSubscription = billingManager.hasActiveSubscription()
-            _isPro.value = hasActiveSubscription
-            _isProUser.value = hasActiveSubscription
+            Log.d(TAG, "Checking subscription status...")
             
-            prefs.edit().putBoolean(KEY_PRO_STATUS, hasActiveSubscription).apply()
+            // Check both Google Play Billing and local state
+            val hasActiveSubscription = billingManager.hasActiveSubscription()
+            val localSubscriptionState = billingManager.getSubscriptionState()
+            
+            Log.d(TAG, "Google Play subscription: $hasActiveSubscription")
+            Log.d(TAG, "Local subscription state: $localSubscriptionState")
+            
+            // Use the most recent and reliable state
+            val actualSubscriptionState = hasActiveSubscription || localSubscriptionState
+            
+            // Update local state with explicit logging
+            val oldProStatus = _isPro.value
+            _isPro.value = actualSubscriptionState
+            _isProUser.value = actualSubscriptionState
+            
+            Log.d(TAG, "Pro status changed from $oldProStatus to $actualSubscriptionState")
+            
+            // Save to preferences
+            prefs.edit().putBoolean(KEY_PRO_STATUS, actualSubscriptionState).apply()
             updateRemainingActions()
             
-            Log.d(TAG, "Subscription status updated: $hasActiveSubscription")
+            // Update UserManager subscription status with retry logic
+            try {
+                val userManager = UserManager.getInstance()
+                val newStatus = if (actualSubscriptionState) "pro" else "free"
+                val result = userManager.updateSubscriptionStatus(newStatus)
+                
+                if (result.isSuccess) {
+                    Log.d(TAG, "UserManager subscription status updated to: $newStatus")
+                } else {
+                    Log.e(TAG, "Failed to update UserManager subscription status: ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating UserManager subscription status", e)
+            }
+            
+            Log.d(TAG, "Subscription status check completed. isPro: ${_isPro.value}, remaining actions: ${_remainingActions.value}")
         } catch (e: Exception) {
             Log.e(TAG, "Error checking subscription status", e)
         }
@@ -180,6 +235,45 @@ class SubscriptionManager(
         updateRemainingActions()
         saveUsageToPrefs()
         Log.d(TAG, "Daily usage reset")
+    }
+    
+    /**
+     * Check subscription status on app resume
+     * Based on reference: checkSubscriptionStatusFromServer in onResume
+     */
+    suspend fun checkSubscriptionStatusOnResume() {
+        Log.d(TAG, "Checking subscription status on app resume...")
+        
+        // Check for existing purchases that might have been processed while app was closed
+        billingManager.checkForExistingPurchases()
+        
+        // Wait a moment for purchase checking to complete
+        delay(1000)
+        
+        // Then do full subscription status check
+        checkSubscriptionStatus()
+    }
+    
+    /**
+     * Force subscription status refresh
+     */
+    suspend fun forceRefreshSubscriptionStatus() {
+        Log.d(TAG, "Force refreshing subscription status...")
+        
+        try {
+            // Check for existing purchases first
+            billingManager.checkForExistingPurchases()
+            
+            // Small delay to let purchase processing complete
+            delay(1500)
+            
+            // Then check full subscription status
+            checkSubscriptionStatus()
+            
+            Log.d(TAG, "Force refresh completed")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during force refresh", e)
+        }
     }
     
     /**

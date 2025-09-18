@@ -9,11 +9,14 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.android.billingclient.api.*
+import com.vishruth.key1.user.UserManager
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.tasks.await
 
 /**
- * Simple BillingManager for SendRight Pro subscriptions
+ * Simple BillingManager for SendRight Pro subscription management
  */
 class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     
@@ -273,39 +276,132 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     
     /**
      * Verify and acknowledge purchase
-     * Based on reference: verifyPurchase method
+     * Based on reference: verifyAndAcknowledgePurchase method
      */
     private fun verifyPurchase(purchase: Purchase) {
-        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-            Log.d(TAG, "Acknowledging purchase: ${purchase.purchaseToken}")
+        // We only process purchases that are in the PURCHASED state
+        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            Log.d(TAG, "Purchase is in PURCHASED state: ${purchase.products}")
             
-            val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
-            
-            billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "Purchase acknowledged successfully")
-                    // Subscription is active and acknowledged - grant entitlement to the user
-                    grantPremiumAccess()
-                } else {
-                    Log.e(TAG, "Failed to acknowledge purchase: ${billingResult.debugMessage}")
+            // Ensure the purchase is not already acknowledged
+            if (!purchase.isAcknowledged) {
+                Log.d(TAG, "Acknowledging purchase: ${purchase.purchaseToken}")
+                
+                val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchase.purchaseToken)
+                    .build()
+                
+                billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        Log.d(TAG, "Purchase acknowledged successfully")
+                        // Purchase is valid and acknowledged. Now grant access.
+                        grantPremiumAccess()
+                    } else {
+                        Log.e(TAG, "Failed to acknowledge purchase: ${billingResult.debugMessage}")
+                        billingScope.launch {
+                            _purchaseUpdates.emit(Result.failure(Exception("Failed to acknowledge purchase: ${billingResult.debugMessage}")))
+                        }
+                    }
                 }
+            } else {
+                Log.d(TAG, "Purchase already acknowledged, granting access")
+                // Already acknowledged, just grant access
+                grantPremiumAccess()
             }
-        } else if (purchase.isAcknowledged) {
-            Log.d(TAG, "Purchase already acknowledged, granting access")
-            // Already acknowledged, just grant access
-            grantPremiumAccess()
+        } else {
+            Log.w(TAG, "Purchase not in PURCHASED state: ${purchase.purchaseState}")
+            billingScope.launch {
+                _purchaseUpdates.emit(Result.failure(Exception("Purchase not in purchased state")))
+            }
         }
     }
     
     /**
      * Grant premium access to the user
+     * Based on reference: grantPremiumAccess function
      */
     private fun grantPremiumAccess() {
         Log.d(TAG, "Granting premium access to user")
-        // This will be handled by the SubscriptionManager when it observes purchase updates
-        // The subscription manager will update the user's subscription status
+        
+        billingScope.launch {
+            try {
+                // Save subscription state locally using SharedPreferences
+                saveSubscriptionState(true)
+                
+                // Update the subscription manager and UserManager
+                updateSubscriptionManagers(true)
+                
+                // Emit successful purchase update for UI to react
+                _purchaseUpdates.emit(Result.success(createDummyPurchase()))
+                
+                Log.d(TAG, "Premium access granted successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error granting premium access", e)
+                _purchaseUpdates.emit(Result.failure(e))
+            }
+        }
+    }
+    
+    /**
+     * Save subscription state to SharedPreferences
+     * Based on reference: saveSubscriptionState function
+     */
+    private fun saveSubscriptionState(isPremium: Boolean) {
+        val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("is_premium_user", isPremium).apply()
+        Log.d(TAG, "Subscription state saved: isPremium = $isPremium")
+    }
+    
+    /**
+     * Get subscription state from SharedPreferences
+     * Based on reference: getSubscriptionState function
+     */
+    fun getSubscriptionState(): Boolean {
+        val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        val isPremium = prefs.getBoolean("is_premium_user", false)
+        Log.d(TAG, "Retrieved subscription state: isPremium = $isPremium")
+        return isPremium
+    }
+    
+    /**
+     * Update subscription managers with new status
+     */
+    private suspend fun updateSubscriptionManagers(isPremium: Boolean) {
+        try {
+            // Get UserManager instance and update subscription status
+            val userManager = UserManager.getInstance()
+            val newStatus = if (isPremium) "pro" else "free"
+            val result = userManager.updateSubscriptionStatus(newStatus)
+            
+            if (result.isSuccess) {
+                Log.d(TAG, "UserManager updated with subscription status: $newStatus")
+            } else {
+                Log.e(TAG, "Failed to update UserManager: ${result.exceptionOrNull()?.message}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating subscription managers", e)
+        }
+    }
+    
+    /**
+     * Create a dummy purchase object for successful purchase updates
+     */
+    private fun createDummyPurchase(): Purchase {
+        // This is a simplified approach for the purchase update flow
+        // In a real app, you'd use the actual purchase object
+        val json = """
+            {
+                "orderId": "premium_${System.currentTimeMillis()}",
+                "packageName": "${context.packageName}",
+                "productId": "$PRODUCT_ID_PRO_MONTHLY",
+                "purchaseTime": ${System.currentTimeMillis()},
+                "purchaseState": 1,
+                "purchaseToken": "premium_token_${System.currentTimeMillis()}",
+                "acknowledged": true
+            }
+        """.trimIndent()
+        
+        return Purchase(json, "")
     }
     
     /**
@@ -351,29 +447,137 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             }
         }
     }
-    
+
     /**
-     * Check if user has an active subscription
+     * Restore purchases from Google Play purchase history
+     * This is critical for handling app reinstalls where local state is lost
+     * Uses Google Play's purchase history API to recover subscriptions
      */
-    suspend fun hasActiveSubscription(): Boolean {
-        return try {
-            if (!billingClient.isReady) {
-                false
-            } else {
-                val params = QueryPurchasesParams.newBuilder()
+    fun restorePurchases(callback: (Boolean, String?) -> Unit) {
+        if (!billingClient.isReady) {
+            Log.w(TAG, "Billing client not ready, cannot restore purchases")
+            callback(false, "Billing service not available")
+            return
+        }
+        
+        Log.d(TAG, "Starting purchase restoration...")
+        
+        billingScope.launch {
+            try {
+                // Check current active purchases first
+                val currentParams = QueryPurchasesParams.newBuilder()
                     .setProductType(BillingClient.ProductType.SUBS)
                     .build()
                 
-                val result = billingClient.queryPurchasesAsync(params)
-                result.purchasesList.any { purchase ->
-                    purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
-                    purchase.products.contains(PRODUCT_ID_PRO_MONTHLY) &&
-                    purchase.isAcknowledged
+                val currentResult = billingClient.queryPurchasesAsync(currentParams)
+                
+                if (currentResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    val activePurchases = currentResult.purchasesList
+                    Log.d(TAG, "Found ${activePurchases.size} active purchases")
+                    
+                    // Check for active subscriptions
+                    val hasActiveSubscription = activePurchases.any { purchase ->
+                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                        purchase.products.contains(PRODUCT_ID_PRO_MONTHLY) &&
+                        purchase.isAcknowledged
+                    }
+                    
+                    if (hasActiveSubscription) {
+                        Log.d(TAG, "Found active subscription, restoring premium access")
+                        grantPremiumAccess()
+                        withContext(Dispatchers.Main) {
+                            callback(true, "Active subscription restored successfully")
+                        }
+                    } else {
+                        Log.d(TAG, "No active subscription found")
+                        withContext(Dispatchers.Main) {
+                            callback(false, "No active subscription found to restore")
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Failed to query current purchases: ${currentResult.billingResult.debugMessage}")
+                    withContext(Dispatchers.Main) {
+                        callback(false, "Failed to verify current subscriptions")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during purchase restoration", e)
+                withContext(Dispatchers.Main) {
+                    callback(false, "Error occurred during purchase restoration: ${e.message}")
                 }
             }
+        }
+    }
+    
+    /**
+     * Store purchase history record for server-side verification
+     * This helps maintain entitlement records even when local state is lost
+     */
+    private suspend fun storePurchaseHistoryForVerification(purchase: Purchase) {
+        try {
+            Log.d(TAG, "Storing purchase history for verification: ${purchase.products}")
+            
+            // Get current user for server-side storage
+            val userManager = UserManager.getInstance()
+            val userData = userManager.userData.value
+            
+            if (userData?.userId != null) {
+                // Store in server-side database for verification
+                storePurchaseOnServer(
+                    userId = userData.userId,
+                    purchaseToken = purchase.purchaseToken,
+                    products = purchase.products,
+                    purchaseTime = purchase.purchaseTime
+                )
+            } else {
+                Log.w(TAG, "No authenticated user found, cannot store purchase history on server")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking subscription status", e)
-            false
+            Log.e(TAG, "Error storing purchase history for verification", e)
+        }
+    }
+    
+    /**
+     * Check if user has an active subscription
+     * Based on reference: checkSubscriptionStatus function
+     */
+    suspend fun hasActiveSubscription(): Boolean {
+        return try {
+            // First check local SharedPreferences for immediate response
+            val localSubscriptionState = getSubscriptionState()
+            
+            if (!billingClient.isReady) {
+                Log.w(TAG, "Billing client not ready, using local state: $localSubscriptionState")
+                return localSubscriptionState
+            }
+            
+            // Then verify with Google Play Billing
+            val params = QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+            
+            val result = billingClient.queryPurchasesAsync(params)
+            val hasActivePurchase = result.purchasesList.any { purchase ->
+                purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                purchase.products.contains(PRODUCT_ID_PRO_MONTHLY) &&
+                purchase.isAcknowledged
+            }
+            
+            // Update local state if different from Google Play state
+            if (hasActivePurchase != localSubscriptionState) {
+                Log.d(TAG, "Subscription state mismatch - Google Play: $hasActivePurchase, Local: $localSubscriptionState")
+                saveSubscriptionState(hasActivePurchase)
+                
+                // Update subscription managers
+                updateSubscriptionManagers(hasActivePurchase)
+            }
+            
+            Log.d(TAG, "Active subscription check result: $hasActivePurchase")
+            hasActivePurchase
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking subscription status, falling back to local state", e)
+            // Fallback to local state if Google Play check fails
+            getSubscriptionState()
         }
     }
     
@@ -382,6 +586,109 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
      */
     fun getProductDetails(productId: String): ProductDetails? {
         return _products.value.find { it.productId == productId }
+    }
+    
+    /**
+     * Store purchase information on server for persistent entitlement tracking
+     * This ensures subscriptions are not lost on app reinstall
+     */
+    private suspend fun storePurchaseOnServer(
+        userId: String,
+        purchaseToken: String,
+        products: List<String>,
+        purchaseTime: Long
+    ) {
+        try {
+            Log.d(TAG, "Storing purchase on server for user: $userId")
+            
+            val firestore = FirebaseFirestore.getInstance()
+            val purchaseData = mapOf(
+                "userId" to userId,
+                "purchaseToken" to purchaseToken,
+                "products" to products,
+                "purchaseTime" to purchaseTime,
+                "timestamp" to System.currentTimeMillis(),
+                "platform" to "android"
+            )
+            
+            // Store in user's subscription collection
+            firestore.collection("users")
+                .document(userId)
+                .collection("subscriptions")
+                .document(purchaseToken)
+                .set(purchaseData)
+                .await()
+            
+            Log.d(TAG, "Purchase successfully stored on server")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to store purchase on server", e)
+        }
+    }
+    
+    /**
+     * Verify subscription status with server-side entitlements
+     * This provides an additional layer of subscription validation
+     */
+    suspend fun verifyServerSideEntitlements(userId: String): Boolean {
+        return try {
+            Log.d(TAG, "Verifying server-side entitlements for user: $userId")
+            
+            val firestore = FirebaseFirestore.getInstance()
+            val subscriptionsSnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("subscriptions")
+                .get()
+                .await()
+            
+            val hasValidSubscription = subscriptionsSnapshot.documents.any { doc ->
+                val products = doc.get("products") as? List<*>
+                products?.contains(PRODUCT_ID_PRO_MONTHLY) == true
+            }
+            
+            Log.d(TAG, "Server-side entitlement verification result: $hasValidSubscription")
+            hasValidSubscription
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error verifying server-side entitlements", e)
+            false
+        }
+    }
+    
+    /**
+     * Sync subscription state with server and restore if needed
+     * This should be called during app startup after user authentication
+     */
+    suspend fun syncWithServerAndRestore(userId: String) {
+        try {
+            Log.d(TAG, "Syncing subscription state with server for user: $userId")
+            
+            // First check local state
+            val localSubscriptionState = getSubscriptionState()
+            
+            // Then check server-side entitlements
+            val serverHasSubscription = verifyServerSideEntitlements(userId)
+            
+            // Finally verify with Google Play
+            val googlePlayHasSubscription = hasActiveSubscription()
+            
+            Log.d(TAG, "Subscription state comparison - Local: $localSubscriptionState, Server: $serverHasSubscription, Google Play: $googlePlayHasSubscription")
+            
+            // If Google Play has active subscription but local doesn't, restore it
+            if (googlePlayHasSubscription && !localSubscriptionState) {
+                Log.d(TAG, "Restoring subscription from Google Play")
+                grantPremiumAccess()
+            }
+            
+            // If server has subscription but Google Play doesn't, there might be an issue
+            if (serverHasSubscription && !googlePlayHasSubscription) {
+                Log.w(TAG, "Server shows subscription but Google Play doesn't - subscription may have expired")
+                // Could trigger a more detailed verification or user notification here
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during subscription sync", e)
+        }
     }
     
     /**

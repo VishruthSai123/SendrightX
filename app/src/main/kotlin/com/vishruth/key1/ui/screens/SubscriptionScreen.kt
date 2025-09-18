@@ -2,7 +2,12 @@
  * Copyright (C) 2025 SendRight 3.0
  * License    // Collect available products from billing manager
     val products by billingManager?.products?.collectAsState() 
-        ?: remember { mutableStateOf(emptyList()) }
+        ?: re                    Icon(
+                        imageVector = if (isUserPro) Icons.Default.CheckCircle else Icons.Default.Star,
+                        contentDescription = "Pro Status",
+                        modifier = Modifier.size(60.dp),
+                        tint = if (isUserPro) MaterialTheme.colorScheme.onPrimary 
+                              else MaterialTheme.colorScheme.onPrimaryContainer { mutableStateOf(emptyList()) }
     
     // Debug logging
     LaunchedEffect(products) {
@@ -19,6 +24,7 @@
 
 package com.vishruth.key1.ui.screens
 
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
@@ -54,6 +60,9 @@ fun SubscriptionScreen(
     val billingManager = userManager.getBillingManager()
     val subscriptionManager = userManager.getSubscriptionManager()
     
+    // Observe UserManager userData for subscription status
+    val userData by userManager.userData.collectAsState()
+    
     // Collect state from managers with safe defaults
     val isPro by subscriptionManager?.isPro?.collectAsState() 
         ?: remember { mutableStateOf(false) }
@@ -63,6 +72,25 @@ fun SubscriptionScreen(
     
     val remainingActions by subscriptionManager?.remainingActions?.collectAsState()
         ?: remember { mutableStateOf(5) }
+    
+    // Determine if user is actually pro based on both sources
+    val isUserPro = userData?.subscriptionStatus == "pro" || isPro
+    
+    // Force subscription status refresh when screen appears
+    LaunchedEffect(Unit) {
+        userManager.onAppResume()
+    }
+    
+    // Show success message when user becomes pro
+    LaunchedEffect(isUserPro) {
+        if (isUserPro) {
+            Toast.makeText(
+                context,
+                "🎉 Welcome to SendRight Pro! Unlimited AI features unlocked.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
     
     // Collect products from billing manager
     val products by billingManager?.products?.collectAsState() 
@@ -165,7 +193,7 @@ fun SubscriptionScreen(
                 modifier = Modifier.size(120.dp),
                 shape = RoundedCornerShape(60.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isPro) MaterialTheme.colorScheme.primary 
+                    containerColor = if (isUserPro) MaterialTheme.colorScheme.primary 
                                    else MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
@@ -187,7 +215,7 @@ fun SubscriptionScreen(
             
             // Main title
             Text(
-                text = if (isPro) "Welcome to SendRight Pro!" else "Upgrade to SendRight Pro",
+                text = if (isUserPro) "Welcome to SendRight Pro!" else "Upgrade to SendRight Pro",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -196,7 +224,7 @@ fun SubscriptionScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = if (isPro) "You have unlimited AI features" else "Unlock unlimited AI features and remove ads",
+                text = if (isUserPro) "You have unlimited AI features" else "Unlock unlimited AI features and remove ads",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -206,7 +234,7 @@ fun SubscriptionScreen(
             
             // Current status card
             StatusCard(
-                isPro = isPro, 
+                isPro = isUserPro, 
                 aiActionsUsed = aiActionsUsed,
                 remainingActions = remainingActions,
                 subscriptionManager = subscriptionManager
@@ -262,7 +290,7 @@ fun SubscriptionScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             // Subscribe/Status button
-            if (!isPro) {
+            if (!isUserPro) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -284,13 +312,19 @@ fun SubscriptionScreen(
                                                     validatedProduct
                                                 )
                                                 
+                                                // DO NOT show success immediately - wait for actual purchase completion
                                                 if (result.isFailure) {
                                                     Toast.makeText(
                                                         context, 
-                                                        "Purchase failed: ${result.exceptionOrNull()?.message}", 
+                                                        "Failed to launch purchase: ${result.exceptionOrNull()?.message}", 
                                                         Toast.LENGTH_SHORT
                                                     ).show()
+                                                } else {
+                                                    Log.d("SubscriptionScreen", "Purchase flow launched successfully")
                                                 }
+                                                
+                                                // The success will be handled by BillingManager.grantPremiumAccess()
+                                                // after purchase is acknowledged
                                             } catch (e: Exception) {
                                                 Toast.makeText(
                                                     context, 
@@ -437,7 +471,7 @@ private fun StatusCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = subscriptionManager?.getSubscriptionStatusMessage() 
-                        ?: "$aiActionsUsed/10 AI actions used today",
+                        ?: "$aiActionsUsed/5 AI actions used today",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center

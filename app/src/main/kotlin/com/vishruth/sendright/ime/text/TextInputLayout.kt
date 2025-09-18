@@ -23,7 +23,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +45,7 @@ import com.vishruth.key1.ime.smartbar.quickaction.QuickActionsOverflowPanel
 import com.vishruth.key1.ime.text.keyboard.TextKeyboardLayout
 import com.vishruth.key1.ime.theme.FlorisImeUi
 import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.user.UserManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import org.florisboard.lib.snygg.ui.SnyggIcon
 
@@ -70,11 +73,31 @@ fun TextInputLayout(
             if (state.isActionsOverflowVisible) {
                 QuickActionsOverflowPanel()
             } else if (state.isMagicWandPanelVisible) {
-                // Check if AI limit is reached
+                // Enhanced subscription and AI limit checking
                 val aiUsageTracker = remember { AiUsageTracker.getInstance() }
                 val usageStats by aiUsageTracker.usageStats.collectAsState()
-                // Check if limit is reached without blocking
-                val isLimitReached = usageStats.remainingActions() == 0 && !usageStats.isRewardWindowActive
+                
+                // Check subscription status from multiple sources
+                val userManager = remember { UserManager.getInstance() }
+                val userData by userManager.userData.collectAsState()
+                val subscriptionManager = remember { userManager.getSubscriptionManager() }
+                val isProFromSubscriptionManager = remember { mutableStateOf(false) }
+                
+                // Observe subscription manager's isPro StateFlow if available
+                LaunchedEffect(subscriptionManager) {
+                    subscriptionManager?.isPro?.collect { isPro ->
+                        isProFromSubscriptionManager.value = isPro
+                    }
+                }
+                
+                // Determine if user is pro from multiple sources
+                val isProUser = userData?.subscriptionStatus == "pro" || 
+                               isProFromSubscriptionManager.value
+                
+                // Check if limit is reached for non-pro users
+                val isLimitReached = !isProUser && 
+                                   usageStats.remainingActions() == 0 && 
+                                   !usageStats.isRewardWindowActive
                 
                 if (isLimitReached) {
                     AiLimitPanel(

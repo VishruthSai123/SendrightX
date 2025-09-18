@@ -109,9 +109,24 @@ fun MagicWandPanel(
     val userManager = remember { UserManager.getInstance() }
     val userData by userManager.userData.collectAsState()
     
+    // Get subscription manager for real-time subscription state
+    val subscriptionManager = userManager.getSubscriptionManager()
+    val isPro by subscriptionManager?.isPro?.collectAsState() ?: remember { mutableStateOf(false) }
+    
+    // Determine pro status from multiple sources for immediate updates
+    val isProUser = isPro || userData?.subscriptionStatus == "pro"
+    
     // Rewarded Ad Manager
     val rewardedAdManager = remember { RewardedAdManager(context) }
     var showLimitDialog by remember { mutableStateOf(false) }
+    
+    // Force refresh UI when subscription status changes
+    LaunchedEffect(isProUser) {
+        if (isProUser) {
+            // Force recomposition when user becomes pro
+            context.showShortToast("🎉 Pro features unlocked!")
+        }
+    }
     
     // State for managing expanded sections
     val expandedSections = remember { mutableStateMapOf<String, Boolean>() }
@@ -154,8 +169,7 @@ fun MagicWandPanel(
             .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Update the UI based on subscription status
-            val isProUser = userData?.subscriptionStatus == "pro"
+            // Get updated subscription status and capabilities
             val canUseRewardedAd = userManager.canUseRewardedAd()
             
             // Show different UI based on subscription status
@@ -254,22 +268,37 @@ fun MagicWandPanel(
                         section = section,
                         onButtonClick = { buttonTitle ->
                             scope.launch {
-                                // Check AI usage before processing
-                                val isAllowed = aiUsageTracker.recordAiAction()
-                                // Force refresh the UI by getting the latest stats
-                                val updatedStats = aiUsageTracker.getUsageStats()
-                                
-                                if (isAllowed) {
+                                // Check if user is pro - use the reactive isProUser variable
+                                if (isProUser) {
+                                    // Pro users get unlimited access
                                     handleMagicWandButtonClick(
                                         buttonTitle = buttonTitle,
                                         editorInstance = editorInstance,
                                         context = context
                                     )
                                 } else {
-                                    // Show limit reached message
-                                    if (updatedStats.remainingActions() == 0) {
-                                        context.showShortToast("Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI.")
-                                        showLimitDialog = true
+                                    // Check AI usage for free users
+                                    val isAllowed = aiUsageTracker.recordAiAction()
+                                    
+                                    if (isAllowed) {
+                                        handleMagicWandButtonClick(
+                                            buttonTitle = buttonTitle,
+                                            editorInstance = editorInstance,
+                                            context = context
+                                        )
+                                    } else {
+                                        // Force refresh the UI by getting the latest stats
+                                        val updatedStats = aiUsageTracker.getUsageStats()
+                                        val canUseAd = userManager.canUseRewardedAd()
+                                        
+                                        if (updatedStats.remainingActions() == 0) {
+                                            if (canUseAd) {
+                                                context.showShortToast("Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI.")
+                                                showLimitDialog = true
+                                            } else {
+                                                context.showShortToast("You've reached your daily limit and used your free ad. Upgrade to Pro or wait until tomorrow!")
+                                            }
+                                        }
                                     }
                                 }
                             }

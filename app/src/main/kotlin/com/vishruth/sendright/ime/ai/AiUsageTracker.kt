@@ -97,6 +97,20 @@ class AiUsageTracker private constructor() {
     }
     
     /**
+     * Check if the user has pro subscription from multiple sources.
+     *
+     * @return true if the user is a pro user, false otherwise
+     */
+    fun isProUser(): Boolean {
+        val userManager = UserManager.getInstance()
+        val userData = userManager.userData.value
+        val subscriptionManager = userManager.getSubscriptionManager()
+        
+        return userData?.subscriptionStatus == "pro" || 
+               subscriptionManager?.isPro?.value == true
+    }
+    
+    /**
      * Record an AI action and check if it's allowed.
      * This method should be called before performing any AI operation.
      *
@@ -117,17 +131,13 @@ class AiUsageTracker private constructor() {
         
         // Check if we've reached the daily limit
         if (currentStats.dailyActionCount >= DAILY_LIMIT) {
-            // Check if user has pro subscription
-            val userManager = UserManager.getInstance()
-            val userData = userManager.userData.value
-            
             // If user is pro, allow unlimited actions
-            if (userData?.subscriptionStatus == "pro") {
-                Log.d(TAG, "AI action allowed - pro user")
+            if (isProUser()) {
+                Log.d(TAG, "AI action allowed - pro user (unlimited access)")
                 return true
             }
             
-            Log.d(TAG, "AI action denied - daily limit reached")
+            Log.d(TAG, "AI action denied - daily limit reached for free user")
             return false
         }
         
