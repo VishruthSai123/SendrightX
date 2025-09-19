@@ -469,6 +469,7 @@ private fun StatusCard(
             
             if (!isPro) {
                 Spacer(modifier = Modifier.height(8.dp))
+                // Show current AI usage stats
                 Text(
                     text = subscriptionManager?.getSubscriptionStatusMessage() 
                         ?: "$aiActionsUsed/5 AI actions used today",
@@ -477,10 +478,10 @@ private fun StatusCard(
                     textAlign = TextAlign.Center
                 )
                 
-                // Progress indicator for free users
+                // Progress indicator for free users  
                 Spacer(modifier = Modifier.height(12.dp))
                 LinearProgressIndicator(
-                    progress = { aiActionsUsed.toFloat() / 10 },
+                    progress = { aiActionsUsed.toFloat() / 5 },
                     modifier = Modifier.fillMaxWidth(),
                     color = if (remainingActions > 0) MaterialTheme.colorScheme.primary 
                            else MaterialTheme.colorScheme.error

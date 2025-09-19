@@ -154,7 +154,7 @@ class AiUsageTracker private constructor() {
     }
     
     /**
-     * Start a reward window (60 minutes of unlimited AI actions).
+     * Start a reward window (24 hours of unlimited AI actions).
      * This should be called after the user successfully watches a rewarded ad.
      */
     suspend fun startRewardWindow() {
@@ -169,7 +169,7 @@ class AiUsageTracker private constructor() {
         
         Log.d(TAG, "Reward window started - will end at: $endTime")
         
-        // Schedule automatic end of reward window after 60 minutes
+        // Schedule automatic end of reward window after 24 hours
         coroutineScope.launch {
             kotlinx.coroutines.delay(REWARD_WINDOW_DURATION_MS)
             // Refresh stats before ending to ensure we have the latest data
@@ -180,7 +180,7 @@ class AiUsageTracker private constructor() {
     
     /**
      * End the current reward window.
-     * This can be called manually or automatically after 60 minutes.
+     * This can be called manually or automatically after 24 hours.
      */
     suspend fun endRewardWindow() {
         prefs.isRewardWindowActive.set(false)

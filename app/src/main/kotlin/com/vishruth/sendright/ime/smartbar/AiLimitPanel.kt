@@ -20,7 +20,6 @@ package com.vishruth.key1.ime.smartbar
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,8 +60,6 @@ import com.vishruth.key1.ime.keyboard.FlorisImeSizing
 import com.vishruth.key1.ime.theme.FlorisImeTheme
 import com.vishruth.key1.ime.theme.FlorisImeUi
 import com.vishruth.key1.keyboardManager
-import com.vishruth.key1.lib.ads.RewardedAdManager
-import com.vishruth.key1.lib.util.launchActivity
 import com.vishruth.key1.user.UserManager
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
@@ -115,9 +112,6 @@ fun AiLimitPanel(
                    isProFromSubscriptionManager
     }
     
-    // Rewarded Ad Manager
-    val rewardedAdManager = remember { RewardedAdManager(context) }
-    
     SnyggBox(
         elementName = FlorisImeUi.SmartbarActionsOverflow.elementName,
         modifier = modifier
@@ -166,7 +160,12 @@ fun AiLimitPanel(
                 SnyggText(
                     elementName = FlorisImeUi.SmartbarActionTileText.elementName,
                     text = if (canUseRewardedAd) {
-                        "Watch a short ad to unlock 60 minutes of unlimited AI actions!"
+                        val durationText = if (AiUsageStats.REWARD_WINDOW_DURATION_MS == 60 * 1000L) {
+                            "1 minute" // Testing mode
+                        } else {
+                            "24 hours" // Production mode
+                        }
+                        "Watch a short ad to unlock $durationText of unlimited AI actions!"
                     } else {
                         "You've used your monthly ad reward. Upgrade to Pro for unlimited access!"
                     },
@@ -201,44 +200,42 @@ fun AiLimitPanel(
                         elementName = FlorisImeUi.SmartbarActionTile.elementName,
                         onClick = {
                             if (canUseRewardedAd) {
-                                // Launch the RewardedAdActivity to show the ad in full-screen
-                                context.launchActivity(RewardedAdActivity::class) {
-                                    // Use test ad unit ID when USE_TEST_ADS is true, otherwise use production
-                                    val adUnitId = if (RewardedAdManager.USE_TEST_ADS) {
-                                        RewardedAdManager.TEST_REWARDED_AD_UNIT_ID
-                                    } else {
-                                        RewardedAdManager.PROD_REWARDED_AD_UNIT_ID
+                                // Start the RewardedAdActivity to handle ad loading and display
+                                try {
+                                    val intent = Intent(context, RewardedAdActivity::class.java)
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    context.startActivity(intent)
+                                    onDismiss()
+                                } catch (e: Exception) {
+                                    scope.launch {
+                                        context.showShortToast("Error starting ad activity: ${e.message}")
                                     }
-                                    it.putExtra(RewardedAdActivity.EXTRA_AD_UNIT_ID, adUnitId)
-                                    // Add flag to ensure proper task management
-                                    it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
-                                // Dismiss the panel immediately since the ad will be shown in a new activity
-                                onDismiss()
                             } else {
-                                // Show subscription screen
-                                // In a real implementation, you would navigate to the subscription screen
-                                Toast.makeText(context, "Please upgrade to Pro for unlimited access", Toast.LENGTH_SHORT).show()
+                                // User has used their monthly ad - show "Go Pro" message  
+                                scope.launch {
+                                    context.showShortToast("Monthly ad used! Go to Settings → SendRight Pro to upgrade")
+                                }
+                                onDismiss()
                             }
                         },
                         modifier = Modifier
                             .weight(1f)
                             .height(50.dp)  // Consistent height with other buttons
-                            .clip(RoundedCornerShape(8.dp)),
-                        enabled = canUseRewardedAd
+                            .clip(RoundedCornerShape(8.dp))
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = if (canUseRewardedAd) Icons.Default.PlayArrow else Icons.Default.Star,
-                                contentDescription = if (canUseRewardedAd) "Watch Ad" else "Upgrade",
+                                contentDescription = if (canUseRewardedAd) "Watch Ad" else "Go Pro",
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             SnyggText(
                                 elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                                text = if (canUseRewardedAd) "Watch Ad" else "Upgrade"
+                                text = if (canUseRewardedAd) "Watch Ad" else "Go Pro"
                             )
                         }
                     }

@@ -77,8 +77,6 @@ import com.vishruth.key1.app.settings.theme.ThemeManagerScreenAction
 import com.vishruth.key1.app.settings.theme.ThemeScreen
 import com.vishruth.key1.app.settings.typing.TypingScreen
 import com.vishruth.key1.app.setup.SetupScreen
-import com.vishruth.sendright.app.auth.AuthScreen
-import com.vishruth.sendright.app.auth.AccountScreen
 import com.vishruth.key1.ui.screens.SubscriptionScreen
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -207,16 +205,6 @@ object Routes {
         @Serializable
         @Deeplink("settings/report-feedback")
         object ReportFeedback
-    }
-
-    object Auth {
-        @Serializable
-        @Deeplink("auth")
-        object Screen
-        
-        @Serializable
-        @Deeplink("account")
-        object Account
     }
 
     object Subscription {
@@ -390,8 +378,6 @@ object Routes {
                 CheckUpdatesScreen()
             }
             
-            composableWithDeepLink(Auth.Screen::class) { AuthScreen() }
-            composableWithDeepLink(Auth.Account::class) { AccountScreen() }
             composableWithDeepLink(Subscription.Screen::class) { 
                 SubscriptionScreen(
                     onNavigateBack = { navController.popBackStack() }

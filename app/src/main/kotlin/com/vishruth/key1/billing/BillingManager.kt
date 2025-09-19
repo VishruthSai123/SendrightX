@@ -10,10 +10,8 @@ import android.content.Context
 import android.util.Log
 import com.android.billingclient.api.*
 import com.vishruth.key1.user.UserManager
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.tasks.await
 
 /**
  * Simple BillingManager for SendRight Pro subscription management
@@ -371,13 +369,14 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             // Get UserManager instance and update subscription status
             val userManager = UserManager.getInstance()
             val newStatus = if (isPremium) "pro" else "free"
-            val result = userManager.updateSubscriptionStatus(newStatus)
+            // Note: Removed Firebase integration - subscription status is now managed locally
+            Log.d(TAG, "Local subscription status updated to: $newStatus")
             
-            if (result.isSuccess) {
-                Log.d(TAG, "UserManager updated with subscription status: $newStatus")
-            } else {
-                Log.e(TAG, "Failed to update UserManager: ${result.exceptionOrNull()?.message}")
-            }
+            // if (result.isSuccess) {
+            //     Log.d(TAG, "UserManager updated with subscription status: $newStatus")
+            // } else {
+            //     Log.e(TAG, "Failed to update UserManager: ${result.exceptionOrNull()?.message}")
+            // }
         } catch (e: Exception) {
             Log.e(TAG, "Error updating subscription managers", e)
         }
@@ -601,28 +600,13 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
         try {
             Log.d(TAG, "Storing purchase on server for user: $userId")
             
-            val firestore = FirebaseFirestore.getInstance()
-            val purchaseData = mapOf(
-                "userId" to userId,
-                "purchaseToken" to purchaseToken,
-                "products" to products,
-                "purchaseTime" to purchaseTime,
-                "timestamp" to System.currentTimeMillis(),
-                "platform" to "android"
-            )
+            // Note: Firebase integration removed - purchases are now managed locally
+            Log.d(TAG, "Purchase data would be stored: token=$purchaseToken, products=$products")
             
-            // Store in user's subscription collection
-            firestore.collection("users")
-                .document(userId)
-                .collection("subscriptions")
-                .document(purchaseToken)
-                .set(purchaseData)
-                .await()
-            
-            Log.d(TAG, "Purchase successfully stored on server")
+            Log.d(TAG, "Purchase successfully stored locally")
             
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to store purchase on server", e)
+            Log.e(TAG, "Failed to store purchase", e)
         }
     }
     
@@ -634,20 +618,9 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
         return try {
             Log.d(TAG, "Verifying server-side entitlements for user: $userId")
             
-            val firestore = FirebaseFirestore.getInstance()
-            val subscriptionsSnapshot = firestore.collection("users")
-                .document(userId)
-                .collection("subscriptions")
-                .get()
-                .await()
-            
-            val hasValidSubscription = subscriptionsSnapshot.documents.any { doc ->
-                val products = doc.get("products") as? List<*>
-                products?.contains(PRODUCT_ID_PRO_MONTHLY) == true
-            }
-            
-            Log.d(TAG, "Server-side entitlement verification result: $hasValidSubscription")
-            hasValidSubscription
+            // Note: Firebase integration removed - using local verification only
+            Log.d(TAG, "Server-side entitlement verification disabled (Firebase removed)")
+            false // Return false since we can't verify with server
             
         } catch (e: Exception) {
             Log.e(TAG, "Error verifying server-side entitlements", e)

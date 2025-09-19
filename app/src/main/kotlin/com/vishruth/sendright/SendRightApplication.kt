@@ -26,7 +26,6 @@ import android.content.IntentFilter
 import android.os.Handler
 import android.util.Log
 import androidx.core.os.UserManagerCompat
-import com.google.firebase.FirebaseApp
 import com.vishruth.key1.app.FlorisPreferenceModel
 import com.vishruth.key1.app.FlorisPreferenceStore
 import com.vishruth.key1.ime.ai.AiUsageTracker
@@ -108,10 +107,6 @@ class SendRightApplication : Application() {
             CrashUtility.install(this)
             FlorisEmojiCompat.init(this)
             //flogError { "dummy result: ${dummyAdd(3,4)}" }
-
-            // Initialize Firebase
-            FirebaseApp.initializeApp(this)
-            Log.d("SendRightApplication", "Firebase initialized successfully")
 
             // Initialize AdMob SDK asynchronously without blocking
             Log.d("SendRightApplication", "Initializing AdMob SDK asynchronously")

@@ -24,7 +24,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.mikepenz.aboutlibraries)
-    id("com.google.gms.google-services")
 }
 
 // Load local.properties
@@ -263,12 +262,8 @@ dependencies {
     implementation(libs.patrickgold.jetpref.datastore.ui)
     implementation(libs.patrickgold.jetpref.material.ui)
     implementation(libs.google.mobile.ads)
-    implementation(libs.google.auth)
     implementation(libs.google.billing)
     implementation("com.google.android.play:integrity:1.5.0")
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.firestore.ktx)
 
     implementation(project(":lib:android"))
     implementation(project(":lib:color"))

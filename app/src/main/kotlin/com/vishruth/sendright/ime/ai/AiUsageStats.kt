@@ -32,8 +32,24 @@ data class AiUsageStats(
         // Daily limit for AI actions
         const val DAILY_LIMIT = 5
         
-        // Duration of reward window in milliseconds (60 minutes)
-        const val REWARD_WINDOW_DURATION_MS = 60 * 60 * 1000L
+        // ========================================
+        // TESTING/PRODUCTION MODE SWITCH
+        // ========================================
+        // Set TESTING_MODE to:
+        // - true  = 1 minute reward window (for testing)
+        // - false = 24 hours reward window (for production)
+        private const val TESTING_MODE = true
+        
+        // Duration constants
+        private const val TESTING_REWARD_DURATION_MS = 1 * 60 * 1000L // 1 minute for testing
+        private const val PRODUCTION_REWARD_DURATION_MS = 24 * 60 * 60 * 1000L // 24 hours for production
+        
+        // Duration of reward window in milliseconds (switches based on testing mode)
+        val REWARD_WINDOW_DURATION_MS = if (TESTING_MODE) {
+            TESTING_REWARD_DURATION_MS
+        } else {
+            PRODUCTION_REWARD_DURATION_MS
+        }
         
         // Create default/empty stats
         fun empty() = AiUsageStats(

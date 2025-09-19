@@ -81,6 +81,66 @@ import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggButton
 import org.florisboard.lib.snygg.ui.SnyggText
 
+/**
+ * Formats time remaining in milliseconds to a human-readable string
+ * @param timeMs Time in milliseconds
+ * @return Formatted string like "23 hours 45 minutes" or "45 minutes" or "30 seconds"
+ */
+private fun formatTimeRemaining(timeMs: Long): String {
+    if (timeMs <= 0) return "0 seconds"
+    
+    val totalSeconds = timeMs / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    
+    return when {
+        hours > 0 -> {
+            if (minutes > 0) {
+                "${hours} hour${if (hours != 1L) "s" else ""} ${minutes} minute${if (minutes != 1L) "s" else ""}"
+            } else {
+                "${hours} hour${if (hours != 1L) "s" else ""}"
+            }
+        }
+        minutes > 0 -> {
+            "${minutes} minute${if (minutes != 1L) "s" else ""}"
+        }
+        else -> {
+            "${seconds} second${if (seconds != 1L) "s" else ""}"
+        }
+    }
+}
+
+/**
+ * Formats time remaining for compact display (for shorter text areas)
+ * @param timeMs Time in milliseconds
+ * @return Formatted string like "23h 45m" or "45m" or "30s"
+ */
+private fun formatTimeRemainingCompact(timeMs: Long): String {
+    if (timeMs <= 0) return "0s"
+    
+    val totalSeconds = timeMs / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    
+    return when {
+        hours > 0 -> {
+            if (minutes > 0) {
+                "${hours}h ${minutes}m"
+            } else {
+                "${hours}h"
+            }
+        }
+        minutes > 0 -> {
+            "${minutes}m"
+        }
+        else -> {
+            "${seconds}s"
+        }
+    }
+}
+
 data class MagicWandSection(
     val title: String,
     val buttons: List<String>,
@@ -196,7 +256,7 @@ fun MagicWandPanel(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Enjoy unlimited AI actions for the next ${aiUsageStats.rewardWindowTimeRemaining() / 1000 / 60} minutes",
+                                text = "Enjoy unlimited AI actions for the next ${formatTimeRemaining(aiUsageStats.rewardWindowTimeRemaining())}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         } else {

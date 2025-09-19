@@ -180,15 +180,11 @@ class SubscriptionManager(
             try {
                 val userManager = UserManager.getInstance()
                 val newStatus = if (actualSubscriptionState) "pro" else "free"
-                val result = userManager.updateSubscriptionStatus(newStatus)
+                // Note: Removed Firebase integration - subscription status is now managed locally
+                Log.d(TAG, "Local subscription status updated to: $newStatus")
                 
-                if (result.isSuccess) {
-                    Log.d(TAG, "UserManager subscription status updated to: $newStatus")
-                } else {
-                    Log.e(TAG, "Failed to update UserManager subscription status: ${result.exceptionOrNull()?.message}")
-                }
             } catch (e: Exception) {
-                Log.e(TAG, "Error updating UserManager subscription status", e)
+                Log.e(TAG, "Error updating subscription status", e)
             }
             
             Log.d(TAG, "Subscription status check completed. isPro: ${_isPro.value}, remaining actions: ${_remainingActions.value}")

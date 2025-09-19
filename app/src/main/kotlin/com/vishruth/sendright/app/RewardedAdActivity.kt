@@ -30,6 +30,7 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.OnUserEarnedRewardListener
 import com.google.android.gms.ads.rewarded.RewardItem
 import com.google.android.gms.ads.rewarded.RewardedAd
+import com.vishruth.key1.ime.ai.AiUsageStats
 import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.lib.ads.RewardedAdManager
 import com.vishruth.key1.user.UserManager
@@ -160,12 +161,19 @@ class RewardedAdActivity : ComponentActivity() {
         Log.d(TAG, "Calling rewardedAdManager.showRewardedAd")
         val shown = rewardedAdManager.showRewardedAd(this, OnUserEarnedRewardListener { rewardItem ->
             Log.d(TAG, "User earned reward: ${rewardItem.type} - ${rewardItem.amount}")
-            showToast("Unlimited AI unlocked for 60 minutes!")
+            // Show success message with dynamic duration based on testing mode
+            val durationText = if (AiUsageStats.REWARD_WINDOW_DURATION_MS == 60 * 1000L) {
+                "1 minute" // Testing mode
+            } else {
+                "24 hours" // Production mode
+            }
+            Toast.makeText(this@RewardedAdActivity, "Unlimited AI unlocked for $durationText!", Toast.LENGTH_LONG).show()
             // Automatically start the reward window
             CoroutineScope(Dispatchers.IO).launch {
                 AiUsageTracker.getInstance().startRewardWindow()
                 // Record rewarded ad usage
-                UserManager.getInstance().recordRewardedAdUsage()
+                // Note: Removed Firebase integration - ad usage tracking is now handled locally
+                Log.d(TAG, "Rewarded ad completed - tracking handled locally")
             }
         })
         

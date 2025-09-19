@@ -235,10 +235,10 @@ class RewardedAdManager(private val context: Context) {
     fun showRewardedAd(activity: android.app.Activity, rewardCallback: OnUserEarnedRewardListener): Boolean {
         val ad = rewardedAd ?: return false
         
-        // Check if user can use rewarded ad (once per day)
+        // Check if user can use rewarded ad (once per month)
         val userManager = UserManager.getInstance()
         if (!userManager.canUseRewardedAd()) {
-            showToast("You can only use one rewarded ad per day. Try again tomorrow or upgrade to Pro for unlimited access.")
+            showToast("You can only use one rewarded ad per month. Try again next month or upgrade to Pro for unlimited access.")
             return false
         }
         
