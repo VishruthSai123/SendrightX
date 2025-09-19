@@ -141,6 +141,21 @@ private fun formatTimeRemainingCompact(timeMs: Long): String {
     }
 }
 
+/**
+ * Formats time remaining for reward track card display
+ * Shows only hours left (e.g., "23 hrs left") if >1 hour, otherwise minutes (e.g., "45 min left")
+ */
+private fun formatRewardTrackTime(timeMs: Long): String {
+    if (timeMs <= 0) return "0 min left"
+    val totalMinutes = timeMs / (60 * 1000)
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return when {
+        hours > 0 -> "${hours} hr${if (hours != 1L) "s" else ""} left"
+        else -> "${minutes} min left"
+    }
+}
+
 data class MagicWandSection(
     val title: String,
     val buttons: List<String>,
@@ -256,7 +271,7 @@ fun MagicWandPanel(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Enjoy unlimited AI actions for the next ${formatTimeRemaining(aiUsageStats.rewardWindowTimeRemaining())}",
+                                text = "Enjoy unlimited AI actions for the next ${formatRewardTrackTime(aiUsageStats.rewardWindowTimeRemaining())}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         } else {

@@ -20,6 +20,7 @@ package com.vishruth.key1.ime.smartbar
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,6 +41,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -167,7 +170,7 @@ fun AiLimitPanel(
                         }
                         "Watch a short ad to unlock $durationText of unlimited AI actions!"
                     } else {
-                        "You've used your monthly ad reward. Upgrade to Pro for unlimited access!"
+                        "You've used your monthly free ad extension. Upgrade to Pro for unlimited access."
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -177,19 +180,19 @@ fun AiLimitPanel(
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = if (isProUser) Arrangement.Center else Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 SnyggButton(
                     elementName = FlorisImeUi.SmartbarActionTile.elementName,
                     onClick = onDismiss,
                     modifier = Modifier
-                        .then(if (isProUser) Modifier else Modifier.weight(1f))
+                        .weight(1f)
                         .height(50.dp)
                         .clip(RoundedCornerShape(8.dp))
                 ) {
                     SnyggText(
                         elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                        text = if (isProUser) "Continue" else "Later"
+                        text = "Later"
                     )
                 }
                 
@@ -212,16 +215,24 @@ fun AiLimitPanel(
                                     }
                                 }
                             } else {
-                                // User has used their monthly ad - show "Go Pro" message  
-                                scope.launch {
-                                    context.showShortToast("Monthly ad used! Go to Settings → SendRight Pro to upgrade")
+                                // User has used their monthly ad - navigate to Go Pro
+                                try {
+                                    val intent = Intent(context, com.vishruth.key1.app.FlorisAppActivity::class.java).apply {
+                                        data = Uri.parse("ui://florisboard/subscription")
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                    }
+                                    context.startActivity(intent)
+                                    onDismiss()
+                                } catch (e: Exception) {
+                                    scope.launch {
+                                        context.showShortToast("Error opening subscription screen: ${e.message}")
+                                    }
                                 }
-                                onDismiss()
                             }
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp)  // Consistent height with other buttons
+                            .height(50.dp)
                             .clip(RoundedCornerShape(8.dp))
                     ) {
                         Row(

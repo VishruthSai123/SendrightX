@@ -76,11 +76,6 @@ fun SubscriptionScreen(
     // Determine if user is actually pro based on both sources
     val isUserPro = userData?.subscriptionStatus == "pro" || isPro
     
-    // Force subscription status refresh when screen appears
-    LaunchedEffect(Unit) {
-        userManager.onAppResume()
-    }
-    
     // Show success message when user becomes pro
     LaunchedEffect(isUserPro) {
         if (isUserPro) {

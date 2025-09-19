@@ -18,6 +18,7 @@
 package com.vishruth.key1.user
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.vishruth.key1.billing.BillingManager
 import com.vishruth.key1.billing.SubscriptionManager
@@ -34,6 +35,10 @@ import kotlinx.coroutines.withContext
  */
 class UserManager private constructor() {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    
+    // Context for SharedPreferences
+    private var appContext: Context? = null
+    private var sharedPrefs: SharedPreferences? = null
     
     // Billing and subscription managers
     private var billingManager: BillingManager? = null
@@ -52,12 +57,15 @@ class UserManager private constructor() {
     private var isInitializing = false
 
     init {
-        // Set initial local user data
+        // Set initial local user data (will be updated after context is available)
         _userData.value = getLocalUserData()
     }
     
     companion object {
         private const val TAG = "UserManager"
+        private const val PREFS_NAME = "user_manager_prefs"
+        private const val KEY_LAST_REWARDED_AD_DATE = "last_rewarded_ad_date"
+        private const val KEY_TOTAL_AD_REWARDS_USED = "total_ad_rewards_used"
         private var instance: UserManager? = null
         
         /**
@@ -85,7 +93,12 @@ class UserManager private constructor() {
         }
         
         isInitializing = true
+        appContext = context.applicationContext
+        sharedPrefs = appContext!!.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         Log.d(TAG, "Initializing UserManager asynchronously")
+        
+        // Load persisted user data
+        _userData.value = getLocalUserData()
         
         // Start async initialization to avoid blocking main thread
         coroutineScope.launch {
@@ -108,48 +121,50 @@ class UserManager private constructor() {
     }
     
     /**
-     * Initialize billing managers asynchronously
+     * Initialize billing and subscription managers
      */
-    private suspend fun initializeBillingManagers(context: Context) = withContext(Dispatchers.IO) {
-        try {
-            Log.d(TAG, "Initializing billing managers")
+    private suspend fun initializeBillingManagers(context: Context) {
+        withContext(Dispatchers.Main) {
+            // Initialize BillingManager
             billingManager = BillingManager(context)
+            
+            // Initialize SubscriptionManager
             subscriptionManager = SubscriptionManager(context, billingManager!!)
-            Log.d(TAG, "Billing managers initialized successfully")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error initializing billing managers", e)
-            billingManager = null
-            subscriptionManager = null
+            
+            Log.d(TAG, "Billing managers initialized")
         }
     }
     
     /**
-     * Get local user data (no authentication required)
+     * Get local user data (simulated - replace with actual data management)
      */
     private fun getLocalUserData(): UserData {
-        return UserData(
-            userId = "local_user",
-            email = "",
-            displayName = "Local User",
-            subscriptionStatus = "free",
-            lastRewardedAdDate = null,
-            totalAdRewardsUsed = 0
-        )
-    }
-    
-    /**
-     * Check subscription status on app resume
-     */
-    suspend fun onAppResume() {
-        try {
-            Log.d(TAG, "App resumed - checking subscription status...")
-            subscriptionManager?.checkSubscriptionStatusOnResume()
-            Log.d(TAG, "App resume subscription check completed")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during app resume subscription check", e)
+        val prefs = sharedPrefs
+        
+        return if (prefs != null) {
+            // Load from SharedPreferences
+            val lastRewardedAdDate = prefs.getLong(KEY_LAST_REWARDED_AD_DATE, 0L)
+            val totalAdRewardsUsed = prefs.getInt(KEY_TOTAL_AD_REWARDS_USED, 0)
+            
+            UserData(
+                userId = "local_user",
+                displayName = "Local User",
+                email = "user@device.local",
+                lastRewardedAdDate = if (lastRewardedAdDate == 0L) null else lastRewardedAdDate,
+                totalAdRewardsUsed = totalAdRewardsUsed
+            )
+        } else {
+            // Fallback to default data
+            UserData(
+                userId = "local_user",
+                displayName = "Local User",
+                email = "user@device.local",
+                lastRewardedAdDate = null,
+                totalAdRewardsUsed = 0
+            )
         }
     }
-
+    
     /**
      * Check if user can use rewarded ad (once per month)
      *
@@ -165,7 +180,44 @@ class UserManager private constructor() {
         return (currentTime - lastAdDate) > oneMonthInMillis
     }
     
-    // MARK: - Subscription Methods
+    /**
+     * Record that user has used a rewarded ad
+     * Updates lastRewardedAdDate to current time and increments totalAdRewardsUsed
+     */
+    suspend fun recordRewardedAdUsage() {
+        val currentTime = System.currentTimeMillis()
+        val currentData = _userData.value ?: getLocalUserData()
+        
+        val updatedData = currentData.copy(
+            lastRewardedAdDate = currentTime,
+            totalAdRewardsUsed = currentData.totalAdRewardsUsed + 1
+        )
+        
+        // Save to SharedPreferences
+        val prefs = sharedPrefs
+        if (prefs != null) {
+            prefs.edit()
+                .putLong(KEY_LAST_REWARDED_AD_DATE, currentTime)
+                .putInt(KEY_TOTAL_AD_REWARDS_USED, updatedData.totalAdRewardsUsed)
+                .apply()
+            Log.d(TAG, "Saved rewarded ad usage to SharedPreferences")
+        }
+        
+        _userData.value = updatedData
+        Log.d(TAG, "Recorded rewarded ad usage at: $currentTime")
+    }
+    
+    /**
+     * Update subscription status in user data
+     */
+    private fun updateSubscriptionStatus(isActive: Boolean) {
+        val currentData = _userData.value ?: getLocalUserData()
+        val updatedData = currentData.copy(
+            subscriptionStatus = if (isActive) "premium" else "free"
+        )
+        _userData.value = updatedData
+        Log.d(TAG, "Updated subscription status: ${updatedData.subscriptionStatus}")
+    }
     
     /**
      * Get the billing manager instance
@@ -178,87 +230,43 @@ class UserManager private constructor() {
     fun getSubscriptionManager(): SubscriptionManager? = subscriptionManager
     
     /**
-     * Check if user is a premium subscriber
-     */
-    fun isPremiumUser(): Boolean {
-        return subscriptionManager?.isPro?.value ?: false
-    }
-    
-    /**
-     * Check if user can use AI action
-     */
-    fun canUseAiAction(): Boolean {
-        return subscriptionManager?.canUseAiAction() ?: true
-    }
-    
-    /**
-     * Use an AI action (increment counter for free users) with integrity verification
-     */
-    suspend fun useAiAction(): Boolean {
-        return subscriptionManager?.useAiAction() ?: true
-    }
-    
-    /**
-     * Get remaining AI actions for free users
-     */
-    fun getRemainingAiActions(): Int {
-        return subscriptionManager?.getRemainingAiActions() ?: -1
-    }
-    
-    /**
-     * Check if ads should be shown
-     */
-    fun shouldShowAds(): Boolean {
-        return !isPremiumUser()
-    }
-    
-    /**
-     * Get subscription status message
-     */
-    fun getSubscriptionStatusMessage(): String {
-        return subscriptionManager?.getSubscriptionStatusMessage() ?: "Free Plan"
-    }
-    
-    /**
      * Restore purchases
      */
     fun restorePurchases(callback: (Boolean, String?) -> Unit) {
         Log.d(TAG, "Restoring purchases...")
-        
         billingManager?.restorePurchases { success, message ->
-            if (success) {
-                Log.d(TAG, "Purchase restoration successful")
-            } else {
-                Log.w(TAG, "Purchase restoration failed: $message")
-            }
+            Log.d(TAG, "Restore purchases result: success=$success, message=$message")
             callback(success, message)
         }
     }
     
     /**
-     * Clean up resources
+     * Check if the user has an active subscription
      */
-    fun destroy() {
-        subscriptionManager?.destroy()
-        billingManager?.destroy()
+    suspend fun hasActiveSubscription(): Boolean {
+        return billingManager?.hasActiveSubscription() == true
     }
     
     /**
-     * Trigger purchase restoration manually (can be called from UI)
+     * Simple wrapper for restore purchases
      * This is useful for "Restore Purchases" buttons in settings
      */
-    fun triggerPurchaseRestoration(callback: (Boolean, String?) -> Unit) {
-        if (!isInitialized) {
-            callback(false, "UserManager not initialized")
-            return
+    fun handleRestorePurchases(
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        restorePurchases { success, message ->
+            if (success) {
+                onSuccess(message ?: "Purchases restored successfully")
+            } else {
+                onError(message ?: "Failed to restore purchases")
+            }
         }
-        
-        restorePurchases(callback)
     }
 }
 
 /**
- * Data class representing user data
+ * Data class representing user information and subscription status
  */
 data class UserData(
     val userId: String = "",

@@ -170,9 +170,15 @@ class RewardedAdActivity : ComponentActivity() {
             Toast.makeText(this@RewardedAdActivity, "Unlimited AI unlocked for $durationText!", Toast.LENGTH_LONG).show()
             // Automatically start the reward window
             CoroutineScope(Dispatchers.IO).launch {
+                // Record rewarded ad usage BEFORE starting reward window
+                try {
+                    UserManager.getInstance().recordRewardedAdUsage()
+                    Log.d(TAG, "Successfully recorded rewarded ad usage")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to record rewarded ad usage", e)
+                }
+                
                 AiUsageTracker.getInstance().startRewardWindow()
-                // Record rewarded ad usage
-                // Note: Removed Firebase integration - ad usage tracking is now handled locally
                 Log.d(TAG, "Rewarded ad completed - tracking handled locally")
             }
         })
