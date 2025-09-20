@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -247,93 +248,6 @@ fun MagicWandPanel(
             // Get updated subscription status and capabilities
             val canUseRewardedAd = userManager.canUseRewardedAd()
             
-            // Show different UI based on subscription status
-            if (!isProUser) {
-                // Show usage info for free users
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (aiUsageStats.isRewardWindowActive) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.secondaryContainer
-                        }
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp)
-                    ) {
-                        if (aiUsageStats.isRewardWindowActive) {
-                            // Reward window active
-                            Text(
-                                text = "Unlimited AI Mode",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Enjoy unlimited AI actions for the next ${formatRewardTrackTime(aiUsageStats.rewardWindowTimeRemaining())}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        } else {
-                            // Normal usage
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "AI Usage: ${aiUsageStats.dailyActionCount} / ${AiUsageStats.DAILY_LIMIT}",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                if (aiUsageStats.dailyActionCount >= AiUsageStats.DAILY_LIMIT - 2) {
-                                    // Show ad option when user is close to limit
-                                    Text(
-                                        text = if (canUseRewardedAd) "Watch Ad" else "Ad Used This Month",
-                                        color = if (canUseRewardedAd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                            }
-                            
-                            // Progress bar
-                            LinearProgressIndicator(
-                                progress = { (aiUsageStats.dailyActionCount.toFloat() / AiUsageStats.DAILY_LIMIT).coerceIn(0f, 1f) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                color = if (aiUsageStats.dailyActionCount >= AiUsageStats.DAILY_LIMIT) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.primary
-                                }
-                            )
-                        }
-                    }
-                }
-            } else {
-                // Show usage info for pro users
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp)
-                    ) {
-                        Text(
-                            text = "Pro User",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Enjoy unlimited AI actions with no restrictions",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
-            
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -382,6 +296,89 @@ fun MagicWandPanel(
                             expandedSections[sectionTitle] = !(expandedSections[sectionTitle] ?: false)
                         }
                     )
+                }
+                
+                // AI Usage card at the bottom with green background
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .background(
+                                color = Color(0xFF23C546),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(12.dp)
+                    ) {
+                        if (!isProUser) {
+                            // Show usage info for free users
+                            Column {
+                                if (aiUsageStats.isRewardWindowActive) {
+                                    // Reward window active
+                                    Text(
+                                        text = "Unlimited AI Mode",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Enjoy unlimited AI actions for the next ${formatRewardTrackTime(aiUsageStats.rewardWindowTimeRemaining())}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                } else {
+                                    // Normal usage
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "AI Usage: ${aiUsageStats.dailyActionCount} / ${AiUsageStats.DAILY_LIMIT}",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (aiUsageStats.dailyActionCount >= AiUsageStats.DAILY_LIMIT - 2) {
+                                            // Show ad option when user is close to limit
+                                            Text(
+                                                text = if (canUseRewardedAd) "Watch Ad" else "Ad Used This Month",
+                                                color = if (canUseRewardedAd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                    }
+                                    
+                                    // Progress bar
+                                    LinearProgressIndicator(
+                                        progress = { (aiUsageStats.dailyActionCount.toFloat() / AiUsageStats.DAILY_LIMIT).coerceIn(0f, 1f) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp),
+                                        color = if (aiUsageStats.dailyActionCount >= AiUsageStats.DAILY_LIMIT) {
+                                            MaterialTheme.colorScheme.error
+                                        } else {
+                                            MaterialTheme.colorScheme.primary
+                                        }
+                                    )
+                                }
+                            }
+                        } else {
+                            // Show usage info for pro users
+                            Column {
+                                Text(
+                                    text = "Pro User",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Enjoy unlimited AI actions with no restrictions",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

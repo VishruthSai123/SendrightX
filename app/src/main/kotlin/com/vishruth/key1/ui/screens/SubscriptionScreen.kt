@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.billingclient.api.ProductDetails
 import com.vishruth.key1.user.UserManager
+import com.vishruth.key1.ime.ai.AiUsageTracker
+import com.vishruth.key1.ime.ai.AiUsageStats
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,6 +62,10 @@ fun SubscriptionScreen(
     val billingManager = userManager.getBillingManager()
     val subscriptionManager = userManager.getSubscriptionManager()
     
+    // Get AI usage tracker for real-time usage stats
+    val aiUsageTracker = remember { AiUsageTracker.getInstance() }
+    val aiUsageStats by aiUsageTracker.usageStats.collectAsState()
+    
     // Observe UserManager userData for subscription status
     val userData by userManager.userData.collectAsState()
     
@@ -67,27 +73,23 @@ fun SubscriptionScreen(
     val isPro by subscriptionManager?.isPro?.collectAsState() 
         ?: remember { mutableStateOf(false) }
     
-    val aiActionsUsed by subscriptionManager?.aiActionsUsed?.collectAsState() 
-        ?: remember { mutableStateOf(0) }
-    
-    val remainingActions by subscriptionManager?.remainingActions?.collectAsState()
-        ?: remember { mutableStateOf(5) }
+    // Use AI usage stats from AiUsageTracker for real-time updates
+    val aiActionsUsed = aiUsageStats.dailyActionCount
+    val remainingActions = aiUsageStats.remainingActions()
     
     // Determine if user is actually pro based on both sources
     val isUserPro = userData?.subscriptionStatus == "pro" || isPro
     
     // Show success message when user becomes pro
-    LaunchedEffect(isUserPro) {
+            LaunchedEffect(isUserPro) {
         if (isUserPro) {
             Toast.makeText(
                 context,
-                "🎉 Welcome to SendRight Pro! Unlimited AI features unlocked.",
+                "🎉 Welcome to SendRight Premium! Unlimited AI features unlocked.",
                 Toast.LENGTH_LONG
             ).show()
         }
-    }
-    
-    // Collect products from billing manager
+    }    // Collect products from billing manager
     val products by billingManager?.products?.collectAsState() 
         ?: remember { mutableStateOf(emptyList()) }
     
@@ -157,7 +159,7 @@ fun SubscriptionScreen(
             TopAppBar(
                 title = { 
                     Text(
-                        "SendRight Pro",
+                        "Premium",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -183,34 +185,9 @@ fun SubscriptionScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Hero section with Pro icon
-            Card(
-                modifier = Modifier.size(120.dp),
-                shape = RoundedCornerShape(60.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isUserPro) MaterialTheme.colorScheme.primary 
-                                   else MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isPro) Icons.Default.CheckCircle else Icons.Default.Star,
-                        contentDescription = "Pro Status",
-                        modifier = Modifier.size(60.dp),
-                        tint = if (isPro) MaterialTheme.colorScheme.onPrimary 
-                               else MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
             // Main title
             Text(
-                text = if (isUserPro) "Welcome to SendRight Pro!" else "Upgrade to SendRight Pro",
+                text = if (isUserPro) "Welcome to SendRight Premium!" else "Upgrade to SendRight Premium",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -230,61 +207,13 @@ fun SubscriptionScreen(
             // Current status card
             StatusCard(
                 isPro = isUserPro, 
-                aiActionsUsed = aiActionsUsed,
-                remainingActions = remainingActions,
+                aiUsageStats = aiUsageStats,
                 subscriptionManager = subscriptionManager
             )
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Features section
-            Text(
-                text = "Pro Features",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Feature cards
-            val features = listOf(
-                FeatureData(
-                    icon = Icons.Default.AutoAwesome,
-                    title = "Unlimited AI Actions",
-                    description = "Use AI features without daily limits",
-                    isHighlight = true
-                ),
-                FeatureData(
-                    icon = Icons.Default.Block,
-                    title = "Ad-Free Experience", 
-                    description = "No interruptions while typing"
-                ),
-                FeatureData(
-                    icon = Icons.Default.Speed,
-                    title = "Priority Processing",
-                    description = "Faster AI responses and processing"
-                ),
-                FeatureData(
-                    icon = Icons.Default.Support,
-                    title = "Premium Support",
-                    description = "Priority customer support"
-                ),
-                FeatureData(
-                    icon = Icons.Default.Update,
-                    title = "Early Access",
-                    description = "Get new features before everyone else"
-                )
-            )
-            
-            features.forEach { feature ->
-                FeatureCard(feature = feature)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Subscribe/Status button
+            // Subscribe/Status button - moved here to be below the plan card
             if (!isUserPro) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -410,7 +339,7 @@ fun SubscriptionScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "You're a Pro subscriber!",
+                            text = "You're a Premium subscriber!",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -426,6 +355,53 @@ fun SubscriptionScreen(
                 }
             }
             
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Features section
+            Text(
+                text = "Premium Features",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Feature cards
+            val features = listOf(
+                FeatureData(
+                    icon = Icons.Default.AutoAwesome,
+                    title = "Unlimited AI Actions",
+                    description = "Use AI features without daily limits",
+                    isHighlight = true
+                ),
+                FeatureData(
+                    icon = Icons.Default.Block,
+                    title = "Ad-Free Experience", 
+                    description = "No interruptions while typing"
+                ),
+                FeatureData(
+                    icon = Icons.Default.Speed,
+                    title = "Priority Processing",
+                    description = "Faster AI responses and processing"
+                ),
+                FeatureData(
+                    icon = Icons.Default.Support,
+                    title = "Premium Support",
+                    description = "Priority customer support"
+                ),
+                FeatureData(
+                    icon = Icons.Default.Update,
+                    title = "Early Access",
+                    description = "Get new features before everyone else"
+                )
+            )
+            
+            features.forEach { feature ->
+                FeatureCard(feature = feature)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -434,8 +410,7 @@ fun SubscriptionScreen(
 @Composable
 private fun StatusCard(
     isPro: Boolean, 
-    aiActionsUsed: Int,
-    remainingActions: Int,
+    aiUsageStats: com.vishruth.key1.ime.ai.AiUsageStats,
     subscriptionManager: com.vishruth.key1.billing.SubscriptionManager?
 ) {
     Card(
@@ -457,30 +432,81 @@ private fun StatusCard(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = if (isPro) "SendRight Pro - Active" else "Free Plan",
+                text = if (isPro) "SendRight Premium - Active" else "Free Plan",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
             
             if (!isPro) {
                 Spacer(modifier = Modifier.height(8.dp))
-                // Show current AI usage stats
-                Text(
-                    text = subscriptionManager?.getSubscriptionStatusMessage() 
-                        ?: "$aiActionsUsed/5 AI actions used today",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
                 
-                // Progress indicator for free users  
-                Spacer(modifier = Modifier.height(12.dp))
-                LinearProgressIndicator(
-                    progress = { aiActionsUsed.toFloat() / 5 },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = if (remainingActions > 0) MaterialTheme.colorScheme.primary 
-                           else MaterialTheme.colorScheme.error
-                )
+                // Show reward window status if active
+                if (aiUsageStats.isRewardWindowActive) {
+                    val remainingTime = aiUsageStats.rewardWindowTimeRemaining()
+                    val hours = remainingTime / (1000 * 60 * 60)
+                    val minutes = (remainingTime % (1000 * 60 * 60)) / (1000 * 60)
+                    
+                    Text(
+                        text = "🎉 Unlimited AI actions active!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Time remaining: ${hours}h ${minutes}m",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    // Show current AI usage stats for free users
+                    val dailyUsed = aiUsageStats.dailyActionCount
+                    val dailyLimit = AiUsageStats.DAILY_LIMIT
+                    val remaining = aiUsageStats.remainingActions()
+                    
+                    Text(
+                        text = "$dailyUsed/$dailyLimit AI actions used today",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    if (remaining > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "$remaining actions remaining",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Daily limit reached - Watch ad for unlimited access",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
+                    // Progress indicator for free users  
+                    Spacer(modifier = Modifier.height(12.dp))
+                    LinearProgressIndicator(
+                        progress = { dailyUsed.toFloat() / dailyLimit },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = if (remaining > 0) MaterialTheme.colorScheme.primary 
+                               else MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }

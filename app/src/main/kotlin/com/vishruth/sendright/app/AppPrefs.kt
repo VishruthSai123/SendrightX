@@ -634,13 +634,13 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
     inner class Other {
         val settingsTheme = enum(
             key = "other__settings_theme",
-            default = AppTheme.AUTO,
+            default = AppTheme.LIGHT,
         )
         val accentColor = custom(
             key = "other__accent_color",
             default = when (AndroidVersion.ATLEAST_API31_S) {
                 true -> Color.Unspecified
-                false -> DEFAULT_GREEN
+                false -> Color(0xFF3F51B5) // INDIGO 500
             },
             serializer = ColorPreferenceSerializer,
         )
@@ -753,7 +753,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
     inner class Theme {
         val mode = enum(
             key = "theme__mode",
-            default = ThemeMode.FOLLOW_SYSTEM,
+            default = ThemeMode.ALWAYS_DAY,
         )
         val dayThemeId = custom(
             key = "theme__day_theme_id",
@@ -769,7 +769,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "theme__accent_color",
             default = when (AndroidVersion.ATLEAST_API31_S) {
                 true -> Color.Unspecified
-                false -> DEFAULT_GREEN
+                false -> Color(0xFF3F51B5) // INDIGO 500
             },
             serializer = ColorPreferenceSerializer,
         )

@@ -31,6 +31,14 @@ class SubscriptionManager(
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val managerScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
+    // Add periodic subscription checking job
+    private var periodicCheckJob: Job? = null
+    
+    // Track last check time to avoid too frequent checks
+    private var lastSubscriptionCheck = 0L
+    private val MIN_CHECK_INTERVAL = 30_000L // 30 seconds minimum between checks
+    private val PERIODIC_CHECK_INTERVAL = 2 * 60 * 1000L // Check every 2 minutes
+    
     // StateFlows for Pro status and usage
     private val _isPro = MutableStateFlow(false)
     val isPro: StateFlow<Boolean> = _isPro.asStateFlow()
@@ -69,6 +77,35 @@ class SubscriptionManager(
         managerScope.launch {
             delay(2000) // Wait for billing client to be ready
             checkSubscriptionStatus()
+        }
+        
+        // Start periodic subscription status checking
+        startPeriodicSubscriptionChecking()
+    }
+    
+    /**
+     * Start periodic subscription status checking to detect expired subscriptions quickly
+     */
+    private fun startPeriodicSubscriptionChecking() {
+        periodicCheckJob?.cancel() // Cancel any existing job
+        
+        periodicCheckJob = managerScope.launch {
+            while (isActive) {
+                try {
+                    delay(PERIODIC_CHECK_INTERVAL)
+                    
+                    // Only check if enough time has passed since last check
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastSubscriptionCheck >= MIN_CHECK_INTERVAL) {
+                        Log.d(TAG, "Periodic subscription status check...")
+                        checkSubscriptionStatusInternal(forceRefresh = true)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in periodic subscription check", e)
+                    // Wait a bit before retrying
+                    delay(60_000L)
+                }
+            }
         }
     }
     
@@ -148,39 +185,83 @@ class SubscriptionManager(
     }
     
     /**
-     * Check subscription status
+     * Check subscription status with improved cache clearing
      * Based on reference: checkSubscriptionStatusFromServer function
      */
     suspend fun checkSubscriptionStatus() {
+        checkSubscriptionStatusInternal(forceRefresh = false)
+    }
+    
+    /**
+     * Internal subscription status checking with force refresh option
+     */
+    private suspend fun checkSubscriptionStatusInternal(forceRefresh: Boolean = false) {
         try {
-            Log.d(TAG, "Checking subscription status...")
+            val currentTime = System.currentTimeMillis()
+            lastSubscriptionCheck = currentTime
             
-            // Check both Google Play Billing and local state
+            Log.d(TAG, "Checking subscription status... (forceRefresh: $forceRefresh)")
+            
+            // Always check Google Play first to get real-time status
             val hasActiveSubscription = billingManager.hasActiveSubscription()
             val localSubscriptionState = billingManager.getSubscriptionState()
             
             Log.d(TAG, "Google Play subscription: $hasActiveSubscription")
             Log.d(TAG, "Local subscription state: $localSubscriptionState")
             
-            // Use the most recent and reliable state
-            val actualSubscriptionState = hasActiveSubscription || localSubscriptionState
+            // If Google Play says no active subscription, immediately clear local cache
+            if (!hasActiveSubscription && localSubscriptionState) {
+                Log.w(TAG, "🔥 SUBSCRIPTION EXPIRED - Google Play shows no subscription but local cache shows active!")
+                Log.w(TAG, "🧹 Immediately clearing subscription cache and revoking access")
+                
+                // Force clear the cache
+                billingManager.saveSubscriptionState(false)
+                prefs.edit().putBoolean(KEY_PRO_STATUS, false).apply()
+                
+                // Update to free status immediately  
+                _isPro.value = false
+                _isProUser.value = false
+                updateRemainingActions()
+                
+                try {
+                    val userManager = UserManager.getInstance()
+                    Log.d(TAG, "Subscription revoked - user downgraded to free")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error updating user manager on subscription expiry", e)
+                }
+                
+                Log.d(TAG, "✅ Subscription cache cleared successfully")
+                return
+            }
+            
+            // Use Google Play as the authoritative source when available
+            val actualSubscriptionState = if (forceRefresh) {
+                hasActiveSubscription // Always trust Google Play on force refresh
+            } else {
+                hasActiveSubscription || localSubscriptionState // Allow local cache only for regular checks
+            }
             
             // Update local state with explicit logging
             val oldProStatus = _isPro.value
             _isPro.value = actualSubscriptionState
             _isProUser.value = actualSubscriptionState
             
-            Log.d(TAG, "Pro status changed from $oldProStatus to $actualSubscriptionState")
+            if (oldProStatus != actualSubscriptionState) {
+                Log.d(TAG, "🔄 Pro status changed from $oldProStatus to $actualSubscriptionState")
+                
+                // Save to preferences
+                prefs.edit().putBoolean(KEY_PRO_STATUS, actualSubscriptionState).apply()
+                
+                // Also update billing manager's local state
+                billingManager.saveSubscriptionState(actualSubscriptionState)
+            }
             
-            // Save to preferences
-            prefs.edit().putBoolean(KEY_PRO_STATUS, actualSubscriptionState).apply()
             updateRemainingActions()
             
             // Update UserManager subscription status with retry logic
             try {
                 val userManager = UserManager.getInstance()
                 val newStatus = if (actualSubscriptionState) "pro" else "free"
-                // Note: Removed Firebase integration - subscription status is now managed locally
                 Log.d(TAG, "Local subscription status updated to: $newStatus")
                 
             } catch (e: Exception) {
@@ -276,6 +357,7 @@ class SubscriptionManager(
      * Cleanup resources
      */
     fun destroy() {
+        periodicCheckJob?.cancel()
         managerScope.cancel()
     }
 }

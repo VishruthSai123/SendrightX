@@ -190,10 +190,15 @@ fun AiLimitPanel(
                         .height(50.dp)
                         .clip(RoundedCornerShape(8.dp))
                 ) {
-                    SnyggText(
-                        elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                        text = "Later"
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SnyggText(
+                            elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                            text = "Later"
+                        )
+                    }
                 }
                 
                 if (!isProUser) {
@@ -235,19 +240,32 @@ fun AiLimitPanel(
                             .height(50.dp)
                             .clip(RoundedCornerShape(8.dp))
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = if (canUseRewardedAd) Icons.Default.PlayArrow else Icons.Default.Star,
-                                contentDescription = if (canUseRewardedAd) "Watch Ad" else "Go Pro",
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            SnyggText(
-                                elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                                text = if (canUseRewardedAd) "Watch Ad" else "Go Pro"
-                            )
+                            if (canUseRewardedAd) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = "Watch Ad",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    SnyggText(
+                                        elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                                        text = "Watch Ad"
+                                    )
+                                }
+                            } else {
+                                SnyggText(
+                                    elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                                    text = "Go Pro"
+                                )
+                            }
                         }
                     }
                 }

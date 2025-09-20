@@ -43,6 +43,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 import com.vishruth.key1.R
 import com.vishruth.key1.app.apptheme.FlorisAppTheme
 import com.vishruth.key1.app.ext.ExtensionImportScreenType
@@ -144,15 +145,29 @@ class FlorisAppActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         
-        // Check for any pending purchases as per reference Step 4
-        // This ensures that if a user subscribes on one device, their access is activated when they open the app on another
+        // Enhanced subscription status checking on app resume
+        // This ensures immediate subscription state refresh when user returns to app
         try {
             val userManager = com.vishruth.key1.user.UserManager.getInstance()
             val billingManager = userManager.getBillingManager()
+            val subscriptionManager = userManager.getSubscriptionManager()
+            
+            // Check for existing purchases first as per reference Step 4
             billingManager?.checkForExistingPurchases()
+            
+            // Force refresh subscription status to detect any expired subscriptions immediately
+            lifecycleScope.launch {
+                try {
+                    // Use force refresh to immediately check Google Play instead of relying on cache
+                    subscriptionManager?.forceRefreshSubscriptionStatus()
+                    android.util.Log.d("FlorisAppActivity", "Subscription status refreshed on app resume")
+                } catch (e: Exception) {
+                    android.util.Log.w("FlorisAppActivity", "Error refreshing subscription status on resume", e)
+                }
+            }
         } catch (e: Exception) {
             // Log error but don't crash the app
-            android.util.Log.w("FlorisAppActivity", "Error checking purchases on resume", e)
+            android.util.Log.w("FlorisAppActivity", "Error checking purchases/subscription on resume", e)
         }
     }
 

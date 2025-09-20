@@ -344,7 +344,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
      * Save subscription state to SharedPreferences
      * Based on reference: saveSubscriptionState function
      */
-    private fun saveSubscriptionState(isPremium: Boolean) {
+    fun saveSubscriptionState(isPremium: Boolean) {
         val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("is_premium_user", isPremium).apply()
         Log.d(TAG, "Subscription state saved: isPremium = $isPremium")
@@ -537,20 +537,25 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
     
     /**
-     * Check if user has an active subscription
+     * Check if user has an active subscription with immediate Google Play verification
      * Based on reference: checkSubscriptionStatus function
      */
     suspend fun hasActiveSubscription(): Boolean {
         return try {
-            // First check local SharedPreferences for immediate response
-            val localSubscriptionState = getSubscriptionState()
-            
+            // Always verify with Google Play Billing first for real-time status
             if (!billingClient.isReady) {
-                Log.w(TAG, "Billing client not ready, using local state: $localSubscriptionState")
-                return localSubscriptionState
+                Log.w(TAG, "Billing client not ready, attempting to connect...")
+                // Try to reconnect if not ready
+                setupBillingClient()
+                delay(1000) // Give some time for connection
+                
+                if (!billingClient.isReady) {
+                    Log.w(TAG, "Billing client still not ready, using local state as fallback")
+                    return getSubscriptionState()
+                }
             }
             
-            // Then verify with Google Play Billing
+            // Query Google Play for real-time subscription status
             val params = QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build()
@@ -562,20 +567,33 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 purchase.isAcknowledged
             }
             
-            // Update local state if different from Google Play state
+            Log.d(TAG, "Google Play subscription check result: $hasActivePurchase")
+            
+            // Get local state for comparison
+            val localSubscriptionState = getSubscriptionState()
+            
+            // If Google Play and local state don't match, update local state immediately
             if (hasActivePurchase != localSubscriptionState) {
-                Log.d(TAG, "Subscription state mismatch - Google Play: $hasActivePurchase, Local: $localSubscriptionState")
+                Log.w(TAG, "🔄 Subscription state mismatch detected!")
+                Log.w(TAG, "   Google Play: $hasActivePurchase")
+                Log.w(TAG, "   Local cache: $localSubscriptionState")
+                Log.w(TAG, "   Updating local cache to match Google Play...")
+                
                 saveSubscriptionState(hasActivePurchase)
                 
-                // Update subscription managers
+                // Update subscription managers immediately
                 updateSubscriptionManagers(hasActivePurchase)
+                
+                if (!hasActivePurchase && localSubscriptionState) {
+                    Log.w(TAG, "🚨 SUBSCRIPTION EXPIRED - Clearing cache and revoking access")
+                }
             }
             
-            Log.d(TAG, "Active subscription check result: $hasActivePurchase")
+            // Return Google Play state as authoritative
             hasActivePurchase
         } catch (e: Exception) {
             Log.e(TAG, "Error checking subscription status, falling back to local state", e)
-            // Fallback to local state if Google Play check fails
+            // Fallback to local state only if Google Play check completely fails
             getSubscriptionState()
         }
     }

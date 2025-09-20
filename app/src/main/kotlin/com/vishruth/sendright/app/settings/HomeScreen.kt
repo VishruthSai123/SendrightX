@@ -17,6 +17,7 @@
 package com.vishruth.key1.app.settings
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.RateReview
@@ -26,12 +27,16 @@ import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.SmartButton
 import androidx.compose.material.icons.outlined.Spellcheck
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vishruth.key1.R
 import com.vishruth.key1.app.LocalNavController
@@ -54,6 +59,21 @@ fun HomeScreen() = FlorisScreen {
 
     val navController = LocalNavController.current
     val context = LocalContext.current
+
+    // Add Premium button to the top app bar actions
+    actions {
+        IconButton(
+            onClick = { navController.navigate(Routes.Subscription.Screen) },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.premium),
+                contentDescription = "Premium",
+                modifier = Modifier.size(28.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
 
     content {
         val isCollapsed by prefs.internal.homeIsBetaToolboxCollapsed.observeAsState()
@@ -135,12 +155,6 @@ fun HomeScreen() = FlorisScreen {
             icon = Icons.Default.RateReview,
             title = "Report & Feedback",
             onClick = { navController.navigate(Routes.Settings.ReportFeedback) },
-        )
-        
-        Preference(
-            icon = Icons.Default.Star,
-            title = "Upgrade to Pro",
-            onClick = { navController.navigate(Routes.Subscription.Screen) },
         )
         Preference(
             icon = Icons.Outlined.Build,
