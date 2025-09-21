@@ -164,7 +164,12 @@ object GeminiApiService {
                 
                 val transformedText = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 if (transformedText != null) {
-                    Result.success(transformedText.trim())
+                    val trimmedText = transformedText.trim()
+                    if (trimmedText.isNotBlank()) {
+                        Result.success(trimmedText)
+                    } else {
+                        Result.failure(Exception("🤔 Empty response received. Please try again."))
+                    }
                 } else {
                     Result.failure(Exception("🤔 No response received. Please try again."))
                 }

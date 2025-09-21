@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -196,6 +197,9 @@ fun MagicWandPanel(
     val rewardedAdManager = remember { RewardedAdManager(context) }
     var showLimitDialog by remember { mutableStateOf(false) }
     
+    // Loading state for AI actions
+    var loadingButton by remember { mutableStateOf<String?>(null) }
+    
     // Force refresh UI when subscription status changes
     LaunchedEffect(isProUser) {
         if (isProUser) {
@@ -255,26 +259,41 @@ fun MagicWandPanel(
                 items(magicWandSections) { section ->
                     MagicWandSectionItem(
                         section = section,
+                        loadingButton = loadingButton,
                         onButtonClick = { buttonTitle ->
                             scope.launch {
                                 // Check if user is pro - use the reactive isProUser variable
                                 if (isProUser) {
                                     // Pro users get unlimited access
-                                    handleMagicWandButtonClick(
-                                        buttonTitle = buttonTitle,
-                                        editorInstance = editorInstance,
-                                        context = context
-                                    )
-                                } else {
-                                    // Check AI usage for free users
-                                    val isAllowed = aiUsageTracker.recordAiAction()
-                                    
-                                    if (isAllowed) {
+                                    loadingButton = buttonTitle
+                                    try {
                                         handleMagicWandButtonClick(
                                             buttonTitle = buttonTitle,
                                             editorInstance = editorInstance,
                                             context = context
                                         )
+                                    } catch (e: Exception) {
+                                        context.showShortToast("Error: ${e.message ?: "Something went wrong"}")
+                                    } finally {
+                                        loadingButton = null
+                                    }
+                                } else {
+                                    // Check AI usage for free users
+                                    val isAllowed = aiUsageTracker.recordAiAction()
+                                    
+                                    if (isAllowed) {
+                                        loadingButton = buttonTitle
+                                        try {
+                                            handleMagicWandButtonClick(
+                                                buttonTitle = buttonTitle,
+                                                editorInstance = editorInstance,
+                                                context = context
+                                            )
+                                        } catch (e: Exception) {
+                                            context.showShortToast("Error: ${e.message ?: "Something went wrong"}")
+                                        } finally {
+                                            loadingButton = null
+                                        }
                                     } else {
                                         // Force refresh the UI by getting the latest stats
                                         val updatedStats = aiUsageTracker.getUsageStats()
@@ -635,6 +654,7 @@ private fun AiLimitDialog(
 @Composable
 private fun MagicWandSectionItem(
     section: MagicWandSection,
+    loadingButton: String?,
     onButtonClick: (String) -> Unit,
     onToggleExpand: (String) -> Unit = {},
     modifier: Modifier = Modifier
@@ -686,11 +706,13 @@ private fun MagicWandSectionItem(
                         ) {
                             MagicWandButton(
                                 button = MagicWandButton(title = section.buttons[i]),
+                                isLoading = loadingButton == section.buttons[i],
                                 onClick = { onButtonClick(section.buttons[i]) },
                                 modifier = Modifier.weight(1f)
                             )
                             MagicWandButton(
                                 button = MagicWandButton(title = section.buttons[i + 1]),
+                                isLoading = loadingButton == section.buttons[i + 1],
                                 onClick = { onButtonClick(section.buttons[i + 1]) },
                                 modifier = Modifier.weight(1f)
                             )
@@ -699,6 +721,7 @@ private fun MagicWandSectionItem(
                         // Single button in this row - take full width without extra spacing
                         MagicWandButton(
                             button = MagicWandButton(title = section.buttons[i]),
+                            isLoading = loadingButton == section.buttons[i],
                             onClick = { onButtonClick(section.buttons[i]) },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -714,12 +737,13 @@ private fun MagicWandSectionItem(
 @Composable
 private fun MagicWandButton(
     button: MagicWandButton,
+    isLoading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SnyggButton(
         elementName = FlorisImeUi.SmartbarActionTile.elementName,
-        onClick = onClick,
+        onClick = if (isLoading) { {} } else onClick, // Disable click when loading
         modifier = modifier
             .height(60.dp)
             .clip(RoundedCornerShape(8.dp))
@@ -730,10 +754,18 @@ private fun MagicWandButton(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
-            SnyggText(
-                elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                text = button.title
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF23C546) // Green loading color as requested
+                )
+            } else {
+                SnyggText(
+                    elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                    text = button.title
+                )
+            }
         }
     }
 }
@@ -761,9 +793,6 @@ private suspend fun handleMagicWandButtonClick(
                 return
             }
             
-            // Show processing message
-            context.showShortToast("Thinking...")
-            
             // Get instruction for chat
             val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
             
@@ -772,6 +801,13 @@ private suspend fun handleMagicWandButtonClick(
             
             result.onSuccess { responseText ->
                 flogDebug { "Chat response: '$responseText'" }
+                
+                // Validate response before replacing text
+                if (responseText.isBlank()) {
+                    context.showShortToast("🤔 Empty response received. Please try again.")
+                    return@onSuccess
+                }
+                
                 // Replace all text with chat response (same as other AI actions)
                 val activeContent = editorInstance.activeContent
                 val totalTextLength = activeContent.textBeforeSelection.length + 
@@ -804,9 +840,6 @@ private suspend fun handleMagicWandButtonClick(
             return
         }
         
-        // Show processing message
-        context.showShortToast("Processing...")
-        
         // Get instruction for the button
         val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
         
@@ -814,6 +847,12 @@ private suspend fun handleMagicWandButtonClick(
         val result = GeminiApiService.transformText(allText, instruction)
         
         result.onSuccess { transformedText ->
+            // Validate response before replacing text
+            if (transformedText.isBlank()) {
+                context.showShortToast("🤔 Empty response received. Please try again.")
+                return@onSuccess
+            }
+            
             // Replace all text with transformed text
             val activeContent = editorInstance.activeContent
             val totalTextLength = activeContent.textBeforeSelection.length + 
