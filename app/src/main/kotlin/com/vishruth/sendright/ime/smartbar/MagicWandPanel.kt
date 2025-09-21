@@ -272,7 +272,8 @@ fun MagicWandPanel(
                                         handleMagicWandButtonClick(
                                             buttonTitle = buttonTitle,
                                             editorInstance = editorInstance,
-                                            context = context
+                                            context = context,
+                                            aiUsageTracker = aiUsageTracker // Pass tracker even for pro users (won't count but needed for signature)
                                         )
                                     } catch (e: Exception) {
                                         context.showShortToast("Error: ${e.message ?: "Something went wrong"}")
@@ -281,7 +282,7 @@ fun MagicWandPanel(
                                     }
                                 } else {
                                     // Check AI usage for free users
-                                    val isAllowed = aiUsageTracker.recordAiAction()
+                                    val isAllowed = aiUsageTracker.canUseAiAction()
                                     
                                     if (isAllowed) {
                                         loadingButton = buttonTitle
@@ -289,7 +290,8 @@ fun MagicWandPanel(
                                             handleMagicWandButtonClick(
                                                 buttonTitle = buttonTitle,
                                                 editorInstance = editorInstance,
-                                                context = context
+                                                context = context,
+                                                aiUsageTracker = aiUsageTracker // Pass tracker for recording successful actions
                                             )
                                         } catch (e: Exception) {
                                             context.showShortToast("Error: ${e.message ?: "Something went wrong"}")
@@ -775,7 +777,8 @@ private fun MagicWandButton(
 private suspend fun handleMagicWandButtonClick(
     buttonTitle: String,
     editorInstance: com.vishruth.key1.ime.editor.EditorInstance,
-    context: android.content.Context
+    context: android.content.Context,
+    aiUsageTracker: com.vishruth.key1.ime.ai.AiUsageTracker
 ) {
     try {
         // Special handling for Chat button
@@ -814,6 +817,9 @@ private suspend fun handleMagicWandButtonClick(
                     context.showShortToast("🤔 Empty response received. Please try again.")
                     return@onSuccess
                 }
+                
+                // Record successful AI action only after we have a valid response
+                aiUsageTracker.recordSuccessfulAiAction()
                 
                 // Replace all text with chat response (same as other AI actions)
                 val activeContent = editorInstance.activeContent
@@ -864,6 +870,9 @@ private suspend fun handleMagicWandButtonClick(
                 context.showShortToast("🤔 Empty response received. Please try again.")
                 return@onSuccess
             }
+            
+            // Record successful AI action only after we have a valid response
+            aiUsageTracker.recordSuccessfulAiAction()
             
             // Replace all text with transformed text
             val activeContent = editorInstance.activeContent

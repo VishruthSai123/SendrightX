@@ -1,8 +1,10 @@
-package com.vishruth.sendright.server.webhooks
+package com.vishruth.key1.server.webhooks
 
 import android.util.Log
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
+import com.vishruth.key1.server.api.PurchaseValidationApi
+import com.vishruth.key1.server.api.EntitlementDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.util.*
 
@@ -40,33 +42,42 @@ class GooglePlayWebhookHandler {
         const val SUBSCRIPTION_EXPIRED = 13
     }
     
-    private val firestore = FirebaseFirestore.getInstance()
+    private val validationApi = PurchaseValidationApi()
+    private val entitlementDatabase = EntitlementDatabase()
     
     /**
      * Main webhook handler function
-     * Call this from your server endpoint when receiving Google Play notifications
+     * Now integrates with the PurchaseValidationApi for automatic processing
      */
     suspend fun handleWebhook(
         notificationData: String,
         signature: String? = null
     ): WebhookResponse {
-        return try {
-            Log.d(TAG, "Received Google Play webhook notification")
-            
-            // Verify webhook signature if provided (recommended for production)
-            if (signature != null && !verifySignature(notificationData, signature)) {
-                Log.e(TAG, "Invalid webhook signature")
-                return WebhookResponse.error("Invalid signature")
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Received Google Play webhook notification")
+                
+                // Verify webhook signature if provided (recommended for production)
+                if (signature != null && !verifySignature(notificationData, signature)) {
+                    Log.e(TAG, "Invalid webhook signature")
+                    return@withContext WebhookResponse.error("Invalid signature")
+                }
+                
+                // Use the validation API to handle the webhook
+                val response = validationApi.handleWebhookNotification(notificationData)
+                
+                if (response.isSuccess) {
+                    Log.d(TAG, "✅ Webhook processed successfully via validation API")
+                    WebhookResponse.success("Notification processed successfully")
+                } else {
+                    Log.e(TAG, "❌ Webhook processing failed: ${response.error}")
+                    WebhookResponse.error("Failed to process notification: ${response.error}")
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing webhook", e)
+                WebhookResponse.error("Failed to process notification: ${e.message}")
             }
-            
-            val notification = parseNotification(notificationData)
-            processNotification(notification)
-            
-            WebhookResponse.success("Notification processed successfully")
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Error processing webhook", e)
-            WebhookResponse.error("Failed to process notification: ${e.message}")
         }
     }
     
@@ -143,32 +154,23 @@ class GooglePlayWebhookHandler {
         Log.d(TAG, "🟡 SUBSCRIPTION_CANCELED: User cancelled but retains access")
         
         try {
-            // Find user by purchase token
-            val userId = findUserByPurchaseToken(notification.purchaseToken)
-            if (userId == null) {
-                Log.w(TAG, "User not found for purchase token: ${notification.purchaseToken}")
+            // Find user by purchase token using entitlement database
+            val entitlement = entitlementDatabase.getEntitlementByPurchaseToken(notification.purchaseToken)
+            if (entitlement == null) {
+                Log.w(TAG, "User entitlement not found for purchase token: ${notification.purchaseToken}")
                 return
             }
             
             // Update subscription status to "canceled_but_active"
             // User keeps Pro access until the paid period ends
-            firestore.collection("users")
-                .document(userId)
-                .update(mapOf(
-                    "subscriptionStatus" to "canceled_but_active",
-                    "subscriptionCanceledAt" to System.currentTimeMillis(),
-                    "lastNotificationProcessed" to System.currentTimeMillis()
-                ))
-                .await()
-            
-            // Update the subscription record
-            updateSubscriptionRecord(
-                userId = userId,
-                purchaseToken = notification.purchaseToken,
-                status = "canceled_but_active"
+            val updatedEntitlement = entitlement.copy(
+                subscriptionStatus = "canceled_but_active",
+                lastVerified = System.currentTimeMillis()
             )
             
-            Log.d(TAG, "✅ Subscription marked as canceled but active for user: $userId")
+            entitlementDatabase.updateEntitlementStatus(updatedEntitlement)
+            
+            Log.d(TAG, "✅ Subscription marked as canceled but active for user: ${entitlement.userId}")
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error handling subscription cancellation", e)

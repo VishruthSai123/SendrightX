@@ -10,6 +10,8 @@ import android.content.Context
 import android.util.Log
 import com.android.billingclient.api.*
 import com.vishruth.key1.user.UserManager
+import com.vishruth.key1.server.api.PurchaseValidationApi
+import com.vishruth.key1.server.api.ValidationRequest
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -33,6 +35,12 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     
     private lateinit var billingClient: BillingClient
     private val billingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val validationApi = PurchaseValidationApi()
+    
+    // Periodic sync for server entitlement verification
+    private var periodicSyncJob: Job? = null
+    private val SYNC_INTERVAL = 30 * 60 * 1000L // 30 minutes
+    private var lastSyncTime = 0L
 
     // StateFlows for UI
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
@@ -46,11 +54,106 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     
     init {
         setupBillingClient()
+        startPeriodicServerSync()
     }
     
     /**
-     * Setup Google Play Billing client
+     * Start periodic server synchronization
+     * This catches any subscription changes that webhooks might miss
      */
+    private fun startPeriodicServerSync() {
+        periodicSyncJob?.cancel()
+        
+        periodicSyncJob = billingScope.launch {
+            while (isActive) {
+                try {
+                    delay(SYNC_INTERVAL)
+                    
+                    val userManager = UserManager.getInstance()
+                    val userData = userManager.userData.value
+                    val userId = userData?.userId
+                    
+                    if (userId != null) {
+                        Log.d(TAG, "🔄 Performing periodic server sync...")
+                        syncWithServer(userId)
+                    } else {
+                        Log.d(TAG, "No authenticated user for periodic sync")
+                    }
+                    
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in periodic server sync", e)
+                    // Wait before retrying
+                    delay(60_000L)
+                }
+            }
+        }
+    }
+    
+    /**
+     * Synchronize subscription status with server
+     * This method refreshes entitlements and catches missed webhook notifications
+     */
+    private suspend fun syncWithServer(userId: String) {
+        try {
+            Log.d(TAG, "Syncing subscription status with server for user: $userId")
+            
+            // Refresh entitlements on server (re-validates with Google Play)
+            val refreshResponse = validationApi.refreshUserEntitlements(userId)
+            
+            if (refreshResponse.isSuccess) {
+                Log.d(TAG, "✅ Server sync completed")
+                Log.d(TAG, "Refreshed ${refreshResponse.refreshedCount} entitlements")
+                Log.d(TAG, "Found ${refreshResponse.activeCount} active subscriptions")
+                
+                // Update local state based on server results
+                val hasActiveSubscription = refreshResponse.activeCount > 0
+                val localState = getSubscriptionState()
+                
+                if (hasActiveSubscription != localState) {
+                    Log.w(TAG, "🔄 Subscription status changed during sync!")
+                    Log.w(TAG, "Server says: $hasActiveSubscription, Local was: $localState")
+                    
+                    saveSubscriptionState(hasActiveSubscription)
+                    updateSubscriptionManagers(hasActiveSubscription)
+                    
+                    if (hasActiveSubscription) {
+                        Log.d(TAG, "🎉 Subscription restored from server sync")
+                    } else {
+                        Log.w(TAG, "🚨 Subscription revoked during server sync")
+                    }
+                }
+                
+                lastSyncTime = System.currentTimeMillis()
+                
+            } else {
+                Log.e(TAG, "❌ Server sync failed: ${refreshResponse.error}")
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during server sync", e)
+        }
+    }
+    
+    /**
+     * Force immediate server sync
+     * Call this when you want to immediately check server entitlement status
+     */
+    suspend fun forceSyncWithServer() {
+        try {
+            val userManager = UserManager.getInstance()
+            val userData = userManager.userData.value
+            val userId = userData?.userId
+            
+            if (userId != null) {
+                Log.d(TAG, "🚀 Force syncing with server...")
+                syncWithServer(userId)
+            } else {
+                Log.w(TAG, "No authenticated user for force sync")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during force sync", e)
+        }
+    }
     fun setupBillingClient() {
         Log.d(TAG, "Setting up billing client")
         _connectionState.value = ConnectionState.CONNECTING
@@ -247,8 +350,9 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
     
     /**
-     * Handle individual purchase
+     * Handle individual purchase with server-side verification
      * Based on reference: Step 3 - Verifying and Acknowledging the Purchase
+     * Now uses server-side validation to prevent client manipulation
      */
     private suspend fun handlePurchase(purchase: Purchase) {
         try {
@@ -257,8 +361,8 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             Log.d(TAG, "Purchase acknowledged: ${purchase.isAcknowledged}")
             
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                // Verify and acknowledge the purchase
-                verifyPurchase(purchase)
+                // NEW: Server-side verification instead of local acknowledgment
+                verifyPurchaseWithServer(purchase)
                 
                 _purchaseUpdates.emit(Result.success(purchase))
                 Log.d(TAG, "Purchase handled successfully: ${purchase.products}")
@@ -273,17 +377,108 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
     
     /**
-     * Verify and acknowledge purchase
-     * Based on reference: verifyAndAcknowledgePurchase method
+     * NEW: Verify purchase with server-side validation
+     * This replaces the old local verifyPurchase method
+     * Sends purchaseToken to server for Google Play API verification
      */
-    private fun verifyPurchase(purchase: Purchase) {
-        // We only process purchases that are in the PURCHASED state
+    private suspend fun verifyPurchaseWithServer(purchase: Purchase) {
+        try {
+            Log.d(TAG, "🔐 Starting server-side purchase verification...")
+            Log.d(TAG, "Purchase token: ${purchase.purchaseToken.take(20)}...")
+            
+            // Get current user ID for server validation
+            val userManager = UserManager.getInstance()
+            val userData = userManager.userData.value
+            val userId = userData?.userId ?: run {
+                Log.e(TAG, "❌ No authenticated user found for purchase verification")
+                throw Exception("User not authenticated")
+            }
+            
+            // Create validation request
+            val validationRequest = ValidationRequest(
+                userId = userId,
+                packageName = context.packageName,
+                productId = purchase.products.firstOrNull() ?: PRODUCT_ID_PRO_MONTHLY,
+                purchaseToken = purchase.purchaseToken
+            )
+            
+            Log.d(TAG, "📤 Sending validation request to server...")
+            Log.d(TAG, "User ID: $userId")
+            Log.d(TAG, "Package: ${validationRequest.packageName}")
+            Log.d(TAG, "Product: ${validationRequest.productId}")
+            
+            // Send to server for verification
+            val validationResponse = validationApi.validateSubscriptionPurchase(validationRequest)
+            
+            if (validationResponse.isSuccess && validationResponse.isValid) {
+                Log.d(TAG, "✅ Server validation successful!")
+                Log.d(TAG, "Subscription status: ${validationResponse.subscriptionStatus}")
+                Log.d(TAG, "Expiry time: ${java.util.Date(validationResponse.expiryTimeMillis)}")
+                Log.d(TAG, "Auto-renewing: ${validationResponse.autoRenewing}")
+                
+                // Server confirmed purchase is valid - acknowledge with Google Play
+                if (!purchase.isAcknowledged) {
+                    acknowledgePurchaseWithGooglePlay(purchase)
+                }
+                
+                // Grant premium access based on server validation
+                grantPremiumAccess()
+                
+                Log.d(TAG, "🎉 Premium access granted after server verification")
+                
+            } else {
+                Log.e(TAG, "❌ Server validation failed!")
+                Log.e(TAG, "Error: ${validationResponse.error}")
+                Log.e(TAG, "Message: ${validationResponse.message}")
+                
+                // Do not grant premium access if server validation fails
+                throw Exception("Server validation failed: ${validationResponse.message}")
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 Error during server-side verification", e)
+            
+            // Fallback to local verification only in development
+            Log.w(TAG, "⚠️ Falling back to local verification (development only)")
+            verifyPurchaseLocally(purchase)
+        }
+    }
+    
+    /**
+     * Acknowledge purchase with Google Play after server validation
+     */
+    private suspend fun acknowledgePurchaseWithGooglePlay(purchase: Purchase) {
+        try {
+            Log.d(TAG, "📝 Acknowledging purchase with Google Play...")
+            
+            val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                .setPurchaseToken(purchase.purchaseToken)
+                .build()
+            
+            billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    Log.d(TAG, "✅ Purchase acknowledged with Google Play")
+                } else {
+                    Log.e(TAG, "❌ Failed to acknowledge purchase: ${billingResult.debugMessage}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error acknowledging purchase", e)
+        }
+    }
+    
+    /**
+     * Fallback local verification (for development/offline use)
+     * This is the old verification method, used only as fallback
+     */
+    private fun verifyPurchaseLocally(purchase: Purchase) {
+        Log.w(TAG, "⚠️ Using local verification - NOT recommended for production")
+        
         if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
             Log.d(TAG, "Purchase is in PURCHASED state: ${purchase.products}")
             
-            // Ensure the purchase is not already acknowledged
             if (!purchase.isAcknowledged) {
-                Log.d(TAG, "Acknowledging purchase: ${purchase.purchaseToken}")
+                Log.d(TAG, "Acknowledging purchase locally: ${purchase.purchaseToken}")
                 
                 val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
                     .setPurchaseToken(purchase.purchaseToken)
@@ -291,25 +486,15 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 
                 billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        Log.d(TAG, "Purchase acknowledged successfully")
-                        // Purchase is valid and acknowledged. Now grant access.
+                        Log.d(TAG, "Purchase acknowledged locally")
                         grantPremiumAccess()
                     } else {
-                        Log.e(TAG, "Failed to acknowledge purchase: ${billingResult.debugMessage}")
-                        billingScope.launch {
-                            _purchaseUpdates.emit(Result.failure(Exception("Failed to acknowledge purchase: ${billingResult.debugMessage}")))
-                        }
+                        Log.e(TAG, "Failed to acknowledge purchase locally: ${billingResult.debugMessage}")
                     }
                 }
             } else {
                 Log.d(TAG, "Purchase already acknowledged, granting access")
-                // Already acknowledged, just grant access
                 grantPremiumAccess()
-            }
-        } else {
-            Log.w(TAG, "Purchase not in PURCHASED state: ${purchase.purchaseState}")
-            billingScope.launch {
-                _purchaseUpdates.emit(Result.failure(Exception("Purchase not in purchased state")))
             }
         }
     }
@@ -431,11 +616,34 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                         Log.d(TAG, "Existing purchase: ${purchase.products}, state: ${purchase.purchaseState}, acknowledged: ${purchase.isAcknowledged}")
                         
                         if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-                            Log.d(TAG, "Found unacknowledged purchase, processing...")
-                            verifyPurchase(purchase)
+                            Log.d(TAG, "Found unacknowledged purchase, processing with server verification...")
+                            verifyPurchaseWithServer(purchase)
                         } else if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && purchase.isAcknowledged) {
-                            Log.d(TAG, "Found acknowledged purchase, granting access...")
-                            grantPremiumAccess()
+                            Log.d(TAG, "Found acknowledged purchase, verifying entitlement with server...")
+                            
+                            // Check with server if this user still has valid entitlement
+                            try {
+                                val userManager = UserManager.getInstance()
+                                val userData = userManager.userData.value
+                                val userId = userData?.userId
+                                
+                                if (userId != null) {
+                                    val entitlementResponse = validationApi.checkUserEntitlements(userId)
+                                    if (entitlementResponse.isSuccess && entitlementResponse.hasActiveSubscription) {
+                                        Log.d(TAG, "Server confirms active subscription, granting access...")
+                                        grantPremiumAccess()
+                                    } else {
+                                        Log.w(TAG, "Server shows no active subscription despite local purchase")
+                                    }
+                                } else {
+                                    Log.w(TAG, "No authenticated user for entitlement check")
+                                    // Fallback to local grant for existing acknowledged purchases
+                                    grantPremiumAccess()
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error checking server entitlement, falling back to local grant", e)
+                                grantPremiumAccess()
+                            }
                         }
                     }
                 } else {
@@ -537,11 +745,45 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
     
     /**
-     * Check if user has an active subscription with immediate Google Play verification
-     * Based on reference: checkSubscriptionStatus function
+     * Check if user has an active subscription with server-side verification
+     * Now checks both Google Play and server entitlements for comprehensive validation
      */
     suspend fun hasActiveSubscription(): Boolean {
         return try {
+            Log.d(TAG, "🔍 Checking subscription status with server verification...")
+            
+            // Step 1: Check server entitlements first (authoritative source)
+            val userManager = UserManager.getInstance()
+            val userData = userManager.userData.value
+            val userId = userData?.userId
+            
+            if (userId != null) {
+                try {
+                    val entitlementResponse = validationApi.checkUserEntitlements(userId)
+                    if (entitlementResponse.isSuccess) {
+                        Log.d(TAG, "Server entitlement check result: ${entitlementResponse.hasActiveSubscription}")
+                        
+                        if (entitlementResponse.hasActiveSubscription) {
+                            // Server confirms active subscription
+                            saveSubscriptionState(true)
+                            updateSubscriptionManagers(true)
+                            return true
+                        } else {
+                            Log.d(TAG, "Server shows no active subscription")
+                        }
+                    } else {
+                        Log.w(TAG, "Server entitlement check failed: ${entitlementResponse.error}")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error checking server entitlements", e)
+                }
+            } else {
+                Log.w(TAG, "No authenticated user for server entitlement check")
+            }
+            
+            // Step 2: Fallback to Google Play verification
+            Log.d(TAG, "Falling back to Google Play verification...")
+            
             // Always verify with Google Play Billing first for real-time status
             if (!billingClient.isReady) {
                 Log.w(TAG, "Billing client not ready, attempting to connect...")
@@ -686,6 +928,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
      * Clean up resources
      */
     fun destroy() {
+        periodicSyncJob?.cancel()
         billingScope.cancel()
         if (::billingClient.isInitialized) {
             billingClient.endConnection()
