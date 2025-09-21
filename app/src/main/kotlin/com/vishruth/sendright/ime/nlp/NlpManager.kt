@@ -232,13 +232,21 @@ class NlpManager(context: Context) {
                         if (emojiSuggestions.isNotEmpty()) 5 else 8
                     }
                     
-                    getSuggestionProvider(subtype).suggest(
+                    val wordSuggestions = getSuggestionProvider(subtype).suggest(
                         subtype = subtype,
                         content = content,
                         maxCandidateCount = maxWordSuggestions,
                         allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
                     )
+                    
+                    // Add fallback character-by-character suggestions if no word suggestions found
+                    // and user is actively typing (composing text exists)
+                    if (wordSuggestions.isEmpty() && content.composingText.isNotBlank()) {
+                        createCharacterFallbackSuggestions(content.composingText.toString())
+                    } else {
+                        wordSuggestions
+                    }
                 }
             }
             internalSuggestionsGuard.withLock {
@@ -406,6 +414,29 @@ class NlpManager(context: Context) {
         val version = debugOverlayVersionSource.incrementAndGet()
         debugOverlaySuggestionsInfos.evictAll()
         debugOverlayVersion.postValue(version)
+    }
+
+    /**
+     * Creates character-by-character fallback suggestions when no word matches are found.
+     * This shows the user's typed text letter by letter as suggestion candidates.
+     */
+    private fun createCharacterFallbackSuggestions(composingText: String): List<SuggestionCandidate> {
+        if (composingText.length < 2) {
+            // For very short text, don't provide fallback suggestions
+            return emptyList()
+        }
+        
+        return buildList<SuggestionCandidate> {
+            // Only show the complete typed text as a single suggestion in the first column
+            // The other columns will remain empty for cleaner appearance
+            add(WordSuggestionCandidate(
+                text = composingText,
+                confidence = 0.2, // Low confidence so it doesn't interfere with real suggestions
+                isEligibleForAutoCommit = false,
+                isEligibleForUserRemoval = false,
+                sourceProvider = null
+            ))
+        }
     }
 
     private class ProviderInstanceWrapper(val provider: NlpProvider) {

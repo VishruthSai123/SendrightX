@@ -17,8 +17,6 @@
 
 package com.vishruth.key1.app
 
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -34,6 +32,7 @@ import com.vishruth.key1.ime.ai.AiUsageStats
 import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.lib.ads.RewardedAdManager
 import com.vishruth.key1.user.UserManager
+import com.vishruth.sendright.lib.network.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -80,13 +79,13 @@ class RewardedAdActivity : ComponentActivity() {
         rewardedAdManager.setAdUnitId(adUnitId)
         
         // Check network connectivity before loading ad
-        if (isNetworkAvailable()) {
+        if (NetworkUtils.isNetworkAvailable(this)) {
             Log.d(TAG, "Network is available, proceeding with ad loading")
             // Load and show the rewarded ad
             loadAndShowRewardedAd()
         } else {
             Log.e(TAG, "No internet connection available")
-            showToast("No internet connection. Please connect to the internet and try again.")
+            NetworkUtils.showNoInternetToast(this)
             // Delay finish to allow user to see the error message
             layout.postDelayed({
                 finish()
@@ -190,14 +189,6 @@ class RewardedAdActivity : ComponentActivity() {
         } else {
             Log.d(TAG, "Rewarded ad show method returned true")
         }
-    }
-    
-    private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(network)
-        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
-                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
     
     private fun showToast(message: String) {

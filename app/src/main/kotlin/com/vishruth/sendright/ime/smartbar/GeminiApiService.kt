@@ -16,7 +16,9 @@
 
 package com.vishruth.key1.ime.smartbar
 
+import android.content.Context
 import com.vishruth.key1.BuildConfig
+import com.vishruth.sendright.lib.network.NetworkUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -69,7 +71,14 @@ object GeminiApiService {
     
     private val json = Json { ignoreUnknownKeys = true }
     
-    suspend fun transformText(inputText: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun transformText(inputText: String, instruction: String, context: Context? = null): Result<String> = withContext(Dispatchers.IO) {
+        // Check network connectivity if context is provided
+        context?.let {
+            if (!NetworkUtils.isNetworkAvailable(it)) {
+                return@withContext Result.failure(IOException("No Internet Connection"))
+            }
+        }
+        
         // Validate API keys
         if (API_KEYS.isEmpty()) {
             return@withContext Result.failure(Exception("🔑 API key not configured. Please check settings."))

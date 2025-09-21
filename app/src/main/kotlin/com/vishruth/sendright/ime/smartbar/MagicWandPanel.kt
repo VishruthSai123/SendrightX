@@ -74,6 +74,7 @@ import com.vishruth.key1.keyboardManager
 import com.vishruth.key1.lib.ads.RewardedAdManager
 import com.vishruth.key1.lib.devtools.flogDebug
 import com.vishruth.key1.user.UserManager
+import com.vishruth.sendright.lib.network.NetworkUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
@@ -793,11 +794,16 @@ private suspend fun handleMagicWandButtonClick(
                 return
             }
             
+            // Check network connectivity before making API call
+            if (!NetworkUtils.checkNetworkAndShowToast(context)) {
+                return
+            }
+            
             // Get instruction for chat
             val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
             
             // Call Gemini API with chat instruction
-            val result = GeminiApiService.transformText(allText, instruction)
+            val result = GeminiApiService.transformText(allText, instruction, context)
             
             result.onSuccess { responseText ->
                 flogDebug { "Chat response: '$responseText'" }
@@ -840,11 +846,16 @@ private suspend fun handleMagicWandButtonClick(
             return
         }
         
+        // Check network connectivity before making API call
+        if (!NetworkUtils.checkNetworkAndShowToast(context)) {
+            return
+        }
+        
         // Get instruction for the button
         val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
         
         // Call Gemini API
-        val result = GeminiApiService.transformText(allText, instruction)
+        val result = GeminiApiService.transformText(allText, instruction, context)
         
         result.onSuccess { transformedText ->
             // Validate response before replacing text

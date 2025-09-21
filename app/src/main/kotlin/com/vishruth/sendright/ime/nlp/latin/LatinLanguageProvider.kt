@@ -195,8 +195,17 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         flogDebug { "User word data keys: ${userWordData.keys.take(10)}" }  // Log first 10 user words for debugging
         
         if (composingText.isEmpty()) {
-            // When there's no composing text, provide diverse high-frequency suggestions
-            val candidates = combinedWordData.entries
+            // When there's no composing text, don't provide any suggestions
+            // This ensures empty columns when user hasn't typed anything yet
+            flogDebug { "No composing text - returning empty suggestions" }
+            return emptyList()
+        }
+        
+        // If composing text is very short (1 character), be more restrictive
+        if (composingText.length == 1) {
+            // Only show exact prefix matches for single characters
+            val prefixCandidates = combinedWordData.entries
+                .filter { (word, _) -> word.lowercase().startsWith(composingTextLower) }
                 .sortedByDescending { it.value }
                 .take(maxCandidateCount)
                 .map { (word, frequency) ->
@@ -207,24 +216,29 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         sourceProvider = this@LatinLanguageProvider,
                     )
                 }
-            flogDebug { "Returning ${candidates.size} candidates for empty composing text" }
-            return candidates
+            flogDebug { "Returning ${prefixCandidates.size} prefix candidates for single character '$composingText'" }
+            return prefixCandidates
         }
         
+        // Process words with much stricter similarity requirements
         val exactMatches = mutableListOf<WordSuggestionCandidate>()
         val prefixMatches = mutableListOf<WordSuggestionCandidate>()
         val fuzzyMatches = mutableListOf<WordSuggestionCandidate>()
-        val contextMatches = mutableListOf<WordSuggestionCandidate>() // For context-aware suggestions
         
         combinedWordData.forEach { (word, frequency) ->
             val wordLower = word.lowercase()
             val confidence = frequency / 255.0
             
+            // Skip very short words unless they're exact matches or very common
+            if (word.length < 2 && frequency < 200) return@forEach
+            
+            // Skip words that are too long compared to input (reduces noise)
+            if (word.length > composingText.length + 5) return@forEach
+            
             when {
                 wordLower == composingTextLower -> {
                     // Preserve original case when matching exactly
                     val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
-                        // If the first character of the input is uppercase, capitalize the suggestion
                         word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
                     } else {
                         word
@@ -238,74 +252,52 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                     ))
                 }
                 wordLower.startsWith(composingTextLower) -> {
-                    // More sophisticated prefix matching with adaptive confidence
+                    // Only accept prefix matches if the typed portion is meaningful
                     val prefixLengthRatio = composingTextLower.length.toDouble() / wordLower.length.toDouble()
-                    val adjustedConfidence = when {
-                        prefixLengthRatio >= 0.8 -> confidence * 0.95 // Very close match
-                        prefixLengthRatio >= 0.6 -> confidence * 0.85 // Good match
-                        prefixLengthRatio >= 0.4 -> confidence * 0.75 // Fair match
-                        else -> confidence * 0.65 // Weak match
+                    
+                    // Require at least 25% of the word to be typed for shorter words
+                    // and adjust requirements based on word length
+                    val minRatioRequired = when {
+                        word.length <= 4 -> 0.5  // Half the word for very short words
+                        word.length <= 6 -> 0.33 // Third of the word for short words  
+                        else -> 0.25             // Quarter for longer words
                     }
                     
-                    // Longer composing texts make matches more confident
-                    val lengthBoost = when {
-                        composingTextLower.length >= 5 -> 1.1
-                        composingTextLower.length >= 3 -> 1.05
-                        else -> 1.0
+                    if (prefixLengthRatio >= minRatioRequired) {
+                        val adjustedConfidence = when {
+                            prefixLengthRatio >= 0.8 -> confidence * 0.95 // Very close match
+                            prefixLengthRatio >= 0.6 -> confidence * 0.85 // Good match
+                            prefixLengthRatio >= 0.4 -> confidence * 0.75 // Fair match
+                            else -> confidence * 0.65 // Weak match
+                        }
+                        
+                        // Preserve case for prefix matches
+                        val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
+                            word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
+                        } else {
+                            word
+                        }
+                        
+                        prefixMatches.add(WordSuggestionCandidate(
+                            text = finalWord,
+                            confidence = adjustedConfidence.coerceAtMost(1.0),
+                            isEligibleForAutoCommit = composingTextLower.length >= 3 && adjustedConfidence > 0.8,
+                            sourceProvider = this@LatinLanguageProvider,
+                        ))
                     }
-                    
-                    val finalConfidence = (adjustedConfidence * lengthBoost).coerceAtMost(1.0)
-                    
-                    // Preserve case for prefix matches
-                    val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
-                        // If the first character of the input is uppercase, capitalize the suggestion
-                        word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
-                    } else {
-                        word
-                    }
-                    
-                    prefixMatches.add(WordSuggestionCandidate(
-                        text = finalWord,
-                        confidence = finalConfidence,
-                        // Make prefix matches eligible for auto-commit based on confidence and length
-                        isEligibleForAutoCommit = composingTextLower.length >= 3 && finalConfidence > 0.8,
-                        sourceProvider = this@LatinLanguageProvider,
-                    ))
                 }
-                // More lenient fuzzy matching for better correction suggestions
-                wordLower.contains(composingTextLower) && composingTextLower.length > 1 -> {
-                    // Calculate position-based confidence boost
-                    val position = wordLower.indexOf(composingTextLower)
-                    val positionBoost = if (position == 0) 1.1 else 1.0 // Beginning match gets boost
-                    
-                    // Preserve case for fuzzy matches
-                    val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
-                        // If the first character of the input is uppercase, capitalize the suggestion
-                        word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
-                    } else {
-                        word
-                    }
-                    
-                    fuzzyMatches.add(WordSuggestionCandidate(
-                        text = finalWord,
-                        confidence = (confidence * 0.7 * positionBoost).coerceAtMost(0.9),
-                        isEligibleForAutoCommit = false,
-                        sourceProvider = this@LatinLanguageProvider,
-                    ))
-                }
-                // Levenshtein distance-based fuzzy matching for typo correction
-                composingTextLower.length > 2 && wordLower.length > 2 -> {
+                // Much more restrictive fuzzy matching - only for clear typos
+                composingTextLower.length >= 3 && wordLower.length >= 3 -> {
                     val distance = calculateEditDistance(composingTextLower, wordLower)
                     val maxLength = kotlin.math.max(composingTextLower.length, wordLower.length)
                     val similarity = 1.0 - (distance.toDouble() / maxLength.toDouble())
                     
-                    // Only consider words with high similarity (80% or better)
-                    if (similarity > 0.8) {
-                        val adjustedConfidence = (confidence * similarity * 0.8).coerceAtMost(0.95)
+                    // Very strict similarity threshold - only obvious typos
+                    if (similarity >= 0.9) {
+                        val adjustedConfidence = (confidence * similarity * 0.8).coerceAtMost(0.9)
                         
                         // Preserve case for typo corrections
                         val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
-                            // If the first character of the input is uppercase, capitalize the suggestion
                             word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(subtype.primaryLocale.base) else it.toString() }
                         } else {
                             word
@@ -314,44 +306,31 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         fuzzyMatches.add(WordSuggestionCandidate(
                             text = finalWord,
                             confidence = adjustedConfidence,
-                            isEligibleForAutoCommit = adjustedConfidence > 0.9, // High confidence typos can auto-commit
+                            isEligibleForAutoCommit = similarity > 0.95 && adjustedConfidence > 0.8,
                             sourceProvider = this@LatinLanguageProvider,
                         ))
                     }
                 }
-                // When there are no good matches, still provide some diverse suggestions
-                // but only if we don't have many good matches already
-                else -> {
-                    // Add some high-frequency words as fallback when there are very few matches
-                    // This helps ensure we always have some suggestions even for non-matching text
-                    if (exactMatches.size + prefixMatches.size + fuzzyMatches.size < 2) {
-                        // Only add if the word is reasonably common (frequency > 100)
-                        if (frequency > 100) {
-                            contextMatches.add(WordSuggestionCandidate(
-                                text = word,
-                                confidence = confidence * 0.3, // Low confidence for fallback suggestions
-                                isEligibleForAutoCommit = false,
-                                sourceProvider = this@LatinLanguageProvider,
-                            ))
-                        }
-                    }
-                }
+                // No fallback suggestions - keep columns empty if no relevant matches
             }
         }
         
-        // Sort matches by confidence
+        // Build final results with strict prioritization - no fallback suggestions
         val allMatches = buildList {
+            // Prioritize exact matches
             addAll(exactMatches.sortedByDescending { it.confidence })
+            
+            // Then add best prefix matches
             addAll(prefixMatches.sortedByDescending { it.confidence })
+            
+            // Finally add fuzzy matches (typo corrections)
             addAll(fuzzyMatches.sortedByDescending { it.confidence })
-            // Add context matches only if we don't have enough good matches
-            if (exactMatches.size + prefixMatches.size + fuzzyMatches.size < 3) {
-                addAll(contextMatches.sortedByDescending { it.confidence }.take(3 - (exactMatches.size + prefixMatches.size + fuzzyMatches.size)))
-            }
         }
         
+        // Return only high-quality matches, keeping columns empty if no good suggestions
         val result = allMatches.take(maxCandidateCount)
-        flogDebug { "Returning ${result.size} candidates for composing text '$composingText'" }
+        flogDebug { "Returning ${result.size} high-quality candidates for composing text '$composingText'" }
+        flogDebug { "Exact: ${exactMatches.size}, Prefix: ${prefixMatches.size}, Fuzzy: ${fuzzyMatches.size}" }
         return result
     }
 

@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import com.vishruth.key1.user.UserManager
+import com.vishruth.sendright.lib.network.NetworkUtils
 import kotlinx.coroutines.flow.firstOrNull
 
 /**
@@ -112,6 +113,14 @@ class RewardedAdManager(private val context: Context) {
         coroutineScope.launch {
             try {
                 Log.d(TAG, "Starting rewarded ad load process")
+                
+                // Check network connectivity before attempting to load ad
+                if (!NetworkUtils.isNetworkAvailable(applicationContext)) {
+                    Log.e(TAG, "No internet connection available for ad loading")
+                    showToast("No Internet Connection")
+                    callback?.invoke(null)
+                    return@launch
+                }
                 
                 // Wait for AdMob SDK to be initialized with a shorter timeout
                 if (!waitForInitialization()) {
