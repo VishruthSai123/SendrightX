@@ -79,6 +79,11 @@ android {
         buildConfigField("String", "FLADDONS_API_VERSION", "\"v~draft2\"")
         buildConfigField("String", "FLADDONS_STORE_URL", "\"beta.addons.sendrightx.org\"")
 
+        // NDK configuration for debug symbols
+        ndk {
+            debugSymbolLevel = "SYMBOL_TABLE"  // Generate debug symbols for Play Console
+        }
+
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
             arg("room.incremental", "true")
@@ -116,7 +121,7 @@ android {
             versionNameSuffix = "+${getGitCommitHash(short = true)}"
 
             isDebuggable = true
-            isJniDebuggable = false
+            isJniDebuggable = true  // Enable JNI debugging for debug symbols
 
             // Add Gemini API key to BuildConfig
             buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
@@ -182,6 +187,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             isMinifyEnabled = true
             isShrinkResources = true
+            isJniDebuggable = true  // Enable debug symbols for release builds
 
             // Add Gemini API key to BuildConfig
             buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")

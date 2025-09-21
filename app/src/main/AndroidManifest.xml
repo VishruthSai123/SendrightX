@@ -20,6 +20,10 @@
     <!-- Permission needed to access advertising ID for analytics and advertising (Android 13+) -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
+    <!-- Explicitly declare that this app uses advertising ID for ads and analytics -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
     <!-- Android 11+ only: Define that SendRight X requests to see all apps that
           ship with an IME or Spell Check service. This is used to guide the user
           in the Settings Ui why SendRight X may not be working.
@@ -46,6 +50,11 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-1496070957048863~2614429048"/>
+
+        <!-- Advertising ID usage declaration for Google Play Console compliance -->
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true"/>
 
         <!-- Allow app to be profiled for benchmarking and baseline profile generation -->
         <profileable android:shell="true"/>
