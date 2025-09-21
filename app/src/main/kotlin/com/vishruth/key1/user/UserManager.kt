@@ -66,6 +66,7 @@ class UserManager private constructor() {
         private const val PREFS_NAME = "user_manager_prefs"
         private const val KEY_LAST_REWARDED_AD_DATE = "last_rewarded_ad_date"
         private const val KEY_TOTAL_AD_REWARDS_USED = "total_ad_rewards_used"
+        private const val KEY_PRO_FEATURES_TOAST_SHOWN = "pro_features_toast_shown"
         private var instance: UserManager? = null
         
         /**
@@ -261,6 +262,27 @@ class UserManager private constructor() {
             } else {
                 onError(message ?: "Failed to restore purchases")
             }
+        }
+    }
+    
+    /**
+     * Check if the pro features unlocked toast has been shown
+     */
+    fun hasProFeaturesToastBeenShown(): Boolean {
+        val prefs = sharedPrefs ?: return false
+        return prefs.getBoolean(KEY_PRO_FEATURES_TOAST_SHOWN, false)
+    }
+    
+    /**
+     * Mark that the pro features unlocked toast has been shown
+     */
+    fun markProFeaturesToastAsShown() {
+        val prefs = sharedPrefs
+        if (prefs != null) {
+            prefs.edit()
+                .putBoolean(KEY_PRO_FEATURES_TOAST_SHOWN, true)
+                .apply()
+            Log.d(TAG, "Marked pro features toast as shown")
         }
     }
 }

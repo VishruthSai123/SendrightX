@@ -114,10 +114,18 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
             KeyboardMode.PHONE,
             KeyboardMode.PHONE2,
             -> false
-            else -> activeState.keyVariation != KeyVariation.PASSWORD &&
-                prefs.suggestion.enabled.get()// &&
-            //!instance.inputAttributes.flagTextAutoComplete &&
-            //!instance.inputAttributes.flagTextNoSuggestions
+            else -> {
+                // Enable suggestions if:
+                // 1. Suggestions are enabled in preferences
+                // 2. Not a password field
+                // 3. Not a sensitive field that explicitly disables suggestions
+                // 4. Not an auto-complete field (like passwords/forms)
+                val isSafeForSuggestions = activeState.keyVariation != KeyVariation.PASSWORD &&
+                    !isSensitiveInputField(editorInfo.inputAttributes) &&
+                    !editorInfo.inputAttributes.flagTextNoSuggestions
+                
+                isSafeForSuggestions && prefs.suggestion.enabled.get()
+            }
         }
         activeState.isIncognitoMode = when (prefs.suggestion.incognitoMode.get()) {
             IncognitoMode.FORCE_OFF -> false
@@ -139,11 +147,14 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     }
 
     override fun determineComposingEnabled(): Boolean {
-        // Always enable composing when suggestions are on to ensure proper auto-correction
-        // Make sure composing is enabled when suggestions are active
-        // Also ensure it's enabled for rich input editors that support suggestions
-        return (nlpManager.isSuggestionOn() && prefs.suggestion.enabled.get()) || 
-               (activeInfo.isRichInputEditor && !activeInfo.inputAttributes.flagTextNoSuggestions)
+        // Use the same security logic as isComposingEnabled
+        // Only enable composing for safe input fields
+        val isSafeForSuggestions = activeState.keyVariation != KeyVariation.PASSWORD &&
+            !isSensitiveInputField(activeInfo.inputAttributes) &&
+            !activeInfo.inputAttributes.flagTextNoSuggestions
+            
+        return isSafeForSuggestions && 
+               (nlpManager.isSuggestionOn() && prefs.suggestion.enabled.get())
     }
 
     override fun determineComposer(composerName: ExtensionComponentName): Composer {
@@ -746,6 +757,39 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
         val selection = activeContent.selection
         if (selection.isSelectionMode) {
             commitText("")
+        }
+    }
+    
+    /**
+     * Determines if the input field is sensitive and should not store suggestions
+     * for security and privacy reasons.
+     */
+    private fun isSensitiveInputField(inputAttributes: InputAttributes): Boolean {
+        return when (inputAttributes.variation) {
+            // Password fields - any type of password input
+            InputAttributes.Variation.PASSWORD,
+            InputAttributes.Variation.VISIBLE_PASSWORD,
+            InputAttributes.Variation.WEB_PASSWORD,
+            -> true
+            
+            // Personal information that shouldn't be learned
+            InputAttributes.Variation.PERSON_NAME,
+            InputAttributes.Variation.EMAIL_ADDRESS,
+            InputAttributes.Variation.WEB_EMAIL_ADDRESS,
+            InputAttributes.Variation.POSTAL_ADDRESS,
+            InputAttributes.Variation.PHONETIC,
+            -> true
+            
+            // Allow search fields even if they have NO_SUGGESTIONS flag
+            InputAttributes.Variation.FILTER -> false
+            
+            // Other fields - check flags
+            else -> {
+                // Check if auto-complete is enabled (typically for passwords/forms)
+                inputAttributes.flagTextAutoComplete ||
+                // Check if the field explicitly disables suggestions  
+                inputAttributes.flagTextNoSuggestions
+            }
         }
     }
 }

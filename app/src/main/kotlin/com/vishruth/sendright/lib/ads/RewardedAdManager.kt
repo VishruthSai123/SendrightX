@@ -61,8 +61,8 @@ class RewardedAdManager(private val context: Context) {
         // Production ad unit ID for rewarded ads
         const val PROD_REWARDED_AD_UNIT_ID = "ca-app-pub-1496070957048863/4659258018"
         
-        // Flag to enable test ads (set to true for debugging) - SWITCHING TO TRUE FOR SAFETY
-        const val USE_TEST_ADS = true
+        // Flag to enable test ads (set to true for debugging) - SWITCHED TO FALSE FOR PRODUCTION
+        const val USE_TEST_ADS = false
         
         // Maximum time to wait for AdMob SDK initialization (in milliseconds)
         private const val MAX_INITIALIZATION_WAIT_TIME = 3000L // Reduced from 5000L for faster response

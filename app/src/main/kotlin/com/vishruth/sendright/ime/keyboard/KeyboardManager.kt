@@ -237,7 +237,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     fun resetSuggestions(content: EditorContent) {
-        if (!(activeState.isComposingEnabled || nlpManager.isSuggestionOn())) {
+        // Suggestions should only show if:
+        // 1. Composing is enabled (safe for this input field type) AND
+        // 2. Suggestions are enabled in preferences
+        if (!activeState.isComposingEnabled || !nlpManager.isSuggestionOn()) {
             nlpManager.clearSuggestions()
             return
         }

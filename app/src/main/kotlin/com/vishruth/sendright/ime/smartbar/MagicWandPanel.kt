@@ -203,9 +203,10 @@ fun MagicWandPanel(
     
     // Force refresh UI when subscription status changes
     LaunchedEffect(isProUser) {
-        if (isProUser) {
-            // Force recomposition when user becomes pro
+        if (isProUser && !userManager.hasProFeaturesToastBeenShown()) {
+            // Only show toast once when user becomes pro and hasn't seen it before
             context.showShortToast("🎉 Pro features unlocked!")
+            userManager.markProFeaturesToastAsShown()
         }
     }
     

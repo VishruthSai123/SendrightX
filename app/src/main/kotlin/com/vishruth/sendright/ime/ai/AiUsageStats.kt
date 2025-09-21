@@ -38,7 +38,7 @@ data class AiUsageStats(
         // Set TESTING_MODE to:
         // - true  = 1 minute reward window (for testing)
         // - false = 24 hours reward window (for production)
-        private const val TESTING_MODE = true
+        private const val TESTING_MODE = false
         
         // Duration constants
         private const val TESTING_REWARD_DURATION_MS = 1 * 60 * 1000L // 1 minute for testing
