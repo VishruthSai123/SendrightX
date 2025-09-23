@@ -554,11 +554,6 @@ private class TextKeyboardLayoutController(
         if (keyboardManager.activeState.isMagicWandPanelVisible) {
             keyboardManager.closeMagicWandPanel()
         }
-        
-        // Auto-close action result panel when user touches keyboard
-        if (keyboardManager.activeState.isActionResultPanelVisible) {
-            keyboardManager.dismissActionResultPanel()
-        }
 
         val key = keyboard.getKeyForPos(event.getX(pointer.index), event.getY(pointer.index))
         if (key != null && key.isEnabled) {

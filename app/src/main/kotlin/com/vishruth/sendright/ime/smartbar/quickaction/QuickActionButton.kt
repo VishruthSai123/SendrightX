@@ -134,7 +134,7 @@ fun QuickActionButton(
                         
                         // Special handling for magic wand PNG icons
                         if (action.data.code == com.vishruth.key1.ime.text.key.KeyCode.MAGIC_WAND) {
-                            val pngResource = if (evaluator.state.isMagicWandPanelVisible || evaluator.state.isActionResultPanelVisible) {
+                            val pngResource = if (evaluator.state.isMagicWandPanelVisible) {
                                 R.drawable.magicwand_close
                             } else {
                                 R.drawable.gemini

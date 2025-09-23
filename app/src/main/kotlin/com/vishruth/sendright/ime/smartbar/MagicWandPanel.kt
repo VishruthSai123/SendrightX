@@ -781,6 +781,65 @@ private suspend fun handleMagicWandButtonClick(
     aiUsageTracker: com.vishruth.key1.ime.ai.AiUsageTracker
 ) {
     try {
+        // Special handling for Chat button
+        if (buttonTitle == "Chat") {
+            // Get all text from the input field (same as other AI actions)
+            val activeContent = editorInstance.activeContent
+            val allText = buildString {
+                append(activeContent.textBeforeSelection)
+                append(activeContent.selectedText)
+                append(activeContent.textAfterSelection)
+            }
+            
+            flogDebug { "Chat - All text: '$allText'" }
+            
+            if (allText.isBlank()) {
+                context.showShortToast("Please type some text first")
+                return
+            }
+            
+            // Check network connectivity before making API call
+            if (!NetworkUtils.checkNetworkAndShowToast(context)) {
+                return
+            }
+            
+            // Get instruction for chat
+            val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
+            
+            // Call Gemini API with chat instruction
+            val result = GeminiApiService.transformText(allText, instruction, context)
+            
+            result.onSuccess { responseText ->
+                flogDebug { "Chat response: '$responseText'" }
+                
+                // Validate response before replacing text
+                if (responseText.isBlank()) {
+                    context.showShortToast("🤔 Empty response received. Please try again.")
+                    return@onSuccess
+                }
+                
+                // Record successful AI action only after we have a valid response
+                aiUsageTracker.recordSuccessfulAiAction()
+                
+                // Replace all text with chat response (same as other AI actions)
+                val activeContent = editorInstance.activeContent
+                val totalTextLength = activeContent.textBeforeSelection.length + 
+                                     activeContent.selectedText.length + 
+                                     activeContent.textAfterSelection.length
+                
+                // Select all text by setting selection from 0 to total length
+                editorInstance.setSelection(0, totalTextLength)
+                editorInstance.deleteSelectedText()
+                editorInstance.commitText(responseText)
+                context.showShortToast("Response received!")
+            }.onFailure { error ->
+                context.showShortToast("Chat error: ${error.message ?: "Something went wrong"}")
+            }
+            
+            return
+        }
+        
+        // Handle all other buttons with existing logic
         // Get all text from the input field
         val activeContent = editorInstance.activeContent
         val allText = buildString {
@@ -788,8 +847,6 @@ private suspend fun handleMagicWandButtonClick(
             append(activeContent.selectedText)
             append(activeContent.textAfterSelection)
         }
-        
-        flogDebug { "$buttonTitle - All text: '$allText'" }
         
         if (allText.isBlank()) {
             context.showShortToast("Please type some text first")
@@ -808,7 +865,7 @@ private suspend fun handleMagicWandButtonClick(
         val result = GeminiApiService.transformText(allText, instruction, context)
         
         result.onSuccess { transformedText ->
-            // Validate response before showing action result panel
+            // Validate response before replacing text
             if (transformedText.isBlank()) {
                 context.showShortToast("🤔 Empty response received. Please try again.")
                 return@onSuccess
@@ -817,28 +874,22 @@ private suspend fun handleMagicWandButtonClick(
             // Record successful AI action only after we have a valid response
             aiUsageTracker.recordSuccessfulAiAction()
             
-            // Get or create the ActionResultPanelManager instance
-            val actionResultManager = ActionResultPanelManager.getCurrentInstance() 
-                ?: ActionResultPanelManager.getInstance(editorInstance, context)
+            // Replace all text with transformed text
+            val activeContent = editorInstance.activeContent
+            val totalTextLength = activeContent.textBeforeSelection.length + 
+                                 activeContent.selectedText.length + 
+                                 activeContent.textAfterSelection.length
             
-            // Show the action result panel with the response
-            actionResultManager.showActionResult(
-                originalText = allText,
-                transformedText = transformedText,
-                actionTitle = buttonTitle,
-                instruction = instruction
-            )
-            
-            // Get keyboard manager and show action result panel
-            val keyboardManager = context.keyboardManager().value
-            keyboardManager.showActionResultPanel()
-            
+            // Select all text by setting selection from 0 to total length
+            editorInstance.setSelection(0, totalTextLength)
+            editorInstance.deleteSelectedText()
+            editorInstance.commitText(transformedText)
+            context.showShortToast("Text transformed!")
         }.onFailure { error ->
             context.showShortToast(error.message ?: "Something went wrong")
         }
         
     } catch (e: Exception) {
         context.showShortToast("Something went wrong. Please try again.")
-        flogDebug { "Error in handleMagicWandButtonClick: ${e.message}" }
     }
 }
