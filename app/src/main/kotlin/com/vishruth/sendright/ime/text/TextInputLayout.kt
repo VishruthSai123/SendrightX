@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,18 +36,23 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import com.vishruth.key1.R
 import com.vishruth.key1.app.FlorisPreferenceStore
+import org.florisboard.lib.android.showShortToast
 import com.vishruth.key1.ime.smartbar.AiLimitPanel
 import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.ime.smartbar.IncognitoDisplayMode
 import com.vishruth.key1.ime.smartbar.InlineSuggestionsStyleCache
 import com.vishruth.key1.ime.smartbar.MagicWandPanel
+import com.vishruth.key1.ime.smartbar.ActionResultPanel
+import com.vishruth.key1.ime.smartbar.ActionResultPanelManager
 import com.vishruth.key1.ime.smartbar.Smartbar
 import com.vishruth.key1.ime.smartbar.quickaction.QuickActionsOverflowPanel
 import com.vishruth.key1.ime.text.keyboard.TextKeyboardLayout
 import com.vishruth.key1.ime.theme.FlorisImeUi
 import com.vishruth.key1.keyboardManager
+import com.vishruth.key1.editorInstance
 import com.vishruth.key1.user.UserManager
 import dev.patrickgold.jetpref.datastore.model.observeAsState
+import kotlinx.coroutines.launch
 import org.florisboard.lib.snygg.ui.SnyggIcon
 
 @Composable
@@ -72,6 +78,8 @@ fun TextInputLayout(
             Smartbar()
             if (state.isActionsOverflowVisible) {
                 QuickActionsOverflowPanel()
+            } else if (state.isActionResultPanelVisible) {
+                ActionResultPanelWrapper()
             } else if (state.isMagicWandPanelVisible) {
                 // Enhanced subscription and AI limit checking
                 val aiUsageTracker = remember { AiUsageTracker.getInstance() }
@@ -127,4 +135,100 @@ fun TextInputLayout(
             }
         }
     }
+}
+
+/**
+ * Wrapper composable for ActionResultPanel with state management
+ */
+@Composable
+private fun ActionResultPanelWrapper() {
+    val context = LocalContext.current
+    val keyboardManager by context.keyboardManager()
+    val editorInstance by context.editorInstance()
+    val scope = rememberCoroutineScope()
+
+    // Create or get the action result panel manager
+    val actionResultManager = remember {
+        ActionResultPanelManager.getInstance(editorInstance, context)
+    }
+
+    // Get the current state
+    val state = actionResultManager.state
+
+    // Add safety check to ensure we have valid data before showing the panel
+    if (state.transformedText.isEmpty() && state.originalText.isEmpty()) {
+        // If no data is available, close the panel
+        LaunchedEffect(Unit) {
+            keyboardManager.dismissActionResultPanel()
+        }
+        return
+    }
+
+    ActionResultPanel(
+        originalText = state.originalText,
+        transformedText = state.transformedText,
+        actionTitle = state.actionTitle,
+        instruction = state.instruction,
+        canUndo = state.canUndo,
+        canRedo = state.canRedo,
+        isLoading = state.isLoading,
+        onAccept = {
+            scope.launch {
+                try {
+                    actionResultManager.acceptText()
+                    keyboardManager.dismissActionResultPanel()
+                } catch (e: Exception) {
+                    context.showShortToast("Error accepting text: ${e.message}")
+                    keyboardManager.dismissActionResultPanel()
+                }
+            }
+        },
+        onReject = {
+            scope.launch {
+                try {
+                    actionResultManager.rejectText()
+                    keyboardManager.closeActionResultPanel()
+                } catch (e: Exception) {
+                    context.showShortToast("Error rejecting text: ${e.message}")
+                    keyboardManager.closeActionResultPanel()
+                }
+            }
+        },
+        onRegenerate = {
+            scope.launch {
+                try {
+                    actionResultManager.regenerateText()
+                } catch (e: Exception) {
+                    context.showShortToast("Error regenerating text: ${e.message}")
+                }
+            }
+        },
+        onUndo = {
+            scope.launch {
+                try {
+                    actionResultManager.undoText()
+                } catch (e: Exception) {
+                    context.showShortToast("Error undoing: ${e.message}")
+                }
+            }
+        },
+        onRedo = {
+            scope.launch {
+                try {
+                    actionResultManager.redoText()
+                } catch (e: Exception) {
+                    context.showShortToast("Error redoing: ${e.message}")
+                }
+            }
+        },
+        onFlag = {
+            scope.launch {
+                try {
+                    actionResultManager.flagResponse()
+                } catch (e: Exception) {
+                    context.showShortToast("Error flagging: ${e.message}")
+                }
+            }
+        }
+    )
 }

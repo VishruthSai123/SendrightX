@@ -770,8 +770,16 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     /**
      * Handles a [KeyCode.MAGIC_WAND] event.
      * Toggles the magic wand panel with customizable buttons.
+     * Also handles closing the action result panel when visible.
      */
     private fun handleMagicWand() {
+        // If action result panel is visible, close it and return to magic wand panel
+        if (activeState.isActionResultPanelVisible) {
+            closeActionResultPanel()
+            return
+        }
+        
+        // Otherwise, toggle magic wand panel normally
         activeState.isMagicWandPanelVisible = !activeState.isMagicWandPanelVisible
         
         if (activeState.isMagicWandPanelVisible) {
@@ -789,6 +797,31 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         if (activeState.isMagicWandPanelVisible) {
             activeState.isMagicWandPanelVisible = false
         }
+    }
+
+    /**
+     * Shows the action result panel and hides other panels
+     */
+    fun showActionResultPanel() {
+        activeState.isActionResultPanelVisible = true
+        activeState.isMagicWandPanelVisible = false
+        activeState.isActionsOverflowVisible = false
+        activeState.isActionsEditorVisible = false
+    }
+
+    /**
+     * Closes the action result panel and returns to magic wand panel
+     */
+    fun closeActionResultPanel() {
+        activeState.isActionResultPanelVisible = false
+        activeState.isMagicWandPanelVisible = true
+    }
+
+    /**
+     * Closes the action result panel completely
+     */
+    fun dismissActionResultPanel() {
+        activeState.isActionResultPanelVisible = false
     }
 
     /**
