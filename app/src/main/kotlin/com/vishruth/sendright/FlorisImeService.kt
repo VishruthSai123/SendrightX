@@ -99,6 +99,7 @@ import com.vishruth.key1.ime.sheet.isBottomSheetShowing
 import com.vishruth.key1.ime.smartbar.ExtendedActionsPlacement
 import com.vishruth.key1.ime.smartbar.SmartbarLayout
 import com.vishruth.key1.ime.smartbar.quickaction.QuickActionsEditorPanel
+import com.vishruth.key1.ime.smartbar.ActionResultPanelManager
 import com.vishruth.key1.ime.text.TextInputLayout
 import com.vishruth.key1.ime.theme.FlorisImeTheme
 import com.vishruth.key1.ime.theme.FlorisImeUi
@@ -350,6 +351,15 @@ class FlorisImeService : LifecycleInputMethodService() {
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
         flogInfo { "restarting=$restarting info=${info?.debugSummarize()}" }
         super.onStartInput(info, restarting)
+        
+        // Auto-close action result panel when keyboard input starts/reopens
+        // Skip auto-close if undo/redo is in progress
+        val actionResultManager = ActionResultPanelManager.getCurrentInstance()
+        if (keyboardManager.activeState.isActionResultPanelVisible && 
+            actionResultManager?.isPerformingUndoRedo != true) {
+            keyboardManager.dismissActionResultPanel()
+        }
+        
         if (info == null) return
         val editorInfo = FlorisEditorInfo.wrap(info)
         editorInstance.handleStartInput(editorInfo)
@@ -358,6 +368,15 @@ class FlorisImeService : LifecycleInputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         flogInfo { "restarting=$restarting info=${info?.debugSummarize()}" }
         super.onStartInputView(info, restarting)
+        
+        // Auto-close action result panel when keyboard input view starts/refreshes
+        // Skip auto-close if undo/redo is in progress
+        val actionResultManager = ActionResultPanelManager.getCurrentInstance()
+        if (keyboardManager.activeState.isActionResultPanelVisible && 
+            actionResultManager?.isPerformingUndoRedo != true) {
+            keyboardManager.dismissActionResultPanel()
+        }
+        
         if (info == null) return
         val editorInfo = FlorisEditorInfo.wrap(info)
         activeState.batchEdit {
@@ -402,6 +421,15 @@ class FlorisImeService : LifecycleInputMethodService() {
 
     override fun onFinishInput() {
         flogInfo { "(no args)" }
+        
+        // Auto-close action result panel when input finishes (app switch, etc.)
+        // Skip auto-close if undo/redo is in progress
+        val actionResultManager = ActionResultPanelManager.getCurrentInstance()
+        if (keyboardManager.activeState.isActionResultPanelVisible && 
+            actionResultManager?.isPerformingUndoRedo != true) {
+            keyboardManager.dismissActionResultPanel()
+        }
+        
         super.onFinishInput()
         editorInstance.handleFinishInput()
         NlpInlineAutofill.clearInlineSuggestions()
