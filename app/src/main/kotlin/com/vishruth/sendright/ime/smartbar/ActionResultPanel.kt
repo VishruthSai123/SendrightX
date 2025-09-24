@@ -66,6 +66,7 @@ import com.vishruth.key1.keyboardManager
 import com.vishruth.key1.lib.devtools.flogDebug
 import com.vishruth.key1.R
 import com.vishruth.sendright.lib.network.NetworkUtils
+import com.vishruth.sendright.ime.review.InAppReviewManager
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
@@ -348,6 +349,17 @@ class ActionResultPanelManager(
             // Update state
             _state = _state.copy(originalText = _state.transformedText)
             updateUndoRedoState()
+            
+            // Record successful action for review tracking
+            // This works for both free and pro users
+            try {
+                val reviewManager = InAppReviewManager.getInstance(context)
+                reviewManager.recordSuccessfulAction()
+                flogDebug { "Recorded successful action for in-app review" }
+            } catch (e: Exception) {
+                flogDebug { "Error recording action for review: ${e.message}" }
+                // Don't fail the main action if review tracking fails
+            }
             
         } catch (e: Exception) {
             context.showShortToast("Error applying text: ${e.message}")

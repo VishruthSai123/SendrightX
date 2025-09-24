@@ -270,6 +270,8 @@ dependencies {
     implementation(libs.google.mobile.ads)
     implementation(libs.google.billing)
     implementation("com.google.android.play:integrity:1.5.0")
+    implementation("com.google.android.play:review:2.0.2")
+    implementation("com.google.android.play:review-ktx:2.0.2")
 
     implementation(project(":lib:android"))
     implementation(project(":lib:color"))
