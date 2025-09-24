@@ -120,8 +120,8 @@ fun ActionResultPanel(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // Title
             item {
@@ -137,9 +137,9 @@ fun ActionResultPanel(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF5F5F5)) // Light colored background
-                        .padding(16.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFCFE9D5)) // Light green background
+                        .padding(12.dp)
                 ) {
                     if (isLoading) {
                         // Loading state - only show spinner

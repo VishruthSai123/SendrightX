@@ -93,18 +93,28 @@ object GeminiApiService {
                     onSuccess = { return@withContext result },
                     onFailure = { error ->
                         val shouldRetryWithSameKey = when {
-                            error is IOException && (error.message?.contains("503") == true || 
-                                                    error.message?.contains("Service temporarily unavailable") == true ||
-                                                    error.message?.contains("500") == true ||
+                            // Only retry with same key for temporary service issues, NOT for quota/auth/service issues
+                            error is IOException && (error.message?.contains("500") == true ||
                                                     error.message?.contains("502") == true ||
                                                     error.message?.contains("504") == true ||
-                                                    error.message?.contains("timeout") == true) -> true
+                                                    error.message?.contains("timeout") == true) && 
+                                                    // Don't retry if it's a quota, auth, or service unavailable issue
+                                                    error.message?.contains("429") != true &&
+                                                    error.message?.contains("Too many requests") != true &&
+                                                    error.message?.contains("403") != true &&
+                                                    error.message?.contains("401") != true &&
+                                                    error.message?.contains("503") != true &&
+                                                    error.message?.contains("Service temporarily unavailable") != true -> true
                             else -> false
                         }
                         
                         val shouldTryNextKey = when {
                             error is IOException && (error.message?.contains("403") == true ||
                                                     error.message?.contains("401") == true ||
+                                                    error.message?.contains("429") == true ||
+                                                    error.message?.contains("503") == true ||
+                                                    error.message?.contains("Too many requests") == true ||
+                                                    error.message?.contains("Service temporarily unavailable") == true ||
                                                     error.message?.contains("API key") == true) -> true
                             else -> false
                         }
