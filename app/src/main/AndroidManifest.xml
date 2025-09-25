@@ -128,6 +128,15 @@
             android:exported="true">
         </activity>
 
+        <!-- In-App Review Activity (transparent activity for hosting review flow) -->
+        <activity
+            android:name="com.vishruth.sendright.ime.review.InAppReviewActivity"
+            android:theme="@style/SendRightAppTheme.Transparent"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:exported="false">
+        </activity>
+
         <!-- Using an activity alias to disable/enable the app icon in the launcher -->
         <activity-alias
             android:name="com.vishruth.key1.SettingsLauncherAlias"

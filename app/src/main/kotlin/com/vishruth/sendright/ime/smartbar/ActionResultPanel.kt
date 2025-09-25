@@ -58,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vishruth.key1.BuildConfig
 import com.vishruth.key1.editorInstance
 import com.vishruth.key1.ime.keyboard.FlorisImeSizing
 import com.vishruth.key1.ime.theme.FlorisImeTheme
@@ -356,6 +357,12 @@ class ActionResultPanelManager(
                 val reviewManager = InAppReviewManager.getInstance(context)
                 reviewManager.recordSuccessfulAction()
                 flogDebug { "Recorded successful action for in-app review" }
+                
+                // Log current stats for debugging
+                if (BuildConfig.DEBUG) {
+                    val stats = reviewManager.getReviewStats()
+                    flogDebug { "InAppReview Stats: daily=${stats.dailyActions}, total=${stats.totalActions}, requested=${stats.reviewRequested}" }
+                }
             } catch (e: Exception) {
                 flogDebug { "Error recording action for review: ${e.message}" }
                 // Don't fail the main action if review tracking fails

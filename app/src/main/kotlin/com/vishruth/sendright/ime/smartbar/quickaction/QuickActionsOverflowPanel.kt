@@ -60,8 +60,6 @@ fun QuickActionsOverflowPanel() {
         buildList {
             // Add dynamic actions that don't fit in the smartbar
             addAll(actionArrangement.dynamicActions.takeLast(dynamicActionsCountToShow))
-            // Add all hidden actions
-            addAll(actionArrangement.hiddenActions)
         }
     }
 

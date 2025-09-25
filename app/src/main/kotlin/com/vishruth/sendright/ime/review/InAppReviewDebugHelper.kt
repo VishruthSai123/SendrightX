@@ -69,7 +69,7 @@ object InAppReviewDebugHelper {
         if (!BuildConfig.DEBUG) return
         
         val reviewManager = InAppReviewManager.getInstance(context)
-        reviewManager.triggerReviewForTesting()
+        reviewManager.forceReviewTrigger()
         flogDebug { "InAppReview Debug: Forced review trigger" }
     }
     

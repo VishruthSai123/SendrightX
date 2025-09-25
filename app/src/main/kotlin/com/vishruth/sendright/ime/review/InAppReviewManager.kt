@@ -18,7 +18,10 @@ package com.vishruth.sendright.ime.review
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
@@ -218,39 +221,93 @@ class InAppReviewManager(private val context: Context) {
      * Launches the review flow
      */
     private suspend fun launchReviewFlow(reviewInfo: ReviewInfo) {
+        // First try to get Activity context
         val activity = getActivityFromContext()
-        if (activity == null) {
-            handleReviewFailure("No activity available for review flow")
-            return
-        }
         
-        withContext(Dispatchers.Main) {
-            val launchTask = reviewManager.launchReviewFlow(activity, reviewInfo)
-            
-            launchTask.addOnCompleteListener { 
-                flogDebug { "InAppReview: Review flow completed" }
-                markReviewCompleted()
+        if (activity != null) {
+            // We have an Activity context - use the standard approach
+            withContext(Dispatchers.Main) {
+                val launchTask = reviewManager.launchReviewFlow(activity, reviewInfo)
+                
+                launchTask.addOnCompleteListener { 
+                    flogDebug { "InAppReview: Review flow completed successfully" }
+                    markReviewCompleted()
+                }
+                
+                launchTask.addOnFailureListener { exception ->
+                    flogDebug { "InAppReview: Review flow failed: ${exception.message}" }
+                    handleReviewFailure("Review flow failed: ${exception.message}")
+                }
             }
-            
-            launchTask.addOnFailureListener { exception ->
-                flogDebug { "InAppReview: Review flow failed: ${exception.message}" }
-                handleReviewFailure("Review flow failed: ${exception.message}")
+        } else {
+            // No Activity context - this is common for keyboard services
+            // According to Google Play docs, the review flow should still work
+            // We'll create a transparent activity to host the review
+            flogDebug { "InAppReview: No Activity context, creating review activity" }
+            createReviewActivity(reviewInfo)
+        }
+    }
+
+    /**
+     * Creates a transparent activity to host the in-app review flow
+     * This is needed when we don't have direct Activity context (e.g., from keyboard service)
+     */
+    private fun createReviewActivity(reviewInfo: ReviewInfo) {
+        try {
+            val intent = Intent(context, InAppReviewActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
+                addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                putExtra(InAppReviewActivity.EXTRA_REVIEW_INFO, reviewInfo)
             }
+            context.startActivity(intent)
+            flogDebug { "InAppReview: Started review activity" }
+        } catch (e: Exception) {
+            flogDebug { "InAppReview: Failed to start review activity: ${e.message}" }
+            // Only as last resort, fall back to Play Store
+            openPlayStoreAsFallback()
+        }
+    }
+
+    /**
+     * Last resort fallback method to open Play Store for review
+     * Only used when in-app review completely fails
+     */
+    private fun openPlayStoreAsFallback() {
+        try {
+            val packageName = context.packageName
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            markReviewCompleted()
+            flogDebug { "InAppReview: Opened Play Store as last resort fallback" }
+        } catch (e: Exception) {
+            flogDebug { "InAppReview: Failed to open Play Store: ${e.message}" }
+            handleReviewFailure("Play Store fallback failed: ${e.message}")
         }
     }
     
     /**
+     * Extension function to find the activity context
+     */
+    private fun Context.findActivity(): Activity? = when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
+
+    /**
      * Tries to get Activity from Context
      */
     private fun getActivityFromContext(): Activity? {
-        return when (context) {
-            is Activity -> context
-            else -> {
-                // In keyboard service, we can't directly get activity
-                // The review will be handled by the system appropriately
-                flogDebug { "InAppReview: Context is not Activity, using context as-is" }
-                null
-            }
+        val activity = context.findActivity()
+        if (activity != null) {
+            flogDebug { "InAppReview: Found Activity context: ${activity::class.simpleName}" }
+            return activity
+        } else {
+            flogDebug { "InAppReview: No Activity context found, will try fallback approach" }
+            return null
         }
     }
     
@@ -297,6 +354,35 @@ class InAppReviewManager(private val context: Context) {
             }
         }
     }
+
+    /**
+     * Force trigger review bypassing all conditions (for testing)
+     */
+    fun forceReviewTrigger() {
+        if (BuildConfig.DEBUG) {
+            flogDebug { "InAppReview: Force triggering review for testing" }
+            CoroutineScope(Dispatchers.Main).launch {
+                // Temporarily bypass all conditions
+                val originalRequested = prefs.getBoolean(KEY_REVIEW_REQUESTED, false)
+                val originalCompleted = prefs.getBoolean(KEY_REVIEW_COMPLETED, false)
+                
+                // Reset flags temporarily
+                prefs.edit()
+                    .putBoolean(KEY_REVIEW_REQUESTED, false)
+                    .putBoolean(KEY_REVIEW_COMPLETED, false)
+                    .putInt(KEY_DAILY_ACTION_COUNT, REQUIRED_DAILY_ACTIONS)
+                    .apply()
+                    
+                requestReview()
+                
+                // Restore original flags if review fails
+                prefs.edit()
+                    .putBoolean(KEY_REVIEW_REQUESTED, originalRequested)
+                    .putBoolean(KEY_REVIEW_COMPLETED, originalCompleted)
+                    .apply()
+            }
+        }
+    }
     
     /**
      * Resets all review data (for testing purposes)
@@ -320,6 +406,20 @@ class InAppReviewManager(private val context: Context) {
             reviewCompleted = prefs.getBoolean(KEY_REVIEW_COMPLETED, false),
             declineCount = prefs.getInt(KEY_REVIEW_DECLINED_COUNT, 0)
         )
+    }
+
+    /**
+     * Called by InAppReviewActivity when review is completed successfully
+     */
+    fun markReviewCompletedFromActivity() {
+        markReviewCompleted()
+    }
+
+    /**
+     * Called by InAppReviewActivity when review fails
+     */
+    fun handleReviewFailureFromActivity(reason: String) {
+        handleReviewFailure(reason)
     }
 }
 
