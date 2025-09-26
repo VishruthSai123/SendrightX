@@ -403,6 +403,19 @@ fun MagicWandPanel(
                         }
                     }
                 }
+                
+                // Ad banner at the bottom for free users
+                item {
+                    com.vishruth.key1.ui.components.AdBannerCard(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        onAdLoaded = {
+                            flogDebug { "Magic Wand Panel: Banner ad loaded successfully" }
+                        },
+                        onAdFailedToLoad = { error ->
+                            flogDebug { "Magic Wand Panel: Banner ad failed to load - ${error.message}" }
+                        }
+                    )
+                }
             }
         }
     }

@@ -67,6 +67,7 @@ class UserManager private constructor() {
         private const val KEY_LAST_REWARDED_AD_DATE = "last_rewarded_ad_date"
         private const val KEY_TOTAL_AD_REWARDS_USED = "total_ad_rewards_used"
         private const val KEY_PRO_FEATURES_TOAST_SHOWN = "pro_features_toast_shown"
+        private const val KEY_FIRST_TIME_SUBSCRIBER = "first_time_subscriber"
         private var instance: UserManager? = null
         
         /**
@@ -283,6 +284,27 @@ class UserManager private constructor() {
                 .putBoolean(KEY_PRO_FEATURES_TOAST_SHOWN, true)
                 .apply()
             Log.d(TAG, "Marked pro features toast as shown")
+        }
+    }
+    
+    /**
+     * Check if this is the user's first time subscribing (eligible for discount)
+     */
+    fun isFirstTimeSubscriber(): Boolean {
+        val prefs = sharedPrefs ?: return true // Default to true if no prefs
+        return prefs.getBoolean(KEY_FIRST_TIME_SUBSCRIBER, true)
+    }
+    
+    /**
+     * Mark user as no longer first-time subscriber (after successful purchase)
+     */
+    fun markAsNotFirstTimeSubscriber() {
+        val prefs = sharedPrefs
+        if (prefs != null) {
+            prefs.edit()
+                .putBoolean(KEY_FIRST_TIME_SUBSCRIBER, false)
+                .apply()
+            Log.d(TAG, "Marked user as not first-time subscriber - no longer eligible for discount")
         }
     }
 }

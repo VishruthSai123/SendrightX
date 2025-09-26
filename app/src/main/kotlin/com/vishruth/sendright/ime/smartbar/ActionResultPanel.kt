@@ -228,6 +228,19 @@ fun ActionResultPanel(
                     )
                 }
             }
+            
+            // Ad banner at the bottom for free users
+            item {
+                com.vishruth.key1.ui.components.AdBannerCard(
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    onAdLoaded = {
+                        flogDebug { "Action Result Panel: Banner ad loaded successfully" }
+                    },
+                    onAdFailedToLoad = { error ->
+                        flogDebug { "Action Result Panel: Banner ad failed to load - ${error.message}" }
+                    }
+                )
+            }
         }
     }
 }

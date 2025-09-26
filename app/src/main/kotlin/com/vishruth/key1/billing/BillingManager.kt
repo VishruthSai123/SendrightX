@@ -282,6 +282,44 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
     
     /**
+     * Find offer by base plan ID from a product's subscription offers
+     */
+    fun findOfferByBasePlanId(productDetails: ProductDetails, basePlanId: String): ProductDetails.SubscriptionOfferDetails? {
+        return productDetails.subscriptionOfferDetails?.find { offer ->
+            offer.basePlanId == basePlanId
+        }
+    }
+    
+    /**
+     * Get offer index by base plan ID
+     */
+    fun getOfferIndexByBasePlanId(productDetails: ProductDetails, basePlanId: String): Int {
+        return productDetails.subscriptionOfferDetails?.indexOfFirst { offer ->
+            offer.basePlanId == basePlanId
+        } ?: -1
+    }
+    
+    /**
+     * Launch purchase flow with specific offer by base plan ID
+     */
+    fun launchPurchaseFlowWithOffer(activity: Activity, productDetails: ProductDetails, basePlanId: String? = null): Result<Unit> {
+        val offerIndex = if (basePlanId != null) {
+            val index = getOfferIndexByBasePlanId(productDetails, basePlanId)
+            if (index == -1) {
+                Log.w(TAG, "Offer with base plan ID '$basePlanId' not found, using default offer")
+                0 // Fallback to first offer
+            } else {
+                Log.d(TAG, "Using offer with base plan ID '$basePlanId' at index $index")
+                index
+            }
+        } else {
+            0 // Use first offer if no specific offer requested
+        }
+        
+        return launchPurchaseFlow(activity, productDetails, offerIndex)
+    }
+    
+    /**
      * Launch purchase flow for a product
      * Based on reference: Step 2 - Launching the Purchase Flow with an Offer
      */
@@ -513,6 +551,15 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 
                 // Update the subscription manager and UserManager
                 updateSubscriptionManagers(true)
+                
+                // Mark user as no longer first-time subscriber (discount no longer available)
+                try {
+                    val userManager = UserManager.getInstance()
+                    userManager.markAsNotFirstTimeSubscriber()
+                    Log.d(TAG, "Marked user as not first-time subscriber - discount no longer available")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to mark user as not first-time subscriber", e)
+                }
                 
                 // Emit successful purchase update for UI to react
                 _purchaseUpdates.emit(Result.success(createDummyPurchase()))
