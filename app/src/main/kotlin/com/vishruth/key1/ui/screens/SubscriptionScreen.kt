@@ -9,31 +9,7 @@
                         tint = if (isUserPro) MaterialTheme.colorScheme.onPrimary 
                               else MaterialTheme.colorScheme.onPrimaryContainer { mutableStateOf(emptyList()) }
     
-    // Debug logging
-    LaunchedEffect(products, isDiscountActive, isDiscountOfferAvailable) {
-        android.util.Log.d("SubscriptionScreen", "Products loaded: ${products.size}")
-        products.forEach { product ->
-            android.util.Log.d("SubscriptionScreen", "Available product: ${product.productId}")
-            product.subscriptionOfferDetails?.forEachIndexed { index, offer ->
-                android.util.Log.d("SubscriptionScreen", "  Offer $index: basePlanId=${offer.basePlanId}, price=${offer.pricingPhases.pricingPhaseList.firstOrNull()?.formattedPrice}")
-            }
-        }
-        android.util.Log.d("SubscriptionScreen", "Looking for product: ${com.vishruth.key1.billing.BillingManager.PRODUCT_ID_PRO_MONTHLY}")
-        android.util.Log.d("SubscriptionScreen", "User is first-time subscriber: $isFirstTimeUser")
-        android.util.Log.d("SubscriptionScreen", "User is pro: $isUserPro")
-        android.util.Log.d("SubscriptionScreen", "Discount active: $isDiscountActive")
-        android.util.Log.d("SubscriptionScreen", "Discount offer available: $isDiscountOfferAvailable")
-        
-        if (isDiscountActive && isDiscountOfferAvailable) {
-            android.util.Log.d("SubscriptionScreen", "🎁 SHOWING DISCOUNT: 50% off promotional card and animation will be displayed")
-        } else if (isFirstTimeUser && isUserPro) {
-            android.util.Log.d("SubscriptionScreen", "User is first-time but already pro - no discount needed")
-        } else if (!isFirstTimeUser) {
-            android.util.Log.d("SubscriptionScreen", "User is not first-time subscriber - no discount")
-        } else {
-            android.util.Log.d("SubscriptionScreen", "Discount not available - offer not found in Google Play")
-        }
-    }
+    // No complex logging needed
     
     // Get the monthly subscription product
     val monthlyProduct = products.find { it.productId == com.vishruth.key1.billing.BillingManager.PRODUCT_ID_PRO_MONTHLY }r the Apache License, Version 2.0
@@ -102,9 +78,7 @@ fun SubscriptionScreen(
     // Determine if user is actually pro based on both sources
     val isUserPro = userData?.subscriptionStatus == "pro" || isPro
     
-    // Check if user is eligible for first-time discount
-    val isFirstTimeUser = remember { userManager.isFirstTimeSubscriber() }
-    val isDiscountActive = isFirstTimeUser && !isUserPro
+    // No complex discount logic - let Google Play handle offers
     
     // Show success message when user becomes pro
     LaunchedEffect(isUserPro) {
@@ -117,12 +91,35 @@ fun SubscriptionScreen(
         }
     }
     
-    // Collect products from billing manager
+    // Collect products from billing manager with loading state
     val products by billingManager?.products?.collectAsState() 
         ?: remember { mutableStateOf(emptyList()) }
     
+    // Track loading state with timeout
+    var isProductsLoading by remember { mutableStateOf(true) }
+    var showFallbackPrice by remember { mutableStateOf(false) }
+    
+    // Auto-hide loading after 5 seconds and show fallback
+    LaunchedEffect(Unit) {
+        delay(5000) // 5 second timeout
+        if (products.isEmpty()) {
+            showFallbackPrice = true
+        }
+        isProductsLoading = false
+    }
+    
+    // Update loading state when products arrive
+    LaunchedEffect(products) {
+        if (products.isNotEmpty()) {
+            isProductsLoading = false
+            showFallbackPrice = false
+        }
+    }
+    
     // Get the monthly subscription product
-    val monthlyProduct = products.find { it.productId == com.vishruth.key1.billing.BillingManager.PRODUCT_ID_PRO_MONTHLY }
+    val monthlyProduct = remember(products) {
+        products.find { it.productId == com.vishruth.key1.billing.BillingManager.PRODUCT_ID_PRO_MONTHLY }
+    }
     
     // Validate if this is a real product or Google Play test data
     fun isRealProduct(product: ProductDetails?): Boolean {
@@ -175,59 +172,22 @@ fun SubscriptionScreen(
     // Only use the product if it's real, not fake test data
     val validatedProduct = if (isRealProduct(monthlyProduct)) monthlyProduct else null
     
-    // Find the appropriate offer based on user eligibility
-    val (selectedOffer, isDiscountOfferAvailable) = remember(validatedProduct, isDiscountActive) {
-        if (validatedProduct == null) return@remember Pair(null, false)
-        
-        if (isDiscountActive) {
-            // Look for the discount offer with base plan ID "sendright-pro-45"
-            val discountOffer = billingManager?.findOfferByBasePlanId(validatedProduct, "sendright-pro-45")
-            if (discountOffer != null) {
-                val discountPrice = discountOffer.pricingPhases.pricingPhaseList.firstOrNull()?.formattedPrice
-                Log.d("SubscriptionScreen", "Found discount offer: sendright-pro-45 with price: $discountPrice")
-                
-                // Validate that the discount price indicates a real discount (₹45 or similar)
-                val isPriceDiscounted = discountPrice?.let { price ->
-                    price.contains("45") || price.contains("₹45") || price.contains("45.00") ||
-                    price.contains("44") || price.contains("46") // Allow slight variations
-                } ?: false
-                
-                if (isPriceDiscounted) {
-                    Log.d("SubscriptionScreen", "✅ Valid discount price detected: $discountPrice")
-                    Pair(discountOffer, true)
-                } else {
-                    Log.w("SubscriptionScreen", "❌ Discount offer found but price doesn't match expected discount: $discountPrice")
-                    // Fallback to regular offer since discount isn't actually applied
-                    Pair(validatedProduct.subscriptionOfferDetails?.firstOrNull(), false)
-                }
-            } else {
-                Log.w("SubscriptionScreen", "Discount offer 'sendright-pro-45' not found, using regular offer")
-                // Fallback to first offer
-                Pair(validatedProduct.subscriptionOfferDetails?.firstOrNull(), false)
-            }
-        } else {
-            // Use regular offer (first one)
-            Pair(validatedProduct.subscriptionOfferDetails?.firstOrNull(), false)
-        }
+    // Simply get the first available offer from Google Play
+    val selectedOffer = remember(validatedProduct) {
+        validatedProduct?.subscriptionOfferDetails?.firstOrNull()
     }
     
-    // Extract price from the selected offer
-    val subscriptionPrice = selectedOffer?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
-    
-    // For animation, get both regular and discount prices if discount offer is available
-    val (originalPriceForAnimation, discountPrice) = remember(validatedProduct, isDiscountOfferAvailable) {
-        if (isDiscountOfferAvailable && validatedProduct != null) {
-            val regularOffer = validatedProduct.subscriptionOfferDetails?.firstOrNull()
-            val regularPrice = regularOffer?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
-            val discountOfferPrice = selectedOffer?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
-            Pair(regularPrice, discountOfferPrice)
-        } else {
-            Pair(null, null)
-        }
+    // Extract price from the selected offer with caching
+    val subscriptionPrice = remember(selectedOffer) {
+        selectedOffer?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
     }
     
-    // Check if we have a real, validated product loaded
-    val isProductAvailable = validatedProduct != null && subscriptionPrice != null
+    // Check product availability states
+    val isProductAvailable = remember(validatedProduct, subscriptionPrice) {
+        validatedProduct != null && subscriptionPrice != null
+    }
+    
+    // Products are automatically loaded when BillingManager connects
 
     Scaffold(
         topBar = {
@@ -288,46 +248,7 @@ fun SubscriptionScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Discount promotional card for first-time users (only if actual discount offer is available)
-            if (isDiscountActive && isDiscountOfferAvailable) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "🎁",
-                            style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = "50% OFF for first time users!",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = "Limited time offer - Save ₹45 today",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                            )
-                        }
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            // No discount promotional card - keep it simple
             
             // Subscribe/Status button - moved here to be below the plan card
             if (!isUserPro) {
@@ -339,24 +260,46 @@ fun SubscriptionScreen(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (isProductAvailable) {
+                        if (isProductsLoading) {
+                            // Show loading state while products are being fetched
+                            Button(
+                                onClick = { },
+                                enabled = false,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                )
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Loading subscription...",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        } else if (isProductAvailable) {
                             // Show real subscription button with actual product
                             Button(
                                 onClick = {
-                                    if (billingManager != null && validatedProduct != null) {
+                                    if (billingManager != null && validatedProduct != null && selectedOffer != null) {
                                         scope.launch {
                                             try {
-                                                // Launch the purchase flow with the correct offer
-                                                val offerBasePlanId = if (isDiscountActive && isDiscountOfferAvailable) {
-                                                    "sendright-pro-45"
-                                                } else {
-                                                    null // Use default offer
-                                                }
-                                                
-                                                val result = billingManager.launchPurchaseFlowWithOffer(
+                                                // Launch the purchase flow with the selected offer
+                                                val result = billingManager.launchPurchaseFlow(
                                                     context as ComponentActivity, 
                                                     validatedProduct,
-                                                    offerBasePlanId
+                                                    selectedOffer.offerToken
                                                 )
                                                 
                                                 // DO NOT show success immediately - wait for actual purchase completion
@@ -401,19 +344,16 @@ fun SubscriptionScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     
-                                    // Animated price display for discount
-                                    if (isDiscountActive && isDiscountOfferAvailable && originalPriceForAnimation != null && discountPrice != null) {
-                                        AnimatedPriceDisplay(
-                                            originalPrice = originalPriceForAnimation,
-                                            discountPrice = discountPrice
-                                        )
-                                    } else {
-                                        Text(
-                                            text = "Subscribe for $subscriptionPrice",
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
+                                    // Optimized price display with fallback
+                                    Text(
+                                        text = when {
+                                            subscriptionPrice != null -> "Subscribe for $subscriptionPrice"
+                                            showFallbackPrice -> "Subscribe for ₹89/month"
+                                            else -> "Subscribe for ₹89/month"
+                                        },
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         } else {

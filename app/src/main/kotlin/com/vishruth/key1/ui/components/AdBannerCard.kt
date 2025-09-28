@@ -39,6 +39,7 @@ import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.android.gms.ads.VideoOptions
 import com.vishruth.key1.user.UserManager
 
 /**
@@ -89,13 +90,11 @@ fun AdBannerCard(
             // Ensure AdMob SDK is initialized
             val adManager = com.vishruth.key1.lib.ads.AdManager
             if (!adManager.isInitialized()) {
-                Log.d("AdBannerCard", "⏳ AdMob SDK not initialized, ensuring initialization...")
                 adManager.ensureInitialized(context)
                 
                 // Wait for initialization with timeout
                 val initialized = adManager.waitForInitialization(10000) // 10 second timeout
                 if (!initialized) {
-                    Log.e("AdBannerCard", "❌ AdMob SDK initialization timed out")
                     hasAdError = true
                     isLoading = false
                     errorMessage = "AdMob initialization timeout"
@@ -164,8 +163,14 @@ fun AdBannerCard(
                 .withNativeAdOptions(
                     NativeAdOptions.Builder()
                         .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_RIGHT)
-                        .setRequestMultipleImages(true) // Request multiple images to improve fill rate
-                        .setReturnUrlsForImageAssets(true) // Return URLs for better performance
+                        .setRequestMultipleImages(false) // Disable multiple images to avoid loading issues
+                        .setReturnUrlsForImageAssets(false) // Use drawable objects for better compatibility
+                        .setVideoOptions(
+                            com.google.android.gms.ads.VideoOptions.Builder()
+                                .setStartMuted(true) // Start videos muted for better UX
+                                .setClickToExpandRequested(false) // Prevent unexpected expand behavior
+                                .build()
+                        )
                         .build()
                 )
                 .build()
@@ -199,8 +204,11 @@ fun AdBannerCard(
     // Cleanup when component is disposed
     DisposableEffect(actualAdUnitId) {
         onDispose {
-            Log.d("AdBannerCard", "🧹 Disposing native ad for unit: $actualAdUnitId")
-            nativeAd?.destroy()
+            try {
+                nativeAd?.destroy()
+            } catch (e: Exception) {
+                android.util.Log.e("AdBannerCard", "Error disposing native ad", e)
+            }
         }
     }
     
@@ -247,66 +255,88 @@ fun AdBannerCard(
                                         setPadding(16, 8, 16, 8)
                                     }
                                     
-                                    // Add MediaView for images/videos with true flexible aspect ratio
+                                    // Add MediaView for images/videos with improved error handling
                                     if (nativeAd!!.mediaContent != null) {
                                         val mediaContent = nativeAd!!.mediaContent!!
-                                        val aspectRatio = mediaContent.aspectRatio
                                         
-                                        // Calculate true aspect ratio height without artificial constraints
-                                        val displayMetrics = context.resources.displayMetrics
-                                        val screenWidth = displayMetrics.widthPixels
-                                        val cardPadding = 64 // Account for card padding/margins
-                                        val availableWidth = screenWidth - cardPadding
-                                        
-                                        val mediaHeight = when {
-                                            aspectRatio > 0 -> {
-                                                // Use natural aspect ratio - no artificial constraints
-                                                val naturalHeight = (availableWidth / aspectRatio).toInt()
-                                                // Only apply minimal constraints for extreme cases
-                                                naturalHeight.coerceIn(
-                                                    100, // Very minimal minimum
-                                                    (displayMetrics.heightPixels * 0.4).toInt() // Max 40% of screen height
-                                                )
+                                        try {
+                                            // Calculate safe aspect ratio with better bounds checking
+                                            val displayMetrics = context.resources.displayMetrics
+                                            val screenWidth = displayMetrics.widthPixels
+                                            val cardPadding = 80 // Account for card padding/margins
+                                            val availableWidth = screenWidth - cardPadding
+                                            
+                                            // Use more conservative aspect ratio calculation
+                                            val aspectRatio = mediaContent.aspectRatio
+                                            val mediaHeight = when {
+                                                aspectRatio > 0.1f && aspectRatio < 10f -> {
+                                                    // Safe aspect ratio range - calculate natural height
+                                                    val naturalHeight = (availableWidth / aspectRatio).toInt()
+                                                    naturalHeight.coerceIn(
+                                                        120, // Reasonable minimum for visibility
+                                                        (displayMetrics.heightPixels * 0.3).toInt() // Max 30% of screen
+                                                    )
+                                                }
+                                                mediaContent.hasVideoContent() -> {
+                                                    // Video content - use 16:9 aspect ratio as default
+                                                    (availableWidth * 0.5625).toInt().coerceIn(
+                                                        150,
+                                                        (displayMetrics.heightPixels * 0.25).toInt()
+                                                    )
+                                                }
+                                                else -> {
+                                                    // Image content - use moderate height
+                                                    (availableWidth * 0.6).toInt().coerceIn(
+                                                        120,
+                                                        (displayMetrics.heightPixels * 0.2).toInt()
+                                                    )
+                                                }
                                             }
-                                            mediaContent.hasVideoContent() -> {
-                                                // Default video height if no aspect ratio available
-                                                (availableWidth * 0.5625).toInt() // 16:9 ratio as fallback
+                                            
+                                            val mediaView = MediaView(context).apply {
+                                                layoutParams = android.widget.LinearLayout.LayoutParams(
+                                                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                                                    mediaHeight
+                                                ).apply {
+                                                    bottomMargin = 12
+                                                }
+                                                // Add background for better loading visibility
+                                                setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
                                             }
-                                            else -> {
-                                                // Square-ish for image content without aspect ratio
-                                                (availableWidth * 0.75).toInt()
-                                            }
+                                            
+                                            mainLayout.addView(mediaView)
+                                            setMediaView(mediaView)
+                                        } catch (e: Exception) {
+                                            // If MediaView creation fails, continue without media
+                                            android.util.Log.e("AdBannerCard", "Failed to create MediaView", e)
                                         }
-                                        
-                                        val mediaView = MediaView(context).apply {
-                                            layoutParams = android.widget.LinearLayout.LayoutParams(
-                                                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                                                mediaHeight
-                                            ).apply {
-                                                bottomMargin = 12
-                                            }
-                                        }
-                                        mainLayout.addView(mediaView)
-                                        setMediaView(mediaView)
                                     }
                                     
                                     // Add icon if available (only if no media content)
                                     if (nativeAd!!.icon != null && nativeAd!!.mediaContent == null) {
-                                        val iconSize = 56 // Slightly larger for better visibility
-                                        val iconView = ImageView(context).apply {
-                                            layoutParams = android.widget.LinearLayout.LayoutParams(iconSize, iconSize).apply {
-                                                bottomMargin = 12
-                                                gravity = android.view.Gravity.CENTER_HORIZONTAL
+                                        try {
+                                            val iconSize = 56 // Slightly larger for better visibility
+                                            val iconView = ImageView(context).apply {
+                                                layoutParams = android.widget.LinearLayout.LayoutParams(iconSize, iconSize).apply {
+                                                    bottomMargin = 12
+                                                    gravity = android.view.Gravity.CENTER_HORIZONTAL
+                                                }
+                                                scaleType = ImageView.ScaleType.CENTER_CROP
+                                                // Add rounded corners with background
+                                                val drawable = android.graphics.drawable.GradientDrawable()
+                                                drawable.cornerRadius = 8f
+                                                drawable.setColor(android.graphics.Color.parseColor("#F0F0F0"))
+                                                background = drawable
+                                                clipToOutline = true
+                                                // Add padding for better appearance
+                                                setPadding(4, 4, 4, 4)
                                             }
-                                            scaleType = ImageView.ScaleType.CENTER_CROP
-                                            // Add rounded corners
-                                            val drawable = android.graphics.drawable.GradientDrawable()
-                                            drawable.cornerRadius = 8f
-                                            background = drawable
-                                            clipToOutline = true
+                                            mainLayout.addView(iconView)
+                                            setIconView(iconView)
+                                        } catch (e: Exception) {
+                                            // If icon creation fails, continue without icon
+                                            android.util.Log.e("AdBannerCard", "Failed to create icon view", e)
                                         }
-                                        mainLayout.addView(iconView)
-                                        setIconView(iconView)
                                     }
                                     
                                     // Add text content vertically

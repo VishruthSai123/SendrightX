@@ -320,6 +320,44 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
     
     /**
+     * Launch purchase flow for a product with specific offer token
+     */
+    fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails, offerToken: String): Result<Unit> {
+        return try {
+            if (!billingClient.isReady) {
+                return Result.failure(Exception("Billing client not ready"))
+            }
+            
+            Log.d(TAG, "Starting purchase flow for product: ${productDetails.productId}")
+            Log.d(TAG, "Using offer token: $offerToken")
+            
+            val productDetailsParamsList = listOf(
+                BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(productDetails)
+                    .setOfferToken(offerToken)
+                    .build()
+            )
+            
+            val billingFlowParams = BillingFlowParams.newBuilder()
+                .setProductDetailsParamsList(productDetailsParamsList)
+                .build()
+                
+            val billingResult = billingClient.launchBillingFlow(activity, billingFlowParams)
+            
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                Log.d(TAG, "Billing flow launched successfully")
+                Result.success(Unit)
+            } else {
+                Log.e(TAG, "Failed to launch billing flow: ${billingResult.debugMessage}")
+                Result.failure(Exception("Failed to launch purchase flow: ${billingResult.debugMessage}"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception launching purchase flow: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Launch purchase flow for a product
      * Based on reference: Step 2 - Launching the Purchase Flow with an Offer
      */

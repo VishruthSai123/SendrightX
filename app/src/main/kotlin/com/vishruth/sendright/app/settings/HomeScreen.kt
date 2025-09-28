@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.SmartButton
 import androidx.compose.material.icons.outlined.Spellcheck
+import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -150,6 +151,11 @@ fun HomeScreen() = FlorisScreen {
             icon = Icons.Outlined.Spellcheck,
             title = stringRes(R.string.settings__typing__title),
             onClick = { navController.navigate(Routes.Settings.Typing) },
+        )
+        Preference(
+            icon = Icons.Outlined.TouchApp,
+            title = stringRes(R.string.settings__gestures__title),
+            onClick = { navController.navigate(Routes.Settings.Gestures) },
         )
         Preference(
             icon = Icons.Default.RateReview,
