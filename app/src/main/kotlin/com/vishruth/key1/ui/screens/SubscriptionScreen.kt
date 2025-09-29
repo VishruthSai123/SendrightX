@@ -1,18 +1,6 @@
 /*
- * Copyright (C) 2025 SendRight 3.0
- * License    // Collect available products from billing manager
-    val products by billingManager?.products?.collectAsState() 
-        ?: re                    Icon(
-                        imageVector = if (isUserPro) Icons.Default.CheckCircle else Icons.Default.Star,
-                        contentDescription = "Pro Status",
-                        modifier = Modifier.size(60.dp),
-                        tint = if (isUserPro) MaterialTheme.colorScheme.onPrimary 
-                              else MaterialTheme.colorScheme.onPrimaryContainer { mutableStateOf(emptyList()) }
-    
-    // No complex logging needed
-    
-    // Get the monthly subscription product
-    val monthlyProduct = products.find { it.productId == com.vishruth.key1.billing.BillingManager.PRODUCT_ID_PRO_MONTHLY }r the Apache License, Version 2.0
+ * Copyright (C) 2025 SendRight 4.0
+ * Licensed under the Apache License, Version 2.0
  */
 
 package com.vishruth.key1.ui.screens
@@ -20,6 +8,7 @@ package com.vishruth.key1.ui.screens
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -428,6 +417,84 @@ fun SubscriptionScreen(
             }
             
             Spacer(modifier = Modifier.height(32.dp))
+            
+            // Limited Offer section (only show for non-pro users)
+            if (!isUserPro) {
+                Text(
+                    text = "Limited Offer",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        2.dp, 
+                        MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Card(
+                            modifier = Modifier.size(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "🎁",
+                                    fontSize = 20.sp
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Get 50% OFF for your first 2 months , limited to the first 1000 premium subscribers",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "₹90",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textDecoration = TextDecoration.LineThrough,
+                                    color = Color.Red,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "₹45",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Blue
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
+            }
             
             // Features section
             Text(

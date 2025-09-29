@@ -57,6 +57,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -276,7 +277,21 @@ fun MagicWandPanel(
                                             aiUsageTracker = aiUsageTracker // Pass tracker even for pro users (won't count but needed for signature)
                                         )
                                     } catch (e: Exception) {
-                                        context.showShortToast("Error: ${e.message ?: "Something went wrong"}")
+                                        val errorMessage = e.message ?: "Something went wrong"
+                                        when {
+                                            errorMessage.contains("timeout") || errorMessage.contains("slow") -> {
+                                                context.showShortToast("⏱️ Service timeout. Trying backup server...")
+                                            }
+                                            errorMessage.contains("All API keys failed") -> {
+                                                context.showShortToast("🔄 Switching to backup server...")
+                                            }
+                                            errorMessage.contains("network") || errorMessage.contains("connection") -> {
+                                                context.showShortToast("📶 Please check your internet connection")
+                                            }
+                                            else -> {
+                                                context.showShortToast("Error: $errorMessage")
+                                            }
+                                        }
                                     } finally {
                                         loadingButton = null
                                     }
@@ -294,7 +309,21 @@ fun MagicWandPanel(
                                                 aiUsageTracker = aiUsageTracker // Pass tracker for recording successful actions
                                             )
                                         } catch (e: Exception) {
-                                            context.showShortToast("Error: ${e.message ?: "Something went wrong"}")
+                                            val errorMessage = e.message ?: "Something went wrong"
+                                            when {
+                                                errorMessage.contains("timeout") || errorMessage.contains("slow") -> {
+                                                    context.showShortToast("⏱️ Service timeout. Trying backup server...")
+                                                }
+                                                errorMessage.contains("All API keys failed") -> {
+                                                    context.showShortToast("🔄 Switching to backup server...")
+                                                }
+                                                errorMessage.contains("network") || errorMessage.contains("connection") -> {
+                                                    context.showShortToast("📶 Please check your internet connection")
+                                                }
+                                                else -> {
+                                                    context.showShortToast("Error: $errorMessage")
+                                                }
+                                            }
                                         } finally {
                                             loadingButton = null
                                         }
@@ -847,7 +876,22 @@ private suspend fun handleMagicWandButtonClick(
             keyboardManager.showActionResultPanel()
             
         }.onFailure { error ->
-            context.showShortToast(error.message ?: "Something went wrong")
+            val errorMessage = error.message ?: "Something went wrong"
+            // Show more specific error messages for better user experience
+            when {
+                errorMessage.contains("timeout") || errorMessage.contains("slow") -> {
+                    context.showShortToast("⏱️ Service timeout. Trying backup server...")
+                }
+                errorMessage.contains("All API keys failed") -> {
+                    context.showShortToast("🔄 Switching to backup server...")
+                }
+                errorMessage.contains("network") || errorMessage.contains("connection") -> {
+                    context.showShortToast("📶 Please check your internet connection")
+                }
+                else -> {
+                    context.showShortToast(errorMessage)
+                }
+            }
         }
         
     } catch (e: Exception) {

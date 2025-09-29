@@ -640,7 +640,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "other__accent_color",
             default = when (AndroidVersion.ATLEAST_API31_S) {
                 true -> Color.Unspecified
-                false -> Color(0xFF3F51B5) // INDIGO 500
+                false -> Color(0xFF3CBB45) // CUSTOM GREEN #3cbb45
             },
             serializer = ColorPreferenceSerializer,
         )
@@ -769,7 +769,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "theme__accent_color",
             default = when (AndroidVersion.ATLEAST_API31_S) {
                 true -> Color.Unspecified
-                false -> Color(0xFF3F51B5) // INDIGO 500
+                false -> Color(0xFF3CBB45) // CUSTOM GREEN #3cbb45
             },
             serializer = ColorPreferenceSerializer,
         )

@@ -90,6 +90,7 @@ data class ColorMappings(val light: ColorScheme, val dark: ColorScheme) {
 
         val schemes = mapOf(
             DEFAULT_GREEN to default, // GREEN 500
+            Color(0xFF3CBB45) to default, // CUSTOM GREEN #3cbb45
             Color(0xFFF44336) to red, // RED 500
             Color(0xFFE91E63) to pink, // PINK 500
             Color(0xFFFF2C93) to lightPink, // LIGHT PINK 500

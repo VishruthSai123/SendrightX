@@ -16,6 +16,9 @@
 
 package com.vishruth.key1.app.settings
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -35,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -167,5 +171,21 @@ fun HomeScreen() = FlorisScreen {
             title = stringRes(R.string.settings__other__title),
             onClick = { navController.navigate(Routes.Settings.Other) },
         )
+        
+        // Sendright illustration at the bottom
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 32.dp, bottom = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.sendrightillustrator),
+                contentDescription = "Sendright - Crafted With Love in India",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            )
+        }
     }
 }

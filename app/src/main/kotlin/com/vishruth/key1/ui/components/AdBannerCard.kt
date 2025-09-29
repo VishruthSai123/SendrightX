@@ -9,6 +9,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +35,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Button
 import android.widget.ImageView
+import android.content.res.Configuration
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.AdRequest
@@ -41,6 +46,13 @@ import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.gms.ads.VideoOptions
 import com.vishruth.key1.user.UserManager
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.lib.util.TimeUtils.javaLocalTime
+import dev.patrickgold.jetpref.datastore.model.observeAsState
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.ime.theme.ThemeMode
+import dev.patrickgold.jetpref.datastore.model.observeAsState
+import dev.patrickgold.jetpref.datastore.model.LocalTime
 
 /**
  * Reusable banner ad card component that matches app's organic card styling
@@ -57,6 +69,37 @@ fun AdBannerCard(
     // Get subscription status
     val userData by userManager.userData.collectAsState()
     val isPro = userData?.subscriptionStatus == "pro"
+    
+    // Get keyboard theme preferences
+    val prefs by FlorisPreferenceStore
+    val themeMode by prefs.theme.mode.observeAsState()
+    val sunriseTime by prefs.theme.sunriseTime.observeAsState()
+    val sunsetTime by prefs.theme.sunsetTime.observeAsState()
+    
+    // Determine if current keyboard theme is "day" (light) or "night" (dark)
+    val isKeyboardDayTheme = remember(themeMode, sunriseTime, sunsetTime) {
+        when (themeMode) {
+            com.vishruth.key1.ime.theme.ThemeMode.ALWAYS_DAY -> true
+            com.vishruth.key1.ime.theme.ThemeMode.ALWAYS_NIGHT -> false
+            com.vishruth.key1.ime.theme.ThemeMode.FOLLOW_SYSTEM -> {
+                val uiMode = context.resources.configuration.uiMode
+                (uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) != android.content.res.Configuration.UI_MODE_NIGHT_YES
+            }
+            com.vishruth.key1.ime.theme.ThemeMode.FOLLOW_TIME -> {
+                val current = java.time.LocalTime.now()
+                val sunrise = sunriseTime.javaLocalTime
+                val sunset = sunsetTime.javaLocalTime
+                current in sunrise..sunset
+            }
+        }
+    }
+    
+    // Keyboard theme-based background colors
+    val cardBackgroundColor = if (isKeyboardDayTheme) {
+        Color.White // Pure white for day theme
+    } else {
+        Color(0xFF1E1E1E) // Light black for night theme
+    }
     
     // Don't show ads for pro users
     if (isPro) {
@@ -212,99 +255,130 @@ fun AdBannerCard(
         }
     }
     
-    // Show the card only if loading or successfully loaded
-    // Hide completely if there's an error (better UX than showing error messages)
-    val shouldShowCard = (isLoading || isAdLoaded) && !hasAdError
-    
-    if (shouldShowCard) {
+    // Show the card only when successfully loaded (hide during loading and error)
+    AnimatedVisibility(
+        visible = isAdLoaded && !hasAdError,
+        enter = fadeIn(animationSpec = tween(600)) + slideInVertically(
+            animationSpec = tween(600),
+            initialOffsetY = { it / 4 }
+        )
+    ) {
         Card(
             modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = cardBackgroundColor // Keyboard theme-aware background
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
-                modifier = Modifier.padding(12.dp)
+                modifier = Modifier.padding(16.dp)
             ) {
-                // Sponsored tag
+                // Header Area with Ad label only
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Sponsored",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        fontWeight = FontWeight.Normal
-                    )
+                    // Ad Label (left side)
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.padding(0.dp)
+                    ) {
+                        Text(
+                            text = "Ad",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 
                 // Native Ad content
-                when {
-                    isAdLoaded && nativeAd != null -> {
-                        AndroidView(
-                            factory = { context ->
-                                NativeAdView(context).apply {
-                                    // Create main vertical layout for native ad
-                                    val mainLayout = android.widget.LinearLayout(context).apply {
-                                        orientation = android.widget.LinearLayout.VERTICAL
-                                        setPadding(16, 8, 16, 8)
-                                    }
+                AndroidView(
+                    factory = { context ->
+                        NativeAdView(context).apply {
+                                // Create main vertical layout for native ad
+                                val mainLayout = android.widget.LinearLayout(context).apply {
+                                    orientation = android.widget.LinearLayout.VERTICAL
+                                    setPadding(0, 0, 0, 0) // Remove padding as it's handled by Card
+                                }
                                     
-                                    // Add MediaView for images/videos with improved error handling
+                                    // Media Area - takes up majority of the card
                                     if (nativeAd!!.mediaContent != null) {
                                         val mediaContent = nativeAd!!.mediaContent!!
                                         
                                         try {
-                                            // Calculate safe aspect ratio with better bounds checking
+                                            // Calculate optimal media dimensions
                                             val displayMetrics = context.resources.displayMetrics
                                             val screenWidth = displayMetrics.widthPixels
-                                            val cardPadding = 80 // Account for card padding/margins
+                                            val cardPadding = 64 // Account for card padding/margins
                                             val availableWidth = screenWidth - cardPadding
                                             
-                                            // Use more conservative aspect ratio calculation
-                                            val aspectRatio = mediaContent.aspectRatio
-                                            val mediaHeight = when {
-                                                aspectRatio > 0.1f && aspectRatio < 10f -> {
-                                                    // Safe aspect ratio range - calculate natural height
-                                                    val naturalHeight = (availableWidth / aspectRatio).toInt()
-                                                    naturalHeight.coerceIn(
-                                                        120, // Reasonable minimum for visibility
-                                                        (displayMetrics.heightPixels * 0.3).toInt() // Max 30% of screen
-                                                    )
-                                                }
-                                                mediaContent.hasVideoContent() -> {
-                                                    // Video content - use 16:9 aspect ratio as default
-                                                    (availableWidth * 0.5625).toInt().coerceIn(
-                                                        150,
-                                                        (displayMetrics.heightPixels * 0.25).toInt()
-                                                    )
-                                                }
-                                                else -> {
-                                                    // Image content - use moderate height
-                                                    (availableWidth * 0.6).toInt().coerceIn(
-                                                        120,
-                                                        (displayMetrics.heightPixels * 0.2).toInt()
-                                                    )
-                                                }
-                                            }
+                                            // Use 16:9 aspect ratio for consistent media area
+                                            val mediaHeight = (availableWidth * 0.5625).toInt().coerceIn(
+                                                180, // Minimum height for good visibility
+                                                (displayMetrics.heightPixels * 0.25).toInt() // Max 25% of screen
+                                            )
                                             
-                                            val mediaView = MediaView(context).apply {
+                                            // Create media container with rounded corners
+                                            val mediaContainer = android.widget.FrameLayout(context).apply {
                                                 layoutParams = android.widget.LinearLayout.LayoutParams(
                                                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                                                     mediaHeight
                                                 ).apply {
-                                                    bottomMargin = 12
+                                                    bottomMargin = 16
                                                 }
-                                                // Add background for better loading visibility
-                                                setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+                                                // Add rounded corner background
+                                                val drawable = android.graphics.drawable.GradientDrawable()
+                                                drawable.cornerRadius = 12f
+                                                drawable.setColor(android.graphics.Color.parseColor("#F8F9FA"))
+                                                background = drawable
+                                                clipToOutline = true
                                             }
                                             
-                                            mainLayout.addView(mediaView)
+                                            val mediaView = MediaView(context).apply {
+                                                layoutParams = android.widget.FrameLayout.LayoutParams(
+                                                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                                                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                                                )
+                                                // Style media view with rounded corners
+                                                val mediaDrawable = android.graphics.drawable.GradientDrawable()
+                                                mediaDrawable.cornerRadius = 12f
+                                                mediaDrawable.setColor(android.graphics.Color.TRANSPARENT)
+                                                background = mediaDrawable
+                                                clipToOutline = true
+                                            }
+                                            
+                                            mediaContainer.addView(mediaView)
+                                            
+                                            // Add legal disclaimer overlay at bottom of media
+                                            val disclaimerView = android.widget.TextView(context).apply {
+                                                text = "Investments in securities market are subject to market risks; read the related documents carefully before investing."
+                                                textSize = 8f
+                                                setTextColor(android.graphics.Color.parseColor("#888888"))
+                                                maxLines = 2
+                                                ellipsize = android.text.TextUtils.TruncateAt.END
+                                                setPadding(8, 4, 8, 4)
+                                                val disclaimerBackground = android.graphics.drawable.GradientDrawable()
+                                                disclaimerBackground.setColor(android.graphics.Color.parseColor("#E0FFFFFF"))
+                                                disclaimerBackground.cornerRadius = 6f
+                                                background = disclaimerBackground
+                                                layoutParams = android.widget.FrameLayout.LayoutParams(
+                                                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                                                    android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+                                                ).apply {
+                                                    gravity = android.view.Gravity.BOTTOM
+                                                    setMargins(8, 0, 8, 8)
+                                                }
+                                            }
+                                            
+                                            mediaContainer.addView(disclaimerView)
+                                            mainLayout.addView(mediaContainer)
                                             setMediaView(mediaView)
                                         } catch (e: Exception) {
                                             // If MediaView creation fails, continue without media
@@ -339,123 +413,118 @@ fun AdBannerCard(
                                         }
                                     }
                                     
-                                    // Add text content vertically
+                                    // Text + CTA Area (bottom section)
+                                    val bottomContainer = android.widget.LinearLayout(context).apply {
+                                        orientation = android.widget.LinearLayout.VERTICAL
+                                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                                        )
+                                        setPadding(0, 8, 0, 0)
+                                    }
+                                    
+                                    // App Title + Description (full width)
                                     val textContainer = android.widget.LinearLayout(context).apply {
                                         orientation = android.widget.LinearLayout.VERTICAL
                                         layoutParams = android.widget.LinearLayout.LayoutParams(
                                             android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                                             android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                                        ).apply {
-                                            bottomMargin = 12
-                                        }
+                                        )
                                     }
                                     
-                                    // Add headline with adaptive sizing
+                                    // Add headline (App Title)
                                     nativeAd!!.headline?.let { headline ->
                                         val headlineView = android.widget.TextView(context).apply {
                                             text = headline
-                                            textSize = if (headline.length > 30) 14f else 16f // Smaller text for longer headlines
-                                            setTextColor(android.graphics.Color.BLACK)
-                                            maxLines = if (nativeAd!!.body != null) 1 else 2 // Less lines if body text exists
+                                            textSize = 16f
+                                            setTextColor(android.graphics.Color.parseColor("#1F1F1F")) // Theme-aware text color
+                                            maxLines = 1
                                             ellipsize = android.text.TextUtils.TruncateAt.END
                                             setTypeface(null, android.graphics.Typeface.BOLD)
                                             layoutParams = android.widget.LinearLayout.LayoutParams(
                                                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                                                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
                                             ).apply {
-                                                bottomMargin = if (nativeAd!!.body != null) 4 else 0
+                                                bottomMargin = 4
                                             }
                                         }
                                         textContainer.addView(headlineView)
                                         setHeadlineView(headlineView)
                                     }
                                     
-                                    // Add body text if available with flexible sizing
+                                    // Add body text (Description)
                                     nativeAd!!.body?.let { body ->
                                         val bodyView = android.widget.TextView(context).apply {
                                             text = body
-                                            textSize = 12f
+                                            textSize = 14f
                                             setTextColor(android.graphics.Color.parseColor("#666666"))
-                                            maxLines = if (nativeAd!!.headline != null) 2 else 3 // More lines if no headline
+                                            maxLines = 2
                                             ellipsize = android.text.TextUtils.TruncateAt.END
                                             layoutParams = android.widget.LinearLayout.LayoutParams(
                                                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                                                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                                            )
+                                            ).apply {
+                                                bottomMargin = 8
+                                            }
                                         }
                                         textContainer.addView(bodyView)
                                         setBodyView(bodyView)
                                     }
                                     
-                                    mainLayout.addView(textContainer)
+                                    bottomContainer.addView(textContainer)
                                     
-                                    // Add full-width call to action button under text
+                                    // CTA Text (positioned at bottom right)
                                     nativeAd!!.callToAction?.let { cta ->
-                                        val ctaView = android.widget.Button(context).apply {
-                                            text = cta
-                                            textSize = 14f // Slightly larger for full-width button
-                                            setPadding(24, 16, 24, 16) // More padding for full-width design
+                                        val ctaContainer = android.widget.LinearLayout(context).apply {
+                                            orientation = android.widget.LinearLayout.HORIZONTAL
                                             layoutParams = android.widget.LinearLayout.LayoutParams(
-                                                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, // Full width
+                                                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                                                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                                            ).apply {
-                                                topMargin = 4 // Space between text and button
-                                            }
-                                            // Style the button with 45% rounded corners
-                                            setBackgroundColor(android.graphics.Color.parseColor("#2196F3"))
-                                            setTextColor(android.graphics.Color.WHITE)
-                                            isAllCaps = false
-                                            setTypeface(null, android.graphics.Typeface.BOLD)
-                                            
-                                            // Calculate 45% rounded corners based on button height
-                                            post {
-                                                val buttonHeight = height.toFloat()
-                                                val cornerRadius = buttonHeight * 0.45f // 45% of button height
-                                                val drawable = android.graphics.drawable.GradientDrawable()
-                                                drawable.cornerRadius = cornerRadius
-                                                drawable.setColor(android.graphics.Color.parseColor("#2196F3"))
-                                                background = drawable
-                                            }
+                                            )
+                                            gravity = android.view.Gravity.END
                                         }
-                                        mainLayout.addView(ctaView)
-                                        setCallToActionView(ctaView)
+                                        
+                                        val ctaView = android.widget.TextView(context).apply {
+                                            text = "$cta "
+                                            textSize = 14f
+                                            setTextColor(android.graphics.Color.parseColor("#007AFF")) // Light blue color
+                                            isAllCaps = false
+                                            setTypeface(null, android.graphics.Typeface.BOLD) // Bold text
+                                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                                            )
+                                            // Remove any background
+                                            background = null
+                                            setPadding(0, 8, 0, 0)
+                                        }
+                                        
+                                        // Bold arrow as separate TextView for emphasis
+                                        val arrowView = android.widget.TextView(context).apply {
+                                            text = "→"
+                                            textSize = 16f // Slightly larger for emphasis
+                                            setTextColor(android.graphics.Color.parseColor("#007AFF"))
+                                            setTypeface(null, android.graphics.Typeface.BOLD) // Bold arrow
+                                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                                            )
+                                            background = null
+                                            setPadding(0, 8, 0, 0)
+                                        }
+                                        
+                                        ctaContainer.addView(ctaView)
+                                        ctaContainer.addView(arrowView)
+                                        bottomContainer.addView(ctaContainer)
+                                        setCallToActionView(ctaContainer)
                                     }
+                                    mainLayout.addView(bottomContainer)
                                     addView(mainLayout)
                                     setNativeAd(nativeAd!!)
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    isLoading -> {
-                        // Loading state
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp,
-                                    color = Color(0xFF23C546) // Green color matching app's loader theme
-                                )
-                                if (com.vishruth.key1.BuildConfig.DEBUG) {
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Loading ad...",
-                                        fontSize = 10.sp,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
             }
         }
     }
