@@ -66,9 +66,22 @@ fun AdBannerCard(
     val context = LocalContext.current
     val userManager = remember { UserManager.getInstance() }
     
-    // Get subscription status
+    // Get subscription status from multiple sources
     val userData by userManager.userData.collectAsState()
-    val isPro = userData?.subscriptionStatus == "pro"
+    val subscriptionManager = remember { userManager.getSubscriptionManager() }
+    val isProFromSubscriptionManager = remember { mutableStateOf(false) }
+    
+    // Observe subscription manager's isPro StateFlow if available
+    LaunchedEffect(subscriptionManager) {
+        subscriptionManager?.isPro?.collect { isPro ->
+            isProFromSubscriptionManager.value = isPro
+        }
+    }
+    
+    // Determine if user is pro from multiple sources (matching the pattern used in TextInputLayout)
+    val isPro = userData?.subscriptionStatus == "pro" || 
+                userData?.subscriptionStatus == "premium" ||  // Also check for "premium" status
+                isProFromSubscriptionManager.value
     
     // Get keyboard theme preferences
     val prefs by FlorisPreferenceStore
@@ -103,8 +116,12 @@ fun AdBannerCard(
     
     // Don't show ads for pro users
     if (isPro) {
+        Log.d("AdBannerCard", "🚫 Hiding ad banner - user is pro (subscriptionStatus: ${userData?.subscriptionStatus}, subscriptionManagerPro: ${isProFromSubscriptionManager.value})")
         return
     }
+    
+    // Log when showing ads for non-pro users
+    Log.d("AdBannerCard", "📢 Showing ad banner - user is not pro (subscriptionStatus: ${userData?.subscriptionStatus}, subscriptionManagerPro: ${isProFromSubscriptionManager.value})")
     
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
     var isAdLoaded by remember { mutableStateOf(false) }

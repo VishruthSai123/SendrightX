@@ -209,33 +209,16 @@ fun SubscriptionScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Main title
-            Text(
-                text = if (isUserPro) "Welcome to SendRight Premium!" else "Upgrade to SendRight Premium",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = if (isUserPro) "You have unlimited AI features" else "Unlock unlimited AI features and remove ads",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Current status card
-            StatusCard(
-                isPro = isUserPro, 
-                aiUsageStats = aiUsageStats,
-                subscriptionManager = subscriptionManager
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
+            // Current status card - only show for free users (hide when pro)
+            if (!isUserPro) {
+                StatusCard(
+                    isPro = isUserPro, 
+                    aiUsageStats = aiUsageStats,
+                    subscriptionManager = subscriptionManager
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+            }
             
             // No discount promotional card - keep it simple
             
