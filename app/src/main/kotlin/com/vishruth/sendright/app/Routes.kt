@@ -77,6 +77,10 @@ import com.vishruth.key1.app.settings.theme.ThemeManagerScreenAction
 import com.vishruth.key1.app.settings.theme.ThemeScreen
 import com.vishruth.key1.app.settings.typing.TypingScreen
 import com.vishruth.key1.app.setup.SetupScreen
+import com.vishruth.key1.app.setup.EnableImeScreen
+import com.vishruth.key1.app.setup.SelectImeScreen
+import com.vishruth.key1.app.setup.NotificationPermissionScreen
+import com.vishruth.key1.app.setup.StartCustomizationScreen
 import com.vishruth.key1.ui.screens.SubscriptionScreen
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -103,6 +107,22 @@ object Routes {
     object Setup {
         @Serializable
         object Screen
+        
+        @Serializable
+        @Deeplink("setup/enable-ime")
+        object EnableIme
+        
+        @Serializable
+        @Deeplink("setup/select-ime")
+        object SelectIme
+        
+        @Serializable
+        @Deeplink("setup/notification-permission")
+        object NotificationPermission
+        
+        @Serializable
+        @Deeplink("setup/start-customization")
+        object StartCustomization
     }
 
     object Settings {
@@ -286,6 +306,10 @@ object Routes {
             },
         ) {
             composable<Setup.Screen> { SetupScreen() }
+            composableWithDeepLink(Setup.EnableIme::class) { EnableImeScreen() }
+            composableWithDeepLink(Setup.SelectIme::class) { SelectImeScreen() }
+            composableWithDeepLink(Setup.NotificationPermission::class) { NotificationPermissionScreen() }
+            composableWithDeepLink(Setup.StartCustomization::class) { StartCustomizationScreen() }
 
             composableWithDeepLink(Settings.Home::class) { HomeScreen() }
 
