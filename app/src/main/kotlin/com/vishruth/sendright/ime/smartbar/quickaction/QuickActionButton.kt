@@ -2,7 +2,7 @@
  * Copyright (C) 2022-2025 The FlorisBoard Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * you may not use thi                        except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -175,15 +175,26 @@ fun QuickActionButton(
                                             color = Color(0xFF23C546) // Green loading color same as MagicWand buttons
                                         )
                                     } else {
-                                        // Use regular Compose Icon without tint to preserve PNG colors
-                                        androidx.compose.material3.Icon(
+                                        // Use SnyggIcon with painter to match other quick actions size and theme tinting
+                                        SnyggIcon(
                                             painter = androidx.compose.ui.res.painterResource(R.drawable.chat),
-                                            contentDescription = null,
-                                            tint = androidx.compose.ui.graphics.Color.Unspecified,
-                                            modifier = Modifier.size(34.dp) // 1.4x of typical 24dp icon size
+                                            contentDescription = null
                                         )
                                     }
                                 }
+                            }
+                        } else if (action.keyData().code == -248) { // TRANSLATE KeyCode
+                            // Special handling for Translate PNG icon
+                            SnyggBox(
+                                elementName = "$elementName-icon",
+                                attributes = attributes,
+                                selector = selector,
+                            ) {
+                                // Use SnyggIcon with painter to match other quick actions size and theme tinting
+                                SnyggIcon(
+                                    painter = androidx.compose.ui.res.painterResource(R.drawable.translate),
+                                    contentDescription = null
+                                )
                             }
                         } else if (imageVector != null) {
                             SnyggBox(

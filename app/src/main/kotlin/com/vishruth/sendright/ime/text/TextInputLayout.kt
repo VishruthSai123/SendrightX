@@ -80,6 +80,8 @@ fun TextInputLayout(
                 QuickActionsOverflowPanel()
             } else if (state.isActionResultPanelVisible) {
                 ActionResultPanelWrapper()
+            } else if (state.isTranslationPanelVisible) {
+                com.vishruth.key1.ime.smartbar.TranslationPanel()
             } else if (state.isMagicWandPanelVisible) {
                 // Enhanced subscription and AI limit checking
                 val aiUsageTracker = remember { AiUsageTracker.getInstance() }

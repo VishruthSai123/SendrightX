@@ -86,7 +86,8 @@ open class KeyboardState protected constructor(open var rawValue: ULong) {
         const val F_IS_ACTIONS_EDITOR_VISIBLE: ULong =      0x00020000u
         const val F_IS_MAGIC_WAND_PANEL_VISIBLE: ULong =    0x00040000u
         const val F_IS_ACTION_RESULT_PANEL_VISIBLE: ULong = 0x00080000u
-        const val F_IS_COMPOSING_ENABLED: ULong =           0x00100000u
+        const val F_IS_TRANSLATION_PANEL_VISIBLE: ULong =  0x00100000u
+        const val F_IS_COMPOSING_ENABLED: ULong =           0x00200000u
 
         const val F_IS_CHAR_HALF_WIDTH: ULong =             0x00200000u
         const val F_IS_KANA_KATA: ULong =                   0x00400000u
@@ -201,6 +202,10 @@ open class KeyboardState protected constructor(open var rawValue: ULong) {
     var isActionResultPanelVisible: Boolean
         get() = getFlag(F_IS_ACTION_RESULT_PANEL_VISIBLE)
         set(v) { setFlag(F_IS_ACTION_RESULT_PANEL_VISIBLE, v) }
+
+    var isTranslationPanelVisible: Boolean
+        get() = getFlag(F_IS_TRANSLATION_PANEL_VISIBLE)
+        set(v) { setFlag(F_IS_TRANSLATION_PANEL_VISIBLE, v) }
 
     var isSubtypeSelectionVisible: Boolean
         get() = getFlag(F_IS_SUBTYPE_SELECTION_VISIBLE)

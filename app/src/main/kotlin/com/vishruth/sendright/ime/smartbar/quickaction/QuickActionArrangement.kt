@@ -66,23 +66,24 @@ data class QuickActionArrangement(
 
     companion object {
         val Default = QuickActionArrangement(
-            stickyAction = QuickAction.InsertKey(TextKeyData.VOICE_INPUT), // Voice Input as sticky action
+            stickyAction = QuickAction.InsertKey(TextKeyData.MAGIC_WAND), // Magic Wand as sticky action
             dynamicActions = listOf(
-                QuickAction.InsertKey(TextKeyData.MAGIC_WAND),          // 1. Magic Wand
-                QuickAction.InsertKey(TextKeyData.AI_CHAT),             // 2. AI Chat
+                QuickAction.InsertKey(TextKeyData.AI_CHAT),         // 1. AI Chat
+                QuickAction.InsertKey(TextKeyData.TRANSLATE),       // 2. Translate
+                QuickAction.InsertKey(TextKeyData.VOICE_INPUT),             // 3. Voice Input (moved from sticky)
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),   // 4. Emoji
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD), // 5. Clipboard
                 QuickAction.InsertKey(TextKeyData.SETTINGS),            // 6. Settings
-                QuickAction.InsertKey(TextKeyData.UNDO),                // 7. Undo
-                QuickAction.InsertKey(TextKeyData.REDO),                // 8. Redo
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_CUT),       // 9. Cut
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL), // 10. Select All
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),      // 11. Copy
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),     // 12. Paste
-                QuickAction.InsertKey(TextKeyData.TOGGLE_INCOGNITO_MODE), // 13. Incognito
-                QuickAction.InsertKey(TextKeyData.LANGUAGE_SWITCH),     // 14. Switch Language
-                QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT), // 15. One Handed
-                QuickAction.InsertKey(TextKeyData.FORWARD_DELETE),      // 16. Forward Delete
+                QuickAction.InsertKey(TextKeyData.UNDO),                // 6. Undo
+                QuickAction.InsertKey(TextKeyData.REDO),                // 7. Redo
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_CUT),       // 8. Cut
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL), // 9. Select All
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),      // 10. Copy
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),     // 11. Paste
+                QuickAction.InsertKey(TextKeyData.TOGGLE_INCOGNITO_MODE), // 12. Incognito
+                QuickAction.InsertKey(TextKeyData.LANGUAGE_SWITCH),     // 13. Switch Language
+                QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT), // 14. One Handed
+                QuickAction.InsertKey(TextKeyData.FORWARD_DELETE),      // 15. Forward Delete
             ),
             hiddenActions = listOf(),
         )

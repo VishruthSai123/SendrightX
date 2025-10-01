@@ -107,11 +107,11 @@ fun AdBannerCard(
         }
     }
     
-    // Keyboard theme-based background colors
+    // Fixed background colors based on keyboard theme
     val cardBackgroundColor = if (isKeyboardDayTheme) {
-        Color.White // Pure white for day theme
+        Color.White // Fixed pure white for day theme
     } else {
-        Color(0xFF1E1E1E) // Light black for night theme
+        Color.Black // Fixed pure black for night theme
     }
     
     // Don't show ads for pro users
@@ -453,10 +453,11 @@ fun AdBannerCard(
                                     
                                     // Add headline (App Title)
                                     nativeAd!!.headline?.let { headline ->
+                                        val headlineColor = if (isKeyboardDayTheme) "#1F1F1F" else "#FFFFFF"
                                         val headlineView = android.widget.TextView(context).apply {
                                             text = headline
                                             textSize = 16f
-                                            setTextColor(android.graphics.Color.parseColor("#1F1F1F")) // Theme-aware text color
+                                            setTextColor(android.graphics.Color.parseColor(headlineColor)) // Theme-aware text color
                                             maxLines = 1
                                             ellipsize = android.text.TextUtils.TruncateAt.END
                                             setTypeface(null, android.graphics.Typeface.BOLD)
@@ -473,10 +474,11 @@ fun AdBannerCard(
                                     
                                     // Add body text (Description)
                                     nativeAd!!.body?.let { body ->
+                                        val bodyColor = if (isKeyboardDayTheme) "#666666" else "#CCCCCC"
                                         val bodyView = android.widget.TextView(context).apply {
                                             text = body
                                             textSize = 14f
-                                            setTextColor(android.graphics.Color.parseColor("#666666"))
+                                            setTextColor(android.graphics.Color.parseColor(bodyColor))
                                             maxLines = 2
                                             ellipsize = android.text.TextUtils.TruncateAt.END
                                             layoutParams = android.widget.LinearLayout.LayoutParams(

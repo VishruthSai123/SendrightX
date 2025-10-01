@@ -151,6 +151,7 @@ data class TextKeyData(
                 TOGGLE_AUTOCORRECT,
                 MAGIC_WAND,
                 AI_CHAT,
+                TRANSLATE,
             )
         }
 
@@ -532,6 +533,13 @@ data class TextKeyData(
             type = KeyType.FUNCTION,
             code = KeyCode.AI_CHAT,
             label = "ai_chat",
+        )
+
+        /** Predefined key data for [KeyCode.TRANSLATE] */
+        val TRANSLATE = TextKeyData(
+            type = KeyType.FUNCTION,
+            code = KeyCode.TRANSLATE,
+            label = "translate",
         )
     }
 }

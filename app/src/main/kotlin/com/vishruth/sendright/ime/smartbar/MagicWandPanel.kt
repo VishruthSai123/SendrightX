@@ -16,6 +16,10 @@
 
 package com.vishruth.key1.ime.smartbar
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +49,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,6 +71,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import android.util.Log
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.LinearLayout
+import android.widget.TextView
+
 import com.vishruth.key1.editorInstance
 import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.ime.ai.AiUsageStats
@@ -193,24 +202,60 @@ fun MagicWandPanel(
     val subscriptionManager = userManager.getSubscriptionManager()
     val isPro by subscriptionManager?.isPro?.collectAsState() ?: remember { mutableStateOf(false) }
     
+
+    
     // Determine pro status from multiple sources for immediate updates
     val isProUser = isPro || userData?.subscriptionStatus == "pro"
+    
+    // Preload banner ad immediately when panel opens (independent of scroll)
+    LaunchedEffect(Unit) {
+        if (!isProUser) {
+            try {
+                Log.d("MagicWandPanel", "🚀 Starting banner ad preload for MagicWand panel")
+                
+                // Ensure AdMob SDK is initialized
+                val adManager = com.vishruth.key1.lib.ads.AdManager
+                if (!adManager.isInitialized()) {
+                    adManager.ensureInitialized(context)
+                    adManager.waitForInitialization(10000)
+                }
+                
+                // Use the same ad unit ID as AdBannerCard
+                val adUnitId = "ca-app-pub-1496070957048863/5853942656"
+                
+                // Preload the native ad
+                val adLoader = com.google.android.gms.ads.AdLoader.Builder(context, adUnitId)
+                    .forNativeAd { loadedAd ->
+                        Log.d("MagicWandPanel", "✅ Banner ad preloaded successfully")
+                    }
+                    .withAdListener(object : com.google.android.gms.ads.AdListener() {
+                        override fun onAdFailedToLoad(error: com.google.android.gms.ads.LoadAdError) {
+                            Log.e("MagicWandPanel", "❌ Banner ad preload failed: ${error.message}")
+                        }
+                    })
+                    .withNativeAdOptions(
+                        com.google.android.gms.ads.nativead.NativeAdOptions.Builder()
+                            .setAdChoicesPlacement(com.google.android.gms.ads.nativead.NativeAdOptions.ADCHOICES_TOP_RIGHT)
+                            .setRequestMultipleImages(false)
+                            .setReturnUrlsForImageAssets(false)
+                            .build()
+                    )
+                    .build()
+                
+                val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
+                adLoader.loadAd(adRequest)
+                
+            } catch (e: Exception) {
+                Log.e("MagicWandPanel", "💥 Exception during banner ad preload", e)
+            }
+        }
+    }
     
     // Rewarded Ad Manager
     val rewardedAdManager = remember { RewardedAdManager(context) }
     var showLimitDialog by remember { mutableStateOf(false) }
     
-    // Preload banner ad when panel opens (independent of scroll)
-    LaunchedEffect(Unit) {
-        if (!isProUser) {
-            try {
-                // Trigger ad preloading by creating an invisible ad component
-                Log.d("MagicWandPanel", "🚀 Preloading banner ad for MagicWand panel")
-            } catch (e: Exception) {
-                Log.e("MagicWandPanel", "Error preloading banner ad", e)
-            }
-        }
-    }
+
     
     // Loading state for AI actions
     var loadingButton by remember { mutableStateOf<String?>(null) }
@@ -230,7 +275,7 @@ fun MagicWandPanel(
     val magicWandSections = listOf(
         MagicWandSection(
             title = "Enhance",
-            buttons = listOf("Rephrase", "Grammar Fix", "Emojie", "Realistic")
+            buttons = listOf("Rewrite", "Grammar")
         ),
         MagicWandSection(
             title = "Tone Changer", 
@@ -241,16 +286,16 @@ fun MagicWandPanel(
             buttons = listOf("Summarise", "Letter", "Optimise", "Formal", "Post Ready")
         ),
         MagicWandSection(
-            title = "Translation",
-            buttons = listOf("Telugu", "Hindi", "Tamil", "English", "Multi"),
-            isExpandable = true,
-            isExpanded = expandedSections["Translation"] ?: false
-        ),
-        MagicWandSection(
             title = "Study",
             buttons = listOf("Explain", "Equation", "Solution"),
             isExpandable = true,
             isExpanded = expandedSections["Study"] ?: false
+        ),
+        MagicWandSection(
+            title = "Others",
+            buttons = listOf("Emojie", "Realistic"),
+            isExpandable = true,
+            isExpanded = expandedSections["Others"] ?: false
         )
     )
 
@@ -258,6 +303,16 @@ fun MagicWandPanel(
     com.vishruth.key1.ui.components.AdPreloader(
         panelName = "MagicWand"
     )
+    
+    // Also preload banner ads immediately when panel opens (independent of scroll)
+    LaunchedEffect(Unit) {
+        try {
+            // Trigger banner ad preloading by creating an invisible ad component
+            Log.d("MagicWandPanel", "🚀 Preloading banner ad for MagicWand panel")
+        } catch (e: Exception) {
+            Log.e("MagicWandPanel", "Error preloading banner ad", e)
+        }
+    }
     
     SnyggBox(
         elementName = FlorisImeUi.SmartbarActionsOverflow.elementName,
@@ -451,10 +506,13 @@ fun MagicWandPanel(
                     }
                 }
                 
-                // Ad banner at the bottom for free users
+                // Ad banner at the bottom for free users - enhanced native ad UI with proper width and fade animation
                 item {
+                    // Enhanced AdBannerCard with same width as usage card and fade animation
                     com.vishruth.key1.ui.components.AdBannerCard(
-                        modifier = Modifier.padding(horizontal = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp), // Match usage card padding
                         onAdLoaded = {
                             flogDebug { "Magic Wand Panel: Banner ad loaded successfully" }
                         },

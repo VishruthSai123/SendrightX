@@ -71,6 +71,8 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
         activeState.isActionsEditorVisible = false
         // Auto-close magic wand panel on fresh keyboard sessions
         activeState.isMagicWandPanelVisible = false
+        // Auto-close translation panel on fresh keyboard sessions
+        activeState.isTranslationPanelVisible = false
         super.handleStartInputView(editorInfo, isRestart)
         val keyboardMode = when (editorInfo.inputAttributes.type) {
             InputAttributes.Type.NUMBER -> {

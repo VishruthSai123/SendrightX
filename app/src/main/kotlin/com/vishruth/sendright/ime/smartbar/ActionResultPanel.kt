@@ -58,6 +58,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Surface
+
 import com.vishruth.key1.BuildConfig
 import com.vishruth.key1.editorInstance
 import com.vishruth.key1.ime.keyboard.FlorisImeSizing
@@ -123,18 +130,56 @@ fun ActionResultPanel(
     val userData by userManager.userData.collectAsState()
     val subscriptionManager = userManager.getSubscriptionManager()
     val isPro by subscriptionManager?.isPro?.collectAsState() ?: remember { mutableStateOf(false) }
+    // Determine pro status from multiple sources for immediate updates
     val isProUser = isPro || userData?.subscriptionStatus == "pro"
     
-    // Preload banner ad when panel opens (independent of scroll)
+    // Preload banner ad immediately when panel opens (independent of scroll)
     LaunchedEffect(Unit) {
         if (!isProUser) {
             try {
-                Log.d("ActionResultPanel", "🚀 Preloading banner ad for ActionResult panel")
+                Log.d("ActionResultPanel", "🚀 Starting banner ad preload for ActionResult panel")
+                
+                // Ensure AdMob SDK is initialized
+                val adManager = com.vishruth.key1.lib.ads.AdManager
+                if (!adManager.isInitialized()) {
+                    adManager.ensureInitialized(context)
+                    adManager.waitForInitialization(10000)
+                }
+                
+                // Use the same ad unit ID as AdBannerCard
+                val adUnitId = "ca-app-pub-1496070957048863/5853942656"
+                
+                // Preload the native ad
+                val adLoader = com.google.android.gms.ads.AdLoader.Builder(context, adUnitId)
+                    .forNativeAd { loadedAd ->
+                        Log.d("ActionResultPanel", "✅ Banner ad preloaded successfully")
+                    }
+                    .withAdListener(object : com.google.android.gms.ads.AdListener() {
+                        override fun onAdFailedToLoad(error: com.google.android.gms.ads.LoadAdError) {
+                            Log.e("ActionResultPanel", "❌ Banner ad preload failed: ${error.message}")
+                        }
+                    })
+                    .withNativeAdOptions(
+                        com.google.android.gms.ads.nativead.NativeAdOptions.Builder()
+                            .setAdChoicesPlacement(com.google.android.gms.ads.nativead.NativeAdOptions.ADCHOICES_TOP_RIGHT)
+                            .setRequestMultipleImages(false)
+                            .setReturnUrlsForImageAssets(false)
+                            .build()
+                    )
+                    .build()
+                
+                val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
+                adLoader.loadAd(adRequest)
+                
             } catch (e: Exception) {
-                Log.e("ActionResultPanel", "Error preloading banner ad", e)
+                Log.e("ActionResultPanel", "💥 Exception during banner ad preload", e)
             }
         }
     }
+    
+
+    
+
 
     // Preload ads when panel opens
     com.vishruth.key1.ui.components.AdPreloader(
@@ -270,10 +315,13 @@ fun ActionResultPanel(
                 }
             }
             
-            // Ad banner at the bottom for free users
+            // Ad banner at the bottom for free users - enhanced native ad UI with proper width
             item {
+                // Enhanced AdBannerCard with same width as action buttons and fade animation
                 com.vishruth.key1.ui.components.AdBannerCard(
-                    modifier = Modifier.padding(horizontal = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp), // Match action buttons padding
                     onAdLoaded = {
                         flogDebug { "Action Result Panel: Banner ad loaded successfully" }
                     },

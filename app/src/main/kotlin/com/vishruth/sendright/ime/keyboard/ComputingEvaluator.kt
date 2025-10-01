@@ -296,6 +296,10 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
             // Return null so QuickActionButton can handle PNG resources directly (chat.png)
             null
         }
+        KeyCode.TRANSLATE -> {
+            // Return null so QuickActionButton can handle PNG resources directly (translate.png)
+            null
+        }
         KeyCode.KANA_SWITCHER -> {
             if (evaluator.state.isKanaKata) {
                 this.context()?.vectorResource(R.drawable.ic_keyboard_kana_switcher_kata)
