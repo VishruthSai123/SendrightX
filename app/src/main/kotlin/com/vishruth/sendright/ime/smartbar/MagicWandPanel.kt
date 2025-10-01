@@ -229,16 +229,16 @@ fun MagicWandPanel(
     
     val magicWandSections = listOf(
         MagicWandSection(
-            title = "Advanced",
-            buttons = listOf("Rewrite", "Summarise", "Letter", "Optimise", "Formal", "Post Ready")
-        ),
-        MagicWandSection(
-            title = "Study",
-            buttons = listOf("Explain", "Equation", "Solution")
+            title = "Enhance",
+            buttons = listOf("Rephrase", "Grammar Fix", "Emojie", "Realistic")
         ),
         MagicWandSection(
             title = "Tone Changer", 
             buttons = listOf("Casual", "Friendly", "Professional", "Flirty", "Anger", "Happy")
+        ),
+        MagicWandSection(
+            title = "Advanced",
+            buttons = listOf("Summarise", "Letter", "Optimise", "Formal", "Post Ready")
         ),
         MagicWandSection(
             title = "Translation",
@@ -247,10 +247,10 @@ fun MagicWandPanel(
             isExpanded = expandedSections["Translation"] ?: false
         ),
         MagicWandSection(
-            title = "Other",
-            buttons = listOf("Emojie"),
+            title = "Study",
+            buttons = listOf("Explain", "Equation", "Solution"),
             isExpandable = true,
-            isExpanded = expandedSections["Other"] ?: false
+            isExpanded = expandedSections["Study"] ?: false
         )
     )
 
