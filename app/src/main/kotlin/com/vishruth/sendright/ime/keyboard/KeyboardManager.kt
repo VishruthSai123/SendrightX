@@ -790,6 +790,48 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     /**
+     * Handles a [KeyCode.AI_CHAT] event.
+     * Directly triggers AI chat functionality with the same behavior as chat in MagicWand panel.
+     */
+    private fun handleAiChat() {
+        scope.launch {
+            try {
+                // Get all text from the input field (same as MagicWand chat)
+                val activeContent = editorInstance.activeContent
+                val allText = buildString {
+                    append(activeContent.textBeforeSelection)
+                    append(activeContent.selectedText)
+                    append(activeContent.textAfterSelection)
+                }
+                
+                if (allText.isBlank()) {
+                    lastToastReference = WeakReference(appContext.showShortToastSync("Please type some text first"))
+                    return@launch
+                }
+                
+                // Check network connectivity
+                if (!com.vishruth.sendright.lib.network.NetworkUtils.checkNetworkAndShowToast(appContext)) {
+                    return@launch
+                }
+                
+                // Create temporary AI usage tracker instance
+                val aiUsageTracker = com.vishruth.key1.ime.ai.AiUsageTracker.getInstance()
+                
+                // Use the MagicWand chat handler directly (original functionality)
+                com.vishruth.key1.ime.smartbar.handleMagicWandButtonClick(
+                    buttonTitle = "Chat",
+                    editorInstance = editorInstance,
+                    context = appContext,
+                    aiUsageTracker = aiUsageTracker
+                )
+                
+            } catch (e: Exception) {
+                lastToastReference = WeakReference(appContext.showShortToastSync("Something went wrong. Please try again."))
+            }
+        }
+    }
+
+    /**
      * Closes the magic wand panel if it's currently visible.
      * Used for auto-close functionality when user interacts with input area.
      */
@@ -1105,6 +1147,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.TOGGLE_INCOGNITO_MODE -> scope.launch { handleToggleIncognitoMode() }
             KeyCode.TOGGLE_AUTOCORRECT -> scope.launch { handleToggleAutocorrect() }
             KeyCode.MAGIC_WAND -> handleMagicWand()
+            KeyCode.AI_CHAT -> handleAiChat()
             KeyCode.UNDO -> editorInstance.performUndo()
             KeyCode.VIEW_CHARACTERS -> activeState.keyboardMode = KeyboardMode.CHARACTERS
             KeyCode.VIEW_NUMERIC -> activeState.keyboardMode = KeyboardMode.NUMERIC

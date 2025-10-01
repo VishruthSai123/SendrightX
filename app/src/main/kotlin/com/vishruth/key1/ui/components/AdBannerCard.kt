@@ -133,19 +133,21 @@ fun AdBannerCard(
     // Always use production ad unit ID
     val actualAdUnitId = "ca-app-pub-1496070957048863/5853942656"
     
-    LaunchedEffect(actualAdUnitId) {
-        // Only load ad once, don't reload on recomposition/scroll
+    // Load ad immediately when component is created
+    LaunchedEffect(Unit) {
+        // Start loading immediately, independent of scroll position or visibility
         if (hasAttemptedLoad) {
             Log.d("AdBannerCard", "⏭️ Ad already attempted for unit: $actualAdUnitId, skipping reload")
             return@LaunchedEffect
         }
         
+        Log.d("AdBannerCard", "🚀 Starting immediate ad load for unit: $actualAdUnitId (independent of scroll)")
+        hasAttemptedLoad = true
+        isLoading = true
+        hasAdError = false
+        errorMessage = null
+        
         try {
-            Log.d("AdBannerCard", "🚀 Initializing native ad for production unit: $actualAdUnitId")
-            hasAttemptedLoad = true
-            isLoading = true
-            hasAdError = false
-            errorMessage = null
             
             // Ensure AdMob SDK is initialized
             val adManager = com.vishruth.key1.lib.ads.AdManager

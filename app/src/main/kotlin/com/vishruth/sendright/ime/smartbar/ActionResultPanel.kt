@@ -71,6 +71,11 @@ import com.vishruth.sendright.ime.review.InAppReviewManager
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
+import android.util.Log
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import com.vishruth.key1.user.UserManager
 import org.florisboard.lib.snygg.ui.SnyggButton
 import org.florisboard.lib.snygg.ui.SnyggText
 
@@ -112,7 +117,30 @@ fun ActionResultPanel(
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
     val scope = rememberCoroutineScope()
+    
+    // User manager to check subscription status
+    val userManager = remember { UserManager.getInstance() }
+    val userData by userManager.userData.collectAsState()
+    val subscriptionManager = userManager.getSubscriptionManager()
+    val isPro by subscriptionManager?.isPro?.collectAsState() ?: remember { mutableStateOf(false) }
+    val isProUser = isPro || userData?.subscriptionStatus == "pro"
+    
+    // Preload banner ad when panel opens (independent of scroll)
+    LaunchedEffect(Unit) {
+        if (!isProUser) {
+            try {
+                Log.d("ActionResultPanel", "🚀 Preloading banner ad for ActionResult panel")
+            } catch (e: Exception) {
+                Log.e("ActionResultPanel", "Error preloading banner ad", e)
+            }
+        }
+    }
 
+    // Preload ads when panel opens
+    com.vishruth.key1.ui.components.AdPreloader(
+        panelName = "ActionResult"
+    )
+    
     SnyggBox(
         elementName = FlorisImeUi.SmartbarActionsOverflow.elementName,
         modifier = modifier
@@ -125,11 +153,24 @@ fun ActionResultPanel(
                 .padding(horizontal = 16.dp, vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Title
+            // Title - Dynamic based on action
             item {
+                val displayTitle = when (actionTitle.lowercase()) {
+                    "chat" -> "AI Response"
+                    "rewrite" -> "Rewritten Text"
+                    "summarise" -> "Summary"
+                    "translate", "telugu", "hindi", "tamil", "english", "multi" -> "Translation"
+                    "explain" -> "Explanation"
+                    "solution" -> "Solution"
+                    "formal" -> "Formal Text"
+                    "casual" -> "Casual Text"
+                    "friendly" -> "Friendly Text"
+                    "professional" -> "Professional Text"
+                    else -> "Transformed Text"
+                }
                 SnyggText(
                     elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                    text = "Transformed Text",
+                    text = displayTitle,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

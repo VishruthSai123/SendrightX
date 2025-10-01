@@ -134,7 +134,7 @@ fun QuickActionButton(
                         
                         // Special handling for magic wand PNG icons
                         if (action.data.code == com.vishruth.key1.ime.text.key.KeyCode.MAGIC_WAND) {
-                            val pngResource = if (evaluator.state.isMagicWandPanelVisible || evaluator.state.isActionResultPanelVisible) {
+                            val pngResource = if (evaluator.state.isMagicWandPanelVisible) {
                                 R.drawable.magicwand_close
                             } else {
                                 R.drawable.gemini
@@ -148,6 +148,21 @@ fun QuickActionButton(
                                 // Use regular Compose Icon without tint to preserve PNG colors
                                 androidx.compose.material3.Icon(
                                     painter = androidx.compose.ui.res.painterResource(pngResource),
+                                    contentDescription = null,
+                                    tint = androidx.compose.ui.graphics.Color.Unspecified,
+                                    modifier = Modifier.size(34.dp) // 1.4x of typical 24dp icon size
+                                )
+                            }
+                        } else if (action.data.code == -247) { // AI_CHAT KeyCode
+                            // Special handling for AI Chat PNG icon
+                            SnyggBox(
+                                elementName = "$elementName-icon",
+                                attributes = attributes,
+                                selector = selector,
+                            ) {
+                                // Use regular Compose Icon without tint to preserve PNG colors
+                                androidx.compose.material3.Icon(
+                                    painter = androidx.compose.ui.res.painterResource(R.drawable.chat),
                                     contentDescription = null,
                                     tint = androidx.compose.ui.graphics.Color.Unspecified,
                                     modifier = Modifier.size(34.dp) // 1.4x of typical 24dp icon size

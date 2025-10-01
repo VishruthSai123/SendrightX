@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.util.Log
 import androidx.compose.ui.unit.sp
 import com.vishruth.key1.editorInstance
 import com.vishruth.key1.ime.ai.AiUsageTracker
@@ -199,6 +200,18 @@ fun MagicWandPanel(
     val rewardedAdManager = remember { RewardedAdManager(context) }
     var showLimitDialog by remember { mutableStateOf(false) }
     
+    // Preload banner ad when panel opens (independent of scroll)
+    LaunchedEffect(Unit) {
+        if (!isProUser) {
+            try {
+                // Trigger ad preloading by creating an invisible ad component
+                Log.d("MagicWandPanel", "🚀 Preloading banner ad for MagicWand panel")
+            } catch (e: Exception) {
+                Log.e("MagicWandPanel", "Error preloading banner ad", e)
+            }
+        }
+    }
+    
     // Loading state for AI actions
     var loadingButton by remember { mutableStateOf<String?>(null) }
     
@@ -235,12 +248,17 @@ fun MagicWandPanel(
         ),
         MagicWandSection(
             title = "Other",
-            buttons = listOf("Emojie", "Chat"),
+            buttons = listOf("Emojie"),
             isExpandable = true,
             isExpanded = expandedSections["Other"] ?: false
         )
     )
 
+    // Preload ads when panel opens
+    com.vishruth.key1.ui.components.AdPreloader(
+        panelName = "MagicWand"
+    )
+    
     SnyggBox(
         elementName = FlorisImeUi.SmartbarActionsOverflow.elementName,
         modifier = modifier
@@ -816,7 +834,7 @@ private fun MagicWandButton(
     }
 }
 
-private suspend fun handleMagicWandButtonClick(
+suspend fun handleMagicWandButtonClick(
     buttonTitle: String,
     editorInstance: com.vishruth.key1.ime.editor.EditorInstance,
     context: android.content.Context,

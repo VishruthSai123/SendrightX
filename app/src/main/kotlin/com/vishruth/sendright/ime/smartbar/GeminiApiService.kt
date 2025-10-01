@@ -19,6 +19,7 @@ package com.vishruth.key1.ime.smartbar
 import android.content.Context
 import com.vishruth.key1.BuildConfig
 import com.vishruth.sendright.lib.network.NetworkUtils
+import com.vishruth.key1.ime.smartbar.MagicWandInstructions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -43,10 +44,10 @@ object GeminiApiService {
     private val keyLastRequestTime = mutableMapOf<Int, Long>() // Track per-key timing
     private val keyFailureCount = mutableMapOf<Int, Int>() // Track key health
     private const val ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-    private const val MIN_REQUEST_INTERVAL = 500L // Reduced to 500ms for faster responses
-    private const val MAX_RETRY_ATTEMPTS = 2 // Reduced from 3 to 2 for speed
-    private const val FAST_RETRY_DELAY_MS = 800L // Reduced from 2000ms to 800ms
-    private const val PARALLEL_TIMEOUT_MS = 3000L // Quick timeout for parallel attempts
+    private const val MIN_REQUEST_INTERVAL = 1000L // 1 second between requests (saves quota)
+    private const val MAX_RETRY_ATTEMPTS = 1 // Only 1 retry per key (saves quota)
+    private const val FAST_RETRY_DELAY_MS = 1200L // 1.2 second delay (saves quota)
+    private const val MAX_FALLBACK_KEYS = 2 // Try maximum 2 fallback keys (saves quota)
     
     @Serializable
     data class GeminiRequest(
@@ -121,52 +122,47 @@ object GeminiApiService {
             }
         )
         
-        // Strategy 3: Fast parallel fallback (try multiple keys simultaneously)
+        // Strategy 3: Smart sequential fallback (try up to 2 keys one by one - saves quota)
         if (API_KEYS.size > 1) {
-            return@withContext tryParallelFallback(inputText, instruction)
+            return@withContext tryLimitedSequentialFallback(inputText, instruction)
         }
         
-        // Strategy 4: Sequential fallback with fast timeouts (if parallel fails)
-        return@withContext trySequentialFallback(inputText, instruction)
+        // No fallback keys available
+        return@withContext Result.failure(Exception("❌ All services unavailable. Please try again later."))
     }
     
-    private suspend fun tryParallelFallback(inputText: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
+    private suspend fun tryLimitedSequentialFallback(inputText: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
         val availableKeys = API_KEYS.indices.filter { it != currentApiKeyIndex }
         if (availableKeys.isEmpty()) {
             return@withContext Result.failure(Exception("❌ No fallback keys available"))
         }
         
-        // Launch parallel requests with the best 2 fallback keys
-        val keyIndices = availableKeys.sortedBy { getKeyFailureCount(it) }.take(2)
+        // Try only the best 2 fallback keys sequentially (saves quota vs parallel)
+        val bestKeys = availableKeys.sortedBy { getKeyFailureCount(it) }.take(MAX_FALLBACK_KEYS)
         
-        try {
-            kotlinx.coroutines.withTimeout(PARALLEL_TIMEOUT_MS) {
-                coroutineScope {
-                    val jobs = keyIndices.map { keyIndex ->
-                        async {
-                            makeApiRequestWithFastTimeout(inputText, instruction, keyIndex)
-                        }
-                    }
+        for ((attemptIndex, keyIndex) in bestKeys.withIndex()) {
+            val result = makeApiRequestWithFastTimeout(inputText, instruction, keyIndex)
+            
+            result.fold(
+                onSuccess = { response ->
+                    // Success! Switch to this key and return
+                    currentApiKeyIndex = keyIndex
+                    markKeyAsHealthy(keyIndex)
+                    return@withContext Result.success(response)
+                },
+                onFailure = { error ->
+                    markKeyAsUnhealthy(keyIndex)
                     
-                    // Wait for first successful result
-                    for (job in jobs) {
-                        try {
-                            val result = job.await()
-                            if (result.isSuccess) {
-                                jobs.forEach { if (it != job) it.cancel() }
-                                return@coroutineScope result
-                            }
-                        } catch (e: Exception) {
-                            continue
-                        }
+                    // If this was the last attempt, return error
+                    if (attemptIndex == bestKeys.size - 1) {
+                        return@withContext Result.failure(Exception("❌ All ${bestKeys.size} backup services failed. Please try again later."))
                     }
-                    
-                    Result.failure<String>(Exception("❌ Parallel fallback failed"))
+                    // Otherwise continue to next key (sequential, not parallel)
                 }
-            }
-        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-            Result.failure(Exception("🕰️ All services are responding slowly. Please try again."))
+            )
         }
+        
+        return@withContext Result.failure(Exception("❌ Unexpected fallback error"))
     }
     
     private suspend fun trySequentialFallback(inputText: String, instruction: String): Result<String> {

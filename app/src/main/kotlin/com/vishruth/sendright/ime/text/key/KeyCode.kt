@@ -108,6 +108,7 @@ object KeyCode {
     const val TOGGLE_INCOGNITO_MODE =       -244
     const val TOGGLE_AUTOCORRECT =          -245
     const val MAGIC_WAND =                  -246
+    const val AI_CHAT =                     -247
 
     const val URI_COMPONENT_TLD =           -255
 

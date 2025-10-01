@@ -67,6 +67,14 @@ fun QuickActionsRow(
     val showOverflowAction = actionArrangement.stickyAction != null ||
         smartbarLayout != SmartbarLayout.SUGGESTIONS_ACTIONS_SHARED || !sharedActionsExpanded
 
+    // Force consecutive placement of MagicWand and AI_CHAT by ensuring 3-dots appear at end
+    val effectiveFlipToggles = remember(dynamicActions, flipToggles) {
+        val hasMagicWandAndChat = dynamicActions.size >= 2 &&
+            dynamicActions[0].keyData().code == com.vishruth.key1.ime.text.key.KeyCode.MAGIC_WAND &&
+            dynamicActions[1].keyData().code == com.vishruth.key1.ime.text.key.KeyCode.AI_CHAT
+        if (hasMagicWandAndChat) false else flipToggles
+    }
+
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val width = constraints.maxWidth.toDp()
         val height = constraints.maxHeight.toDp()
@@ -94,13 +102,13 @@ fun QuickActionsRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            if (showOverflowAction && flipToggles) {
+            if (showOverflowAction && effectiveFlipToggles) {
                 QuickActionButton(ToggleOverflowPanelAction, evaluator)
             }
             for (action in visibleActions) {
                 QuickActionButton(action, evaluator)
             }
-            if (showOverflowAction && !flipToggles) {
+            if (showOverflowAction && !effectiveFlipToggles) {
                 QuickActionButton(ToggleOverflowPanelAction, evaluator)
             }
         }

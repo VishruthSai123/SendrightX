@@ -150,6 +150,7 @@ data class TextKeyData(
                 TOGGLE_INCOGNITO_MODE,
                 TOGGLE_AUTOCORRECT,
                 MAGIC_WAND,
+                AI_CHAT,
             )
         }
 
@@ -525,6 +526,12 @@ data class TextKeyData(
             type = KeyType.FUNCTION,
             code = KeyCode.MAGIC_WAND,
             label = "magic_wand",
+        )
+        /** Predefined key data for [KeyCode.AI_CHAT] */
+        val AI_CHAT = TextKeyData(
+            type = KeyType.FUNCTION,
+            code = KeyCode.AI_CHAT,
+            label = "ai_chat",
         )
     }
 }
