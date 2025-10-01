@@ -795,6 +795,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      */
     private fun handleAiChat() {
         scope.launch {
+            // Set loading state
+            activeState.isAiChatLoading = true
+            
             try {
                 // Get all text from the input field (same as MagicWand chat)
                 val activeContent = editorInstance.activeContent
@@ -827,6 +830,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 
             } catch (e: Exception) {
                 lastToastReference = WeakReference(appContext.showShortToastSync("Something went wrong. Please try again."))
+            } finally {
+                // Clear loading state
+                activeState.isAiChatLoading = false
             }
         }
     }

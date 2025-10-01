@@ -24,9 +24,12 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -69,7 +72,8 @@ fun QuickActionButton(
     val inputFeedbackController = FlorisImeService.inputFeedbackController()
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val isEnabled = type == QuickActionBarType.EDITOR_TILE || evaluator.evaluateEnabled(action.keyData())
+    val isEnabled = (type == QuickActionBarType.EDITOR_TILE || evaluator.evaluateEnabled(action.keyData())) && 
+                    !(action.keyData().code == -247 && evaluator.state.isAiChatLoading) // Disable AI Chat when loading
     val elementName = when (type) {
         QuickActionBarType.INTERACTIVE_BUTTON -> FlorisImeUi.SmartbarActionKey
         QuickActionBarType.INTERACTIVE_TILE -> FlorisImeUi.SmartbarActionTile
@@ -153,20 +157,33 @@ fun QuickActionButton(
                                     modifier = Modifier.size(34.dp) // 1.4x of typical 24dp icon size
                                 )
                             }
-                        } else if (action.data.code == -247) { // AI_CHAT KeyCode
-                            // Special handling for AI Chat PNG icon
+                        } else if (action.keyData().code == -247) { // AI_CHAT KeyCode
+                            // Special handling for AI Chat PNG icon with loading state
                             SnyggBox(
                                 elementName = "$elementName-icon",
                                 attributes = attributes,
                                 selector = selector,
                             ) {
-                                // Use regular Compose Icon without tint to preserve PNG colors
-                                androidx.compose.material3.Icon(
-                                    painter = androidx.compose.ui.res.painterResource(R.drawable.chat),
-                                    contentDescription = null,
-                                    tint = androidx.compose.ui.graphics.Color.Unspecified,
-                                    modifier = Modifier.size(34.dp) // 1.4x of typical 24dp icon size
-                                )
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (evaluator.state.isAiChatLoading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            strokeWidth = 2.dp,
+                                            color = Color(0xFF23C546) // Green loading color same as MagicWand buttons
+                                        )
+                                    } else {
+                                        // Use regular Compose Icon without tint to preserve PNG colors
+                                        androidx.compose.material3.Icon(
+                                            painter = androidx.compose.ui.res.painterResource(R.drawable.chat),
+                                            contentDescription = null,
+                                            tint = androidx.compose.ui.graphics.Color.Unspecified,
+                                            modifier = Modifier.size(34.dp) // 1.4x of typical 24dp icon size
+                                        )
+                                    }
+                                }
                             }
                         } else if (imageVector != null) {
                             SnyggBox(
