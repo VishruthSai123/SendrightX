@@ -837,17 +837,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         }
     }
 
-    /**
-     * Handles a [KeyCode.TRANSLATE] event.
-     * Shows the translation panel directly instead of going through MagicWand panel.
-     */
-    private fun handleTranslate() {
-        activeState.isTranslationPanelVisible = true
-        activeState.isMagicWandPanelVisible = false
-        activeState.isActionsOverflowVisible = false
-        activeState.isActionsEditorVisible = false
-        activeState.isActionResultPanelVisible = false
-    }
+
 
     /**
      * Closes the magic wand panel if it's currently visible.
@@ -1176,7 +1166,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.TOGGLE_AUTOCORRECT -> scope.launch { handleToggleAutocorrect() }
             KeyCode.MAGIC_WAND -> handleMagicWand()
             KeyCode.AI_CHAT -> handleAiChat()
-            KeyCode.TRANSLATE -> handleTranslate()
+            KeyCode.TRANSLATE -> activeState.imeUiMode = ImeUiMode.TRANSLATE
             KeyCode.UNDO -> editorInstance.performUndo()
             KeyCode.VIEW_CHARACTERS -> activeState.keyboardMode = KeyboardMode.CHARACTERS
             KeyCode.VIEW_NUMERIC -> activeState.keyboardMode = KeyboardMode.NUMERIC
