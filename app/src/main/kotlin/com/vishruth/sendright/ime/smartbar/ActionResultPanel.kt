@@ -385,6 +385,10 @@ class ActionResultPanelManager(
 ) {
     private var _state by mutableStateOf(ActionResultState())
     val state: ActionResultState get() = _state
+    
+    // StateFlow for the new ActionResultInputLayout
+    private val _currentState = kotlinx.coroutines.flow.MutableStateFlow(ActionResultState())
+    val currentState: kotlinx.coroutines.flow.StateFlow<ActionResultState> = _currentState
 
     private val undoStack = mutableListOf<String>()
     private val redoStack = mutableListOf<String>()
@@ -392,6 +396,12 @@ class ActionResultPanelManager(
     // Flag to prevent auto-close during undo/redo operations
     private var _isPerformingUndoRedo by mutableStateOf(false)
     val isPerformingUndoRedo: Boolean get() = _isPerformingUndoRedo
+    
+    // Helper method to update both state properties consistently
+    private fun updateState(newState: ActionResultState) {
+        _state = newState
+        _currentState.value = newState
+    }
 
     companion object {
         private var instance: ActionResultPanelManager? = null
@@ -418,13 +428,13 @@ class ActionResultPanelManager(
         actionTitle: String,
         instruction: String
     ) {
-        _state = _state.copy(
+        updateState(_state.copy(
             originalText = originalText,
             transformedText = transformedText,
             actionTitle = actionTitle,
             instruction = instruction,
             isLoading = false
-        )
+        ))
         updateUndoRedoState()
     }
 
@@ -450,7 +460,7 @@ class ActionResultPanelManager(
             context.showShortToast("Applied")
             
             // Update state
-            _state = _state.copy(originalText = _state.transformedText)
+            updateState(_state.copy(originalText = _state.transformedText))
             updateUndoRedoState()
             
             // Record successful action for review tracking
@@ -490,12 +500,12 @@ class ActionResultPanelManager(
     suspend fun regenerateText() {
         if (_state.isLoading) return
         
-        _state = _state.copy(isLoading = true)
+        updateState(_state.copy(isLoading = true))
         
         try {
             // Check network connectivity
             if (!NetworkUtils.checkNetworkAndShowToast(context)) {
-                _state = _state.copy(isLoading = false)
+                updateState(_state.copy(isLoading = false))
                 return
             }
             
@@ -505,21 +515,22 @@ class ActionResultPanelManager(
             result.onSuccess { newTransformedText ->
                 if (newTransformedText.isBlank()) {
                     // Empty response - no toast needed
+                    updateState(_state.copy(isLoading = false))
                 } else {
-                    _state = _state.copy(
+                    updateState(_state.copy(
                         transformedText = newTransformedText,
                         isLoading = false
-                    )
+                    ))
                     // Remove toast after response is generated
                 }
             }.onFailure { error ->
                 context.showShortToast("Regenerate failed")
-                _state = _state.copy(isLoading = false)
+                updateState(_state.copy(isLoading = false))
             }
             
         } catch (e: Exception) {
             context.showShortToast("Regenerate error")
-            _state = _state.copy(isLoading = false)
+            updateState(_state.copy(isLoading = false))
         }
     }
 
@@ -544,7 +555,7 @@ class ActionResultPanelManager(
                     editorInstance.deleteSelectedText()
                     editorInstance.commitText(previousText)
                     
-                    _state = _state.copy(originalText = previousText)
+                    updateState(_state.copy(originalText = previousText))
                     updateUndoRedoState()
                     
                 } catch (e: Exception) {
@@ -577,7 +588,7 @@ class ActionResultPanelManager(
                     editorInstance.deleteSelectedText()
                     editorInstance.commitText(nextText)
                     
-                    _state = _state.copy(originalText = nextText)
+                    updateState(_state.copy(originalText = nextText))
                     updateUndoRedoState()
                     
                 } catch (e: Exception) {
@@ -645,20 +656,57 @@ class ActionResultPanelManager(
      * Update undo/redo button states
      */
     private fun updateUndoRedoState() {
-        _state = _state.copy(
+        updateState(_state.copy(
             canUndo = undoStack.isNotEmpty(),
             canRedo = redoStack.isNotEmpty(),
             undoStack = undoStack.toList(),
             redoStack = redoStack.toList()
-        )
+        ))
     }
 
     /**
      * Reset the manager state
      */
     fun reset() {
-        _state = ActionResultState()
+        updateState(ActionResultState())
         undoStack.clear()
         redoStack.clear()
+    }
+    
+    // Wrapper methods for ActionResultInputLayout compatibility
+    fun acceptResult() {
+        kotlinx.coroutines.GlobalScope.launch {
+            acceptText()
+        }
+    }
+    
+    fun rejectResult() {
+        kotlinx.coroutines.GlobalScope.launch {
+            rejectText()
+        }
+    }
+    
+    fun regenerateResult() {
+        kotlinx.coroutines.GlobalScope.launch {
+            regenerateText()
+        }
+    }
+    
+    fun undoResult() {
+        kotlinx.coroutines.GlobalScope.launch {
+            undoText()
+        }
+    }
+    
+    fun redoResult() {
+        kotlinx.coroutines.GlobalScope.launch {
+            redoText()
+        }
+    }
+    
+    fun flagResult() {
+        kotlinx.coroutines.GlobalScope.launch {
+            flagResponse()
+        }
     }
 }

@@ -100,6 +100,7 @@ import com.vishruth.key1.ime.smartbar.ExtendedActionsPlacement
 import com.vishruth.key1.ime.smartbar.SmartbarLayout
 import com.vishruth.key1.ime.smartbar.quickaction.QuickActionsEditorPanel
 import com.vishruth.key1.ime.smartbar.ActionResultPanelManager
+import com.vishruth.key1.ime.smartbar.ActionResultInputLayout
 import com.vishruth.key1.ime.text.TextInputLayout
 import com.vishruth.key1.ime.translate.TranslateInputLayout
 import com.vishruth.key1.ime.theme.FlorisImeTheme
@@ -702,6 +703,7 @@ class FlorisImeService : LifecycleInputMethodService() {
                                 ImeUiMode.MEDIA -> MediaInputLayout()
                                 ImeUiMode.CLIPBOARD -> ClipboardInputLayout()
                                 ImeUiMode.TRANSLATE -> TranslateInputLayout()
+                                ImeUiMode.ACTION_RESULT -> ActionResultInputLayout()
                             }
                         }
                     }

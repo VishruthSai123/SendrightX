@@ -862,7 +862,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * Shows the action result panel and hides other panels
      */
     fun showActionResultPanel() {
-        activeState.isActionResultPanelVisible = true
+        activeState.imeUiMode = ImeUiMode.ACTION_RESULT
+        activeState.isActionResultPanelVisible = false // No longer needed as panel
         activeState.isMagicWandPanelVisible = false
         activeState.isTranslationPanelVisible = false
         activeState.isActionsOverflowVisible = false
