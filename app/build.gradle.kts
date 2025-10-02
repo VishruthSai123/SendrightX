@@ -128,6 +128,12 @@ android {
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
+            
+            // Add Premium API keys for Pro users (secure from local.properties) - Same fallback safety as free users
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_1", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_2", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_3", "")}\"")
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
@@ -153,6 +159,12 @@ android {
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
+            
+            // Add Premium API keys for Pro users (secure from local.properties) - Same fallback safety as free users
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_1", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_2", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_3", "")}\"")
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
@@ -174,6 +186,12 @@ android {
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
+            
+            // Add Premium API keys for Pro users (secure from local.properties) - Same fallback safety as free users
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_1", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_2", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_3", "")}\"")
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
@@ -194,6 +212,12 @@ android {
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
             buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
+            
+            // Add Premium API keys for Pro users (secure from local.properties) - Same fallback safety as free users
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_1", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_2", "")}\"")
+            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_3", "")}\"")
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")

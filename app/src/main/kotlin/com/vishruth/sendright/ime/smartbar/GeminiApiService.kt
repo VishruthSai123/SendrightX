@@ -20,6 +20,8 @@ import android.content.Context
 import com.vishruth.key1.BuildConfig
 import com.vishruth.sendright.lib.network.NetworkUtils
 import com.vishruth.key1.ime.smartbar.MagicWandInstructions
+import com.vishruth.key1.user.UserManager
+import com.vishruth.key1.ime.ai.AiUsageTracker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -33,16 +35,29 @@ import java.net.SocketTimeoutException
 import java.net.URL
 
 object GeminiApiService {
-    private val API_KEYS = listOf(
+    // Free user API keys (existing system)
+    private val FREE_API_KEYS = listOf(
         BuildConfig.GEMINI_API_KEY,
         BuildConfig.GEMINI_API_KEY_FALLBACK_1,
         BuildConfig.GEMINI_API_KEY_FALLBACK_2,
         BuildConfig.GEMINI_API_KEY_FALLBACK_3
     ).filter { it.isNotBlank() } // Only use non-empty API keys
     
-    private var currentApiKeyIndex = 0
-    private val keyLastRequestTime = mutableMapOf<Int, Long>() // Track per-key timing
-    private val keyFailureCount = mutableMapOf<Int, Int>() // Track key health
+    // Premium API keys for pro users - Same level of fallback safety as free users
+    private val PREMIUM_API_KEYS = listOf(
+        BuildConfig.GEMINI_API_KEY_PREMIUM,
+        BuildConfig.GEMINI_API_KEY_PREMIUM_FALLBACK_1,
+        BuildConfig.GEMINI_API_KEY_PREMIUM_FALLBACK_2,
+        BuildConfig.GEMINI_API_KEY_PREMIUM_FALLBACK_3
+    ).filter { it.isNotBlank() } // Only use non-empty API keys
+    
+    // Separate tracking for free and premium keys
+    private var currentFreeApiKeyIndex = 0
+    private var currentPremiumApiKeyIndex = 0
+    private val freeKeyLastRequestTime = mutableMapOf<Int, Long>() // Track per-key timing for free
+    private val premiumKeyLastRequestTime = mutableMapOf<Int, Long>() // Track per-key timing for premium
+    private val freeKeyFailureCount = mutableMapOf<Int, Int>() // Track key health for free
+    private val premiumKeyFailureCount = mutableMapOf<Int, Int>() // Track key health for premium
     private const val ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     private const val MIN_REQUEST_INTERVAL = 1000L // 1 second between requests (saves quota)
     private const val MAX_RETRY_ATTEMPTS = 1 // Only 1 retry per key (saves quota)
@@ -76,6 +91,62 @@ object GeminiApiService {
     
     private val json = Json { ignoreUnknownKeys = true }
     
+    /**
+     * Check if the user is a pro user from multiple sources
+     */
+    private fun isProUser(): Boolean {
+        return try {
+            val aiUsageTracker = AiUsageTracker.getInstance()
+            aiUsageTracker.isProUser()
+        } catch (e: Exception) {
+            false // Default to free user if there's any error
+        }
+    }
+    
+    /**
+     * Get the appropriate API keys based on user subscription status
+     */
+    private fun getApiKeysForUser(): List<String> {
+        return if (isProUser()) {
+            PREMIUM_API_KEYS
+        } else {
+            FREE_API_KEYS
+        }
+    }
+    
+    /**
+     * Get the current API key index based on user type
+     */
+    private fun getCurrentApiKeyIndex(): Int {
+        return if (isProUser()) {
+            currentPremiumApiKeyIndex
+        } else {
+            currentFreeApiKeyIndex
+        }
+    }
+    
+    /**
+     * Set the current API key index based on user type
+     */
+    private fun setCurrentApiKeyIndex(index: Int) {
+        if (isProUser()) {
+            currentPremiumApiKeyIndex = index
+        } else {
+            currentFreeApiKeyIndex = index
+        }
+    }
+    
+    /**
+     * Get the appropriate key tracking maps based on user type
+     */
+    private fun getKeyMaps(): Triple<MutableMap<Int, Long>, MutableMap<Int, Int>, Int> {
+        return if (isProUser()) {
+            Triple(premiumKeyLastRequestTime, premiumKeyFailureCount, currentPremiumApiKeyIndex)
+        } else {
+            Triple(freeKeyLastRequestTime, freeKeyFailureCount, currentFreeApiKeyIndex)
+        }
+    }
+    
     suspend fun transformText(inputText: String, instruction: String, context: Context? = null): Result<String> = withContext(Dispatchers.IO) {
         // Check network connectivity if context is provided
         context?.let {
@@ -84,20 +155,25 @@ object GeminiApiService {
             }
         }
         
+        // Get appropriate API keys based on user subscription status
+        val apiKeys = getApiKeysForUser()
+        val userType = if (isProUser()) "Premium" else "Free"
+        
         // Validate API keys
-        if (API_KEYS.isEmpty()) {
-            return@withContext Result.failure(Exception("🔑 API key not configured. Please check settings."))
+        if (apiKeys.isEmpty()) {
+            return@withContext Result.failure(Exception("🔑 $userType API key not configured. Please check settings."))
         }
         
         // Strategy 1: Try primary key with fast timeout
-        val primaryResult = makeApiRequestWithFastTimeout(inputText, instruction, currentApiKeyIndex)
+        val currentIndex = getCurrentApiKeyIndex()
+        val primaryResult = makeApiRequestWithFastTimeout(inputText, instruction, currentIndex, apiKeys)
         primaryResult.fold(
             onSuccess = { 
-                markKeyAsHealthy(currentApiKeyIndex)
+                markKeyAsHealthy(currentIndex)
                 return@withContext primaryResult 
             },
             onFailure = { error ->
-                markKeyAsUnhealthy(currentApiKeyIndex)
+                markKeyAsUnhealthy(currentIndex)
                 
                 // Check if it's a permanent failure that warrants immediate fallback
                 val shouldImmediatelyTryFallback = error is IOException && (
@@ -110,10 +186,10 @@ object GeminiApiService {
                 if (!shouldImmediatelyTryFallback) {
                     // Strategy 2: Quick retry with primary key (only for temporary issues)
                     delay(FAST_RETRY_DELAY_MS)
-                    val retryResult = makeApiRequestWithFastTimeout(inputText, instruction, currentApiKeyIndex)
+                    val retryResult = makeApiRequestWithFastTimeout(inputText, instruction, currentIndex, apiKeys)
                     retryResult.fold(
                         onSuccess = { 
-                            markKeyAsHealthy(currentApiKeyIndex)
+                            markKeyAsHealthy(currentIndex)
                             return@withContext retryResult 
                         },
                         onFailure = { /* Continue to fallback strategy */ }
@@ -123,16 +199,17 @@ object GeminiApiService {
         )
         
         // Strategy 3: Smart sequential fallback (try up to 2 keys one by one - saves quota)
-        if (API_KEYS.size > 1) {
-            return@withContext tryLimitedSequentialFallback(inputText, instruction)
+        if (apiKeys.size > 1) {
+            return@withContext tryLimitedSequentialFallback(inputText, instruction, apiKeys)
         }
         
         // No fallback keys available
         return@withContext Result.failure(Exception("❌ All services unavailable. Please try again later."))
     }
     
-    private suspend fun tryLimitedSequentialFallback(inputText: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
-        val availableKeys = API_KEYS.indices.filter { it != currentApiKeyIndex }
+    private suspend fun tryLimitedSequentialFallback(inputText: String, instruction: String, apiKeys: List<String>): Result<String> = withContext(Dispatchers.IO) {
+        val currentIndex = getCurrentApiKeyIndex()
+        val availableKeys = apiKeys.indices.filter { it != currentIndex }
         if (availableKeys.isEmpty()) {
             return@withContext Result.failure(Exception("❌ No fallback keys available"))
         }
@@ -141,12 +218,12 @@ object GeminiApiService {
         val bestKeys = availableKeys.sortedBy { getKeyFailureCount(it) }.take(MAX_FALLBACK_KEYS)
         
         for ((attemptIndex, keyIndex) in bestKeys.withIndex()) {
-            val result = makeApiRequestWithFastTimeout(inputText, instruction, keyIndex)
+            val result = makeApiRequestWithFastTimeout(inputText, instruction, keyIndex, apiKeys)
             
             result.fold(
                 onSuccess = { response ->
                     // Success! Switch to this key and return
-                    currentApiKeyIndex = keyIndex
+                    setCurrentApiKeyIndex(keyIndex)
                     markKeyAsHealthy(keyIndex)
                     return@withContext Result.success(response)
                 },
@@ -165,17 +242,18 @@ object GeminiApiService {
         return@withContext Result.failure(Exception("❌ Unexpected fallback error"))
     }
     
-    private suspend fun trySequentialFallback(inputText: String, instruction: String): Result<String> {
+    private suspend fun trySequentialFallback(inputText: String, instruction: String, apiKeys: List<String>): Result<String> {
         // Try remaining keys with fast timeouts
-        val remainingKeys = API_KEYS.indices.filter { it != currentApiKeyIndex }
+        val currentIndex = getCurrentApiKeyIndex()
+        val remainingKeys = apiKeys.indices.filter { it != currentIndex }
             .sortedBy { getKeyFailureCount(it) } // Try healthiest keys first
         
         for (keyIndex in remainingKeys) {
-            val result = makeApiRequestWithFastTimeout(inputText, instruction, keyIndex)
+            val result = makeApiRequestWithFastTimeout(inputText, instruction, keyIndex, apiKeys)
             result.fold(
                 onSuccess = { 
                     markKeyAsHealthy(keyIndex)
-                    currentApiKeyIndex = keyIndex // Switch to working key
+                    setCurrentApiKeyIndex(keyIndex) // Switch to working key
                     return result
                 },
                 onFailure = { markKeyAsUnhealthy(keyIndex) }
@@ -189,27 +267,31 @@ object GeminiApiService {
     }
     
     private fun markKeyAsHealthy(keyIndex: Int) {
-        keyFailureCount[keyIndex] = 0
+        val (_, failureMap, _) = getKeyMaps()
+        failureMap[keyIndex] = 0
     }
     
     private fun markKeyAsUnhealthy(keyIndex: Int) {
-        keyFailureCount[keyIndex] = (keyFailureCount[keyIndex] ?: 0) + 1
+        val (_, failureMap, _) = getKeyMaps()
+        failureMap[keyIndex] = (failureMap[keyIndex] ?: 0) + 1
     }
     
     private fun getKeyFailureCount(keyIndex: Int): Int {
-        return keyFailureCount[keyIndex] ?: 0
+        val (_, failureMap, _) = getKeyMaps()
+        return failureMap[keyIndex] ?: 0
     }
     
-    private suspend fun makeApiRequestWithFastTimeout(inputText: String, instruction: String, apiKeyIndex: Int): Result<String> = withContext(Dispatchers.IO) {
+    private suspend fun makeApiRequestWithFastTimeout(inputText: String, instruction: String, apiKeyIndex: Int, apiKeys: List<String>): Result<String> = withContext(Dispatchers.IO) {
         try {
             // Per-key rate limiting for better performance
+            val (requestTimeMap, _, _) = getKeyMaps()
             val currentTime = System.currentTimeMillis()
-            val lastRequestTime = keyLastRequestTime[apiKeyIndex] ?: 0L
+            val lastRequestTime = requestTimeMap[apiKeyIndex] ?: 0L
             val timeSinceLastRequest = currentTime - lastRequestTime
             if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
                 delay(MIN_REQUEST_INTERVAL - timeSinceLastRequest)
             }
-            keyLastRequestTime[apiKeyIndex] = System.currentTimeMillis()
+            requestTimeMap[apiKeyIndex] = System.currentTimeMillis()
             
             val prompt = buildPrompt(inputText, instruction)
             val requestBody = GeminiRequest(
@@ -220,7 +302,7 @@ object GeminiApiService {
                 )
             )
             
-            val url = URL("$ENDPOINT?key=${API_KEYS[apiKeyIndex]}")
+            val url = URL("$ENDPOINT?key=${apiKeys[apiKeyIndex]}")
             val connection = url.openConnection() as HttpURLConnection
             
             connection.apply {
@@ -271,20 +353,22 @@ object GeminiApiService {
         }
     }
     
-    private suspend fun makeApiRequest(inputText: String, instruction: String, apiKeyIndex: Int): Result<String> = withContext(Dispatchers.IO) {
+    private suspend fun makeApiRequest(inputText: String, instruction: String, apiKeyIndex: Int, apiKeys: List<String>): Result<String> = withContext(Dispatchers.IO) {
         // Legacy method for backwards compatibility
-        return@withContext makeApiRequestWithFastTimeout(inputText, instruction, apiKeyIndex)
+        return@withContext makeApiRequestWithFastTimeout(inputText, instruction, apiKeyIndex, apiKeys)
     }
     
     /**
      * Get information about the current API key configuration
      */
     fun getApiKeyInfo(): String {
-        val healthyKeys = API_KEYS.indices.count { getKeyFailureCount(it) == 0 }
+        val apiKeys = getApiKeysForUser()
+        val userType = if (isProUser()) "Premium" else "Free"
+        val healthyKeys = apiKeys.indices.count { getKeyFailureCount(it) == 0 }
         return when {
-            API_KEYS.isEmpty() -> "No API keys configured"
-            API_KEYS.size == 1 -> "1 API key configured (no fallbacks)"
-            else -> "${API_KEYS.size} API keys configured (1 primary + ${API_KEYS.size - 1} fallbacks) - $healthyKeys healthy"
+            apiKeys.isEmpty() -> "No $userType API keys configured"
+            apiKeys.size == 1 -> "1 $userType API key configured (no fallbacks)"
+            else -> "${apiKeys.size} $userType API keys configured (1 primary + ${apiKeys.size - 1} fallbacks) - $healthyKeys healthy"
         }
     }
     
@@ -292,23 +376,30 @@ object GeminiApiService {
      * Reset to primary API key (for testing purposes)
      */
     fun resetToPrimaryKey() {
-        currentApiKeyIndex = 0
-        keyFailureCount.clear()
-        keyLastRequestTime.clear()
+        if (isProUser()) {
+            currentPremiumApiKeyIndex = 0
+            premiumKeyFailureCount.clear()
+            premiumKeyLastRequestTime.clear()
+        } else {
+            currentFreeApiKeyIndex = 0
+            freeKeyFailureCount.clear()
+            freeKeyLastRequestTime.clear()
+        }
     }
     
     /**
      * Get the healthiest API key index (lowest failure count)
      */
     fun getHealthiestKeyIndex(): Int {
-        return API_KEYS.indices.minByOrNull { getKeyFailureCount(it) } ?: 0
+        val apiKeys = getApiKeysForUser()
+        return apiKeys.indices.minByOrNull { getKeyFailureCount(it) } ?: 0
     }
     
     /**
      * Switch to the healthiest API key
      */
     fun switchToHealthiestKey() {
-        currentApiKeyIndex = getHealthiestKeyIndex()
+        setCurrentApiKeyIndex(getHealthiestKeyIndex())
     }
     
     private fun buildPrompt(inputText: String, instruction: String): String {
