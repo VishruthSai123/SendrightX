@@ -182,6 +182,7 @@ fun TranslateInputLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(FlorisImeSizing.keyboardRowBaseHeight * 0.8f),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             KeyboardLikeButton(
                 elementName = FlorisImeUi.MediaBottomRowButton.elementName,
@@ -194,8 +195,16 @@ fun TranslateInputLayout(
                     contentDescription = "Back to keyboard"
                 )
             }
+            
+            SnyggText(
+                elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                text = "Translation",
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 4.dp)
+            )
+            
             Spacer(modifier = Modifier.weight(1f))
-            // Optional: Add other header buttons here if needed
         }
         
         // Main content area
@@ -211,13 +220,6 @@ fun TranslateInputLayout(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Section Header
-                    SnyggText(
-                        elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                        text = "Translation",
-                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp)
-                    )
-                    
                     // Process buttons in rows of 2, but handle odd numbers correctly
                     for (i in translationButtons.indices step 2) {
                         if (i + 1 < translationButtons.size) {

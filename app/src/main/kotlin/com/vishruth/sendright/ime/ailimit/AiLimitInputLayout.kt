@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.vishruth.key1.ime.ImeUiMode
 import com.vishruth.key1.ime.keyboard.FlorisImeSizing
 import com.vishruth.key1.ime.smartbar.AiLimitPanel
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import com.vishruth.key1.keyboardManager
 
 @Composable

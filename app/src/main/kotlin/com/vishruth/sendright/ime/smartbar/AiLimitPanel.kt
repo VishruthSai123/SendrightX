@@ -64,6 +64,8 @@ import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.ime.keyboard.FlorisImeSizing
 import com.vishruth.key1.ime.theme.FlorisImeTheme
 import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.ime.media.KeyboardLikeButton
+import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import com.vishruth.key1.keyboardManager
 import com.vishruth.key1.user.UserManager
 import kotlinx.coroutines.launch
@@ -71,6 +73,7 @@ import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggButton
 import org.florisboard.lib.snygg.ui.SnyggColumn
+import org.florisboard.lib.snygg.ui.SnyggRow
 import org.florisboard.lib.snygg.ui.SnyggText
 
 // Extension function to find the activity context
@@ -126,37 +129,34 @@ fun AiLimitPanel(
             modifier = modifier
         ) {
             // Header with back button
-            SnyggBox(
+            SnyggRow(
                 elementName = FlorisImeUi.MediaBottomRow.elementName,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(FlorisImeSizing.keyboardRowBaseHeight * 0.8f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                KeyboardLikeButton(
+                    elementName = FlorisImeUi.MediaBottomRowButton.elementName,
+                    inputEventDispatcher = keyboardManager.inputEventDispatcher,
+                    keyData = TextKeyData.IME_UI_MODE_TEXT,
+                    modifier = Modifier.fillMaxHeight(),
                 ) {
-                    SnyggButton(
-                        elementName = FlorisImeUi.MediaBottomRowButton.elementName,
-                        onClick = onDismiss,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                    
-                    SnyggText(
-                        elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                        text = "AI Usage Limit",
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 16.dp)
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back to keyboard"
                     )
                 }
+                
+                SnyggText(
+                    elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                    text = "AI Usage Limit",
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 4.dp)
+                )
+                
+                Spacer(modifier = Modifier.weight(1f))
             }
             
             // Content area

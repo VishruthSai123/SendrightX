@@ -85,6 +85,7 @@ fun ActionResultInputLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(FlorisImeSizing.keyboardRowBaseHeight * 0.8f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 KeyboardLikeButton(
                     elementName = FlorisImeUi.MediaBottomRowButton.elementName,
