@@ -17,6 +17,7 @@
 package com.vishruth.key1.ime.translate
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -167,7 +170,26 @@ fun TranslateInputLayout(
         }
     }
     
-    val translationButtons = listOf("Telugu", "Hindi", "Tamil", "English", "Multi")
+    // Basic languages - always visible
+    val basicLanguages = listOf("Telugu", "Tamil", "Hindi", "English")
+    
+    // Indian languages - in dropdown
+    val indianLanguages = listOf(
+        "Malayalam", "Kannada", "Bengali", "Gujarati", 
+        "Marathi", "Punjabi", "Urdu", "Assamese"
+    )
+    
+    // International languages - in dropdown
+    val internationalLanguages = listOf(
+        "Spanish", "French", "German", "Italian", "Portuguese",
+        "Chinese", "Japanese", "Korean", "Arabic", "Russian",
+        "Malay", "Dutch", "Swedish", "Norwegian", "Polish",
+        "Turkish", "Greek", "Hebrew", "Thai", "Vietnamese"
+    )
+    
+    // Dropdown states
+    var showIndianDropdown by remember { mutableStateOf(false) }
+    var showInternationalDropdown by remember { mutableStateOf(false) }
     
     // Full screen layout like MediaInputLayout
     SnyggColumn(
@@ -214,16 +236,23 @@ fun TranslateInputLayout(
                 .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Translation buttons section
+            // Basic Languages Section
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Process buttons in rows of 2, but handle odd numbers correctly
-                    for (i in translationButtons.indices step 2) {
-                        if (i + 1 < translationButtons.size) {
-                            // Two buttons in this row
+                    Text(
+                        text = "Basic Languages",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    // Basic language buttons in rows of 2
+                    for (i in basicLanguages.indices step 2) {
+                        if (i + 1 < basicLanguages.size) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -231,12 +260,12 @@ fun TranslateInputLayout(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 TranslationActionButton(
-                                    button = TranslationButton(title = translationButtons[i]),
-                                    isLoading = loadingButton == translationButtons[i],
+                                    button = TranslationButton(title = basicLanguages[i]),
+                                    isLoading = loadingButton == basicLanguages[i],
                                     onClick = { 
                                         scope.launch {
                                             handleTranslationAction(
-                                                buttonTitle = translationButtons[i],
+                                                buttonTitle = basicLanguages[i],
                                                 editorInstance = editorInstance,
                                                 context = context,
                                                 aiUsageTracker = aiUsageTracker,
@@ -251,12 +280,12 @@ fun TranslateInputLayout(
                                     modifier = Modifier.weight(1f)
                                 )
                                 TranslationActionButton(
-                                    button = TranslationButton(title = translationButtons[i + 1]),
-                                    isLoading = loadingButton == translationButtons[i + 1],
+                                    button = TranslationButton(title = basicLanguages[i + 1]),
+                                    isLoading = loadingButton == basicLanguages[i + 1],
                                     onClick = { 
                                         scope.launch {
                                             handleTranslationAction(
-                                                buttonTitle = translationButtons[i + 1],
+                                                buttonTitle = basicLanguages[i + 1],
                                                 editorInstance = editorInstance,
                                                 context = context,
                                                 aiUsageTracker = aiUsageTracker,
@@ -272,14 +301,13 @@ fun TranslateInputLayout(
                                 )
                             }
                         } else {
-                            // Single button in this row - take full width without extra spacing
                             TranslationActionButton(
-                                button = TranslationButton(title = translationButtons[i]),
-                                isLoading = loadingButton == translationButtons[i],
+                                button = TranslationButton(title = basicLanguages[i]),
+                                isLoading = loadingButton == basicLanguages[i],
                                 onClick = { 
                                     scope.launch {
                                         handleTranslationAction(
-                                            buttonTitle = translationButtons[i],
+                                            buttonTitle = basicLanguages[i],
                                             editorInstance = editorInstance,
                                             context = context,
                                             aiUsageTracker = aiUsageTracker,
@@ -295,6 +323,222 @@ fun TranslateInputLayout(
                                     .fillMaxWidth()
                                     .padding(horizontal = 12.dp)
                             )
+                        }
+                    }
+                }
+            }
+            
+            // Indian Languages Section
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Indian languages dropdown header
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showIndianDropdown = !showIndianDropdown }
+                            .padding(vertical = 8.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SnyggText(
+                            elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                            text = "Indian Languages",
+                            modifier = Modifier.weight(1f)
+                        )
+                        
+                        Icon(
+                            imageVector = if (showIndianDropdown) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (showIndianDropdown) "Collapse" else "Expand",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    // Indian languages grid when expanded
+                    if (showIndianDropdown) {
+                        for (i in indianLanguages.indices step 2) {
+                            if (i + 1 < indianLanguages.size) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    TranslationActionButton(
+                                        button = TranslationButton(title = indianLanguages[i]),
+                                        isLoading = loadingButton == indianLanguages[i],
+                                        onClick = { 
+                                            scope.launch {
+                                                handleTranslationAction(
+                                                    buttonTitle = indianLanguages[i],
+                                                    editorInstance = editorInstance,
+                                                    context = context,
+                                                    aiUsageTracker = aiUsageTracker,
+                                                    isProUser = isProUser,
+                                                    userManager = userManager,
+                                                    onLoadingStart = { loadingButton = it },
+                                                    onLoadingEnd = { loadingButton = null },
+                                                    onShowLimitDialog = { showLimitDialog = true }
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    TranslationActionButton(
+                                        button = TranslationButton(title = indianLanguages[i + 1]),
+                                        isLoading = loadingButton == indianLanguages[i + 1],
+                                        onClick = { 
+                                            scope.launch {
+                                                handleTranslationAction(
+                                                    buttonTitle = indianLanguages[i + 1],
+                                                    editorInstance = editorInstance,
+                                                    context = context,
+                                                    aiUsageTracker = aiUsageTracker,
+                                                    isProUser = isProUser,
+                                                    userManager = userManager,
+                                                    onLoadingStart = { loadingButton = it },
+                                                    onLoadingEnd = { loadingButton = null },
+                                                    onShowLimitDialog = { showLimitDialog = true }
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            } else {
+                                TranslationActionButton(
+                                    button = TranslationButton(title = indianLanguages[i]),
+                                    isLoading = loadingButton == indianLanguages[i],
+                                    onClick = { 
+                                        scope.launch {
+                                            handleTranslationAction(
+                                                buttonTitle = indianLanguages[i],
+                                                editorInstance = editorInstance,
+                                                context = context,
+                                                aiUsageTracker = aiUsageTracker,
+                                                isProUser = isProUser,
+                                                userManager = userManager,
+                                                onLoadingStart = { loadingButton = it },
+                                                onLoadingEnd = { loadingButton = null },
+                                                onShowLimitDialog = { showLimitDialog = true }
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // International Languages Section
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // International languages dropdown header
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showInternationalDropdown = !showInternationalDropdown }
+                            .padding(vertical = 8.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SnyggText(
+                            elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                            text = "International Languages",
+                            modifier = Modifier.weight(1f)
+                        )
+                        
+                        Icon(
+                            imageVector = if (showInternationalDropdown) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (showInternationalDropdown) "Collapse" else "Expand",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    // International languages grid when expanded
+                    if (showInternationalDropdown) {
+                        for (i in internationalLanguages.indices step 2) {
+                            if (i + 1 < internationalLanguages.size) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    TranslationActionButton(
+                                        button = TranslationButton(title = internationalLanguages[i]),
+                                        isLoading = loadingButton == internationalLanguages[i],
+                                        onClick = { 
+                                            scope.launch {
+                                                handleTranslationAction(
+                                                    buttonTitle = internationalLanguages[i],
+                                                    editorInstance = editorInstance,
+                                                    context = context,
+                                                    aiUsageTracker = aiUsageTracker,
+                                                    isProUser = isProUser,
+                                                    userManager = userManager,
+                                                    onLoadingStart = { loadingButton = it },
+                                                    onLoadingEnd = { loadingButton = null },
+                                                    onShowLimitDialog = { showLimitDialog = true }
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    TranslationActionButton(
+                                        button = TranslationButton(title = internationalLanguages[i + 1]),
+                                        isLoading = loadingButton == internationalLanguages[i + 1],
+                                        onClick = { 
+                                            scope.launch {
+                                                handleTranslationAction(
+                                                    buttonTitle = internationalLanguages[i + 1],
+                                                    editorInstance = editorInstance,
+                                                    context = context,
+                                                    aiUsageTracker = aiUsageTracker,
+                                                    isProUser = isProUser,
+                                                    userManager = userManager,
+                                                    onLoadingStart = { loadingButton = it },
+                                                    onLoadingEnd = { loadingButton = null },
+                                                    onShowLimitDialog = { showLimitDialog = true }
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            } else {
+                                TranslationActionButton(
+                                    button = TranslationButton(title = internationalLanguages[i]),
+                                    isLoading = loadingButton == internationalLanguages[i],
+                                    onClick = { 
+                                        scope.launch {
+                                            handleTranslationAction(
+                                                buttonTitle = internationalLanguages[i],
+                                                editorInstance = editorInstance,
+                                                context = context,
+                                                aiUsageTracker = aiUsageTracker,
+                                                isProUser = isProUser,
+                                                userManager = userManager,
+                                                onLoadingStart = { loadingButton = it },
+                                                onLoadingEnd = { loadingButton = null },
+                                                onShowLimitDialog = { showLimitDialog = true }
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp)
+                                )
+                            }
                         }
                     }
                 }
