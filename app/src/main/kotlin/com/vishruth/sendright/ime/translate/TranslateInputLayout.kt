@@ -66,6 +66,7 @@ import com.vishruth.key1.ime.smartbar.GeminiApiService
 import com.vishruth.key1.ime.smartbar.MagicWandInstructions
 import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import com.vishruth.key1.ime.theme.FlorisImeUi
+import com.vishruth.key1.ime.ImeUiMode
 import com.vishruth.key1.keyboardManager
 import com.vishruth.key1.lib.ads.RewardedAdManager
 import com.vishruth.key1.lib.devtools.flogDebug
@@ -510,18 +511,9 @@ suspend fun handleTranslationAction(
                     onLoadingEnd()
                 }
             } else {
-                // Force refresh the UI by getting the latest stats
-                val updatedStats = aiUsageTracker.getUsageStats()
-                val canUseAd = userManager.canUseRewardedAd()
-                
-                if (updatedStats.remainingActions() == 0) {
-                    if (canUseAd) {
-                        context.showShortToast("Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI.")
-                        onShowLimitDialog()
-                    } else {
-                        context.showShortToast("You've reached your daily limit and used your free ad. Upgrade to Pro or wait until tomorrow!")
-                    }
-                }
+                // Show AI limit panel as layout when limits are exceeded
+                val keyboardManager = context.keyboardManager().value
+                keyboardManager.activeState.imeUiMode = ImeUiMode.AI_LIMIT
             }
         }
     } catch (e: Exception) {

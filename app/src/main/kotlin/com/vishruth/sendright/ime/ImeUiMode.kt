@@ -21,7 +21,8 @@ enum class ImeUiMode(val value: Int) {
     MEDIA(1),
     CLIPBOARD(2),
     TRANSLATE(3),
-    ACTION_RESULT(4);
+    ACTION_RESULT(4),
+    AI_LIMIT(5);
 
     companion object {
         fun fromInt(int: Int) = entries.firstOrNull { it.value == int } ?: TEXT

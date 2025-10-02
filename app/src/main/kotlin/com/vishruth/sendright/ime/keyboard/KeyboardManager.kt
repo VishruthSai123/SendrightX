@@ -795,6 +795,19 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      */
     private fun handleAiChat() {
         scope.launch {
+            // Check AI usage limits first (same as MagicWandPanel and TranslateInputLayout)
+            val userManager = com.vishruth.key1.user.UserManager.getInstance()
+            val userData = userManager.userData.value
+            val isProUser = userData?.subscriptionStatus == "pro" ||
+                           userManager.getSubscriptionManager()?.isPro?.value == true
+
+            val aiUsageTracker = com.vishruth.key1.ime.ai.AiUsageTracker.getInstance()
+            if (!isProUser && !aiUsageTracker.canUseAiAction()) {
+                // Show AI limit panel as full-screen layout
+                activeState.imeUiMode = com.vishruth.key1.ime.ImeUiMode.AI_LIMIT
+                return@launch
+            }
+
             // Set loading state
             activeState.isAiChatLoading = true
             
@@ -816,9 +829,6 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 if (!com.vishruth.sendright.lib.network.NetworkUtils.checkNetworkAndShowToast(appContext)) {
                     return@launch
                 }
-                
-                // Create temporary AI usage tracker instance
-                val aiUsageTracker = com.vishruth.key1.ime.ai.AiUsageTracker.getInstance()
                 
                 // Use the MagicWand chat handler directly (original functionality)
                 com.vishruth.key1.ime.smartbar.handleMagicWandButtonClick(

@@ -103,6 +103,7 @@ import com.vishruth.key1.ime.smartbar.ActionResultPanelManager
 import com.vishruth.key1.ime.smartbar.ActionResultInputLayout
 import com.vishruth.key1.ime.text.TextInputLayout
 import com.vishruth.key1.ime.translate.TranslateInputLayout
+import com.vishruth.key1.ime.ailimit.AiLimitInputLayout
 import com.vishruth.key1.ime.theme.FlorisImeTheme
 import com.vishruth.key1.ime.theme.FlorisImeUi
 import com.vishruth.key1.ime.theme.WallpaperChangeReceiver
@@ -704,6 +705,7 @@ class FlorisImeService : LifecycleInputMethodService() {
                                 ImeUiMode.CLIPBOARD -> ClipboardInputLayout()
                                 ImeUiMode.TRANSLATE -> TranslateInputLayout()
                                 ImeUiMode.ACTION_RESULT -> ActionResultInputLayout()
+                                ImeUiMode.AI_LIMIT -> AiLimitInputLayout()
                             }
                         }
                     }
