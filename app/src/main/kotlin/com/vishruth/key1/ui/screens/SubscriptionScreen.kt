@@ -12,10 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compo                                text = "Get 50% OFF for your first 2 months , limited to the first 1000 premium subscribers",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = SubscriptionGreenoundation.verticalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -28,6 +25,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vishruth.key1.user.UserManager
+import com.vishruth.key1.ime.ai.AiUsageTracker
+import com.vishruth.key1.ime.ai.AiUsageStats
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.ui.text.style.TextDecoration
@@ -38,11 +40,6 @@ import com.android.billingclient.api.ProductDetails
 private val SubscriptionGreen = Color(0xFF46BB23)
 private val SubscriptionGreenLight = Color(0xFF66CC43)
 private val SubscriptionGreenDark = Color(0xFF2A7A15)
-import com.vishruth.key1.user.UserManager
-import com.vishruth.key1.ime.ai.AiUsageTracker
-import com.vishruth.key1.ime.ai.AiUsageStats
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

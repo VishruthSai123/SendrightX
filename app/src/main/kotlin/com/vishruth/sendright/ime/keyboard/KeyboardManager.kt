@@ -307,12 +307,28 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         }
         when (candidate) {
             is ClipboardSuggestionCandidate -> editorInstance.commitClipboardItem(candidate.clipboardItem)
-            else -> editorInstance.commitCompletion(candidate)
+            else -> {
+                // Preserve user's original case when committing suggestions
+                val preservedCandidate = preserveUserCase(candidate)
+                editorInstance.commitCompletion(preservedCandidate)
+            }
         }
     }
 
     fun commitGesture(word: String) {
-        editorInstance.commitGesture(fixCase(word))
+        // For glide typing, only apply case changes if caps lock is active
+        // This preserves saved words' original case in most situations
+        val processedWord = when (activeState.inputShiftState) {
+            InputShiftState.CAPS_LOCK -> {
+                // Only apply caps lock - this is a strong user intention
+                word.uppercase(subtypeManager.activeSubtype.primaryLocale.base)
+            }
+            else -> {
+                // Preserve the original case of saved words for other states
+                word
+            }
+        }
+        editorInstance.commitGesture(processedWord)
     }
 
     /**
@@ -331,6 +347,69 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             }
             else -> word
         }
+    }
+
+    /**
+     * Preserves the user's original case pattern when committing suggestions.
+     * This prevents auto-correction from changing the case the user intentionally typed.
+     * For glide typing, preserves the saved word's original case.
+     */
+    private fun preserveUserCase(candidate: SuggestionCandidate): SuggestionCandidate {
+        val content = editorInstance.activeContent
+        
+        // Get the composing text (what user actually typed)
+        val composingText = if (content.composing.isValid) {
+            content.composingText
+        } else {
+            // If no composing text, try to get the current word being typed
+            content.currentWordText
+        }
+        
+        // Only apply case preservation if there's actual typed text to preserve
+        // This avoids interfering with glide typing which doesn't have composing text
+        if (composingText.isNotEmpty() && composingText.any { it.isLetter() }) {
+            val candidateText = candidate.text.toString()
+            val locale = subtypeManager.activeSubtype.primaryLocale.base
+            
+            // Determine the case pattern from user's input
+            val preservedText = when {
+                // If user typed in ALL CAPS, keep suggestion in ALL CAPS
+                composingText.all { it.isUpperCase() || !it.isLetter() } -> {
+                    candidateText.uppercase(locale)
+                }
+                // If user typed with first letter capitalized, preserve that pattern
+                composingText.firstOrNull()?.isUpperCase() == true && 
+                composingText.drop(1).all { it.isLowerCase() || !it.isLetter() } -> {
+                    candidateText.replaceFirstChar { 
+                        if (it.isLowerCase()) it.uppercaseChar().toString() else it.toString() 
+                    }.let { text ->
+                        // Ensure rest is lowercase
+                        text.take(1) + text.drop(1).lowercase(locale)
+                    }
+                }
+                // If user typed in lowercase, keep suggestion in lowercase
+                composingText.all { it.isLowerCase() || !it.isLetter() } -> {
+                    candidateText.lowercase(locale)
+                }
+                // Mixed case or other patterns - preserve the suggestion's original case
+                else -> candidateText
+            }
+            
+            // Create a new candidate with preserved case
+            return object : SuggestionCandidate {
+                override val text = preservedText
+                override val secondaryText = candidate.secondaryText
+                override val confidence = candidate.confidence
+                override val isEligibleForAutoCommit = candidate.isEligibleForAutoCommit
+                override val isEligibleForUserRemoval = candidate.isEligibleForUserRemoval
+                override val icon = candidate.icon
+                override val sourceProvider = candidate.sourceProvider
+            }
+        }
+        
+        // If no meaningful composing text found (like in glide typing), 
+        // return original candidate to preserve saved word's original case
+        return candidate
     }
 
     /**
