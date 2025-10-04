@@ -12,7 +12,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compo                                text = "Get 50% OFF for your first 2 months , limited to the first 1000 premium subscribers",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = SubscriptionGreenoundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -30,6 +33,11 @@ import androidx.compose.animation.core.*
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.graphics.Color
 import com.android.billingclient.api.ProductDetails
+
+// Custom subscription colors - independent of theme
+private val SubscriptionGreen = Color(0xFF46BB23)
+private val SubscriptionGreenLight = Color(0xFF66CC43)
+private val SubscriptionGreenDark = Color(0xFF2A7A15)
 import com.vishruth.key1.user.UserManager
 import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.ime.ai.AiUsageStats
@@ -194,9 +202,9 @@ fun SubscriptionScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = SubscriptionGreen,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         }
@@ -241,7 +249,7 @@ fun SubscriptionScreen(
                                     .fillMaxWidth()
                                     .height(56.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                    containerColor = SubscriptionGreen.copy(alpha = 0.6f)
                                 )
                             ) {
                                 Row(
@@ -250,7 +258,7 @@ fun SubscriptionScreen(
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(20.dp),
                                         strokeWidth = 2.dp,
-                                        color = MaterialTheme.colorScheme.onPrimary
+                                        color = Color.White
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
@@ -303,7 +311,7 @@ fun SubscriptionScreen(
                                     .fillMaxWidth()
                                     .height(56.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
+                                    containerColor = SubscriptionGreen
                                 )
                             ) {
                                 Row(
@@ -369,7 +377,7 @@ fun SubscriptionScreen(
                 // Pro user status card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    colors = CardDefaults.cardColors(containerColor = SubscriptionGreenLight.copy(alpha = 0.2f))
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
@@ -378,7 +386,7 @@ fun SubscriptionScreen(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = "Active",
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = SubscriptionGreen,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -415,11 +423,11 @@ fun SubscriptionScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = SubscriptionGreenLight.copy(alpha = 0.2f)
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         2.dp, 
-                        MaterialTheme.colorScheme.primary
+                        SubscriptionGreen
                     )
                 ) {
                     Row(
@@ -430,7 +438,7 @@ fun SubscriptionScreen(
                             modifier = Modifier.size(48.dp),
                             shape = RoundedCornerShape(24.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primary
+                                containerColor = SubscriptionGreen
                             )
                         ) {
                             Box(
@@ -469,7 +477,7 @@ fun SubscriptionScreen(
                                     text = "₹45",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.Blue
+                                    color = SubscriptionGreen
                                 )
                             }
                         }
@@ -538,7 +546,7 @@ private fun StatusCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isPro) MaterialTheme.colorScheme.primaryContainer 
+            containerColor = if (isPro) SubscriptionGreenLight.copy(alpha = 0.2f)
                            else MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
@@ -549,7 +557,7 @@ private fun StatusCard(
             Icon(
                 imageVector = if (isPro) Icons.Default.CheckCircle else Icons.Default.Info,
                 contentDescription = null,
-                tint = if (isPro) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (isPro) SubscriptionGreen else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -573,7 +581,7 @@ private fun StatusCard(
                     Text(
                         text = "🎉 Unlimited AI actions active!",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = SubscriptionGreen,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -605,7 +613,7 @@ private fun StatusCard(
                         Text(
                             text = "$remaining actions remaining",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = SubscriptionGreen,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -625,7 +633,7 @@ private fun StatusCard(
                     LinearProgressIndicator(
                         progress = { dailyUsed.toFloat() / dailyLimit },
                         modifier = Modifier.fillMaxWidth(),
-                        color = if (remaining > 0) MaterialTheme.colorScheme.primary 
+                        color = if (remaining > 0) SubscriptionGreen 
                                else MaterialTheme.colorScheme.error
                     )
                 }
@@ -646,7 +654,7 @@ private fun FeatureCard(feature: FeatureData) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = if (feature.isHighlight) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            CardDefaults.cardColors(containerColor = SubscriptionGreenLight.copy(alpha = 0.2f))
         } else {
             CardDefaults.cardColors()
         }
@@ -659,8 +667,8 @@ private fun FeatureCard(feature: FeatureData) {
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (feature.isHighlight) MaterialTheme.colorScheme.primary 
-                                   else MaterialTheme.colorScheme.primaryContainer
+                    containerColor = if (feature.isHighlight) SubscriptionGreen 
+                                   else SubscriptionGreenLight.copy(alpha = 0.3f)
                 )
             ) {
                 Box(
@@ -670,8 +678,8 @@ private fun FeatureCard(feature: FeatureData) {
                     Icon(
                         imageVector = feature.icon,
                         contentDescription = null,
-                        tint = if (feature.isHighlight) MaterialTheme.colorScheme.onPrimary 
-                               else MaterialTheme.colorScheme.primary,
+                        tint = if (feature.isHighlight) Color.White 
+                               else SubscriptionGreen,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -735,7 +743,7 @@ fun AnimatedPriceDisplay(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 textDecoration = if (showStrikethrough) TextDecoration.LineThrough else TextDecoration.None,
-                color = if (showStrikethrough) Color.Red else MaterialTheme.colorScheme.onPrimary
+                color = if (showStrikethrough) Color.Red else Color.White
             )
         }
         
@@ -753,14 +761,14 @@ fun AnimatedPriceDisplay(
                         text = " → ",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = Color.White
                     )
                 }
                 Text(
                     text = discountPrice,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Green
+                    color = SubscriptionGreenLight
                 )
             }
         }

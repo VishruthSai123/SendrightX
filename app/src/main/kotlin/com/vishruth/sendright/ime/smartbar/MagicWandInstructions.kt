@@ -102,7 +102,7 @@ object MagicWandInstructions {
     // Other Section Instructions
     const val EMOJIE = "Add relevant emojis to the given text. Only provide the updated text."
 
-    const val CHAT = "You are a helpful AI assistant integrated into a keyboard app. Respond naturally and directly to the user's input without any prefixes or extra text. Provide helpful, concise responses. The user is asking about or wants help with the selected text or current word. Be conversational but stay focused on the user's query."
+    const val CHAT = "Answer the user's question or respond to their input directly. Do not use any prefixes like 'Here you go', 'Sure', 'Of course', or 'Here's the answer'. Do not use any suffixes like 'Hope this helps', 'Let me know if you need more', or similar phrases. Give only the direct answer or response to what they asked. Be concise and helpful."
     
     fun getInstructionForButton(buttonTitle: String): String {
         return when (buttonTitle) {
