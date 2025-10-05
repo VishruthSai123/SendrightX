@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -42,6 +43,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -85,7 +87,10 @@ import com.vishruth.key1.keyboardManager
 import com.vishruth.key1.lib.ads.RewardedAdManager
 import com.vishruth.key1.lib.devtools.flogDebug
 import com.vishruth.key1.user.UserManager
+import com.vishruth.key1.app.settings.aiworkspace.AIWorkspaceManager
 import com.vishruth.sendright.lib.network.NetworkUtils
+import com.vishruth.key1.ime.smartbar.GeminiApiService
+import com.vishruth.key1.ime.smartbar.ActionResultPanelManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
@@ -202,6 +207,9 @@ fun MagicWandPanel(
     val subscriptionManager = userManager.getSubscriptionManager()
     val isPro by subscriptionManager?.isPro?.collectAsState() ?: remember { mutableStateOf(false) }
     
+    // AI Workspace Manager for dynamic actions
+    val aiWorkspaceManager = remember { AIWorkspaceManager.getInstance(context) }
+    
 
     
     // Determine pro status from multiple sources for immediate updates
@@ -272,7 +280,26 @@ fun MagicWandPanel(
     // State for managing expanded sections
     val expandedSections = remember { mutableStateMapOf<String, Boolean>() }
     
+    // Create AI Workspace section dynamically
+    val aiWorkspaceButtons = remember(aiWorkspaceManager) {
+        val buttons = mutableListOf<String>()
+        // Add enabled actions (first 6 for space optimization)
+        aiWorkspaceManager.getAllEnabledActions().take(6).forEach { action ->
+            buttons.add(action.title)
+        }
+        if (buttons.isEmpty()) {
+            buttons.add("Humanise") // Default fallback
+        }
+        buttons
+    }
+
     val magicWandSections = listOf(
+        MagicWandSection(
+            title = "AI Workspace",
+            buttons = aiWorkspaceButtons,
+            isExpandable = true,
+            isExpanded = true // Always expanded
+        ),
         MagicWandSection(
             title = "Enhance",
             buttons = listOf("Rewrite", "Grammar")
@@ -419,7 +446,23 @@ fun MagicWandPanel(
                         },
                         onToggleExpand = { sectionTitle ->
                             expandedSections[sectionTitle] = !(expandedSections[sectionTitle] ?: false)
-                        }
+                        },
+                        onManageClick = if (section.title == "AI Workspace") {
+                            {
+                                // Navigate to AI Workspace management screen
+                                try {
+                                    val intent = android.content.Intent(context, com.vishruth.key1.app.FlorisAppActivity::class.java).apply {
+                                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                        data = android.net.Uri.parse("ui://florisboard/settings/ai-workspace")
+                                    }
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    scope.launch {
+                                        context.showShortToast("Unable to open AI Workspace settings")
+                                    }
+                                }
+                            }
+                        } else null
                     )
                 }
                 
@@ -779,15 +822,16 @@ private fun MagicWandSectionItem(
     loadingButton: String?,
     onButtonClick: (String) -> Unit,
     onToggleExpand: (String) -> Unit = {},
+    onManageClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        // Section Header with expand/collapse functionality
+        // Section Header with expand/collapse functionality (except AI Workspace)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                    if (section.isExpandable) {
+                    if (section.isExpandable && section.title != "AI Workspace") {
                         onToggleExpand(section.title)
                     }
                 }
@@ -801,54 +845,90 @@ private fun MagicWandSectionItem(
                 modifier = Modifier.weight(1f)
             )
             
-            if (section.isExpandable) {
-                Icon(
-                    imageVector = if (section.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (section.isExpanded) "Collapse" else "Expand",
-                    modifier = Modifier.size(20.dp)
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Add manage button for AI Workspace section
+                if (onManageClick != null) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Manage ${section.title}",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { onManageClick() }
+                    )
+                }
+                
+                // Show dropdown icon only for non-AI Workspace expandable sections
+                if (section.isExpandable && section.title != "AI Workspace") {
+                    Icon(
+                        imageVector = if (section.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (section.isExpanded) "Collapse" else "Expand",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
         
         // Content - Show only if not expandable or if expanded
         if (!section.isExpandable || section.isExpanded) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Process buttons in rows of 2, but handle odd numbers correctly
-                for (i in section.buttons.indices step 2) {
-                    if (i + 1 < section.buttons.size) {
-                        // Two buttons in this row
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+            if (section.title == "AI Workspace") {
+                // AI Workspace: Display all buttons horizontally in a single scrollable row
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    items(section.buttons) { buttonTitle ->
+                        AIWorkspaceButton(
+                            button = MagicWandButton(title = buttonTitle),
+                            isLoading = loadingButton == buttonTitle,
+                            onClick = { onButtonClick(buttonTitle) },
+                            modifier = Modifier.fillMaxWidth() // Full width for complete text visibility
+                        )
+                    }
+                }
+            } else {
+                // Other sections: Keep the existing 2-button-per-row layout
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Process buttons in rows of 2, but handle odd numbers correctly
+                    for (i in section.buttons.indices step 2) {
+                        if (i + 1 < section.buttons.size) {
+                            // Two buttons in this row
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                MagicWandButton(
+                                    button = MagicWandButton(title = section.buttons[i]),
+                                    isLoading = loadingButton == section.buttons[i],
+                                    onClick = { onButtonClick(section.buttons[i]) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                MagicWandButton(
+                                    button = MagicWandButton(title = section.buttons[i + 1]),
+                                    isLoading = loadingButton == section.buttons[i + 1],
+                                    onClick = { onButtonClick(section.buttons[i + 1]) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        } else {
+                            // Single button in this row - take full width without extra spacing
                             MagicWandButton(
                                 button = MagicWandButton(title = section.buttons[i]),
                                 isLoading = loadingButton == section.buttons[i],
                                 onClick = { onButtonClick(section.buttons[i]) },
-                                modifier = Modifier.weight(1f)
-                            )
-                            MagicWandButton(
-                                button = MagicWandButton(title = section.buttons[i + 1]),
-                                isLoading = loadingButton == section.buttons[i + 1],
-                                onClick = { onButtonClick(section.buttons[i + 1]) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp)
                             )
                         }
-                    } else {
-                        // Single button in this row - take full width without extra spacing
-                        MagicWandButton(
-                            button = MagicWandButton(title = section.buttons[i]),
-                            isLoading = loadingButton == section.buttons[i],
-                            onClick = { onButtonClick(section.buttons[i]) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp)
-                        )
                     }
                 }
             }
@@ -892,6 +972,42 @@ private fun MagicWandButton(
     }
 }
 
+@Composable
+private fun AIWorkspaceButton(
+    button: MagicWandButton,
+    isLoading: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SnyggButton(
+        elementName = FlorisImeUi.SmartbarActionTile.elementName,
+        onClick = onClick,
+        modifier = modifier
+            .height(60.dp) // Original height restored
+            .clip(RoundedCornerShape(8.dp))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp), // Slightly smaller loading indicator
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF23C546) // Green loading color as requested
+                )
+            } else {
+                SnyggText(
+                    elementName = FlorisImeUi.SmartbarActionTileText.elementName,
+                    text = button.title
+                )
+            }
+        }
+    }
+}
+
 suspend fun handleMagicWandButtonClick(
     buttonTitle: String,
     editorInstance: com.vishruth.key1.ime.editor.EditorInstance,
@@ -919,8 +1035,17 @@ suspend fun handleMagicWandButtonClick(
             return
         }
         
+        // Check if this is an AI Workspace action
+        val aiWorkspaceManager = AIWorkspaceManager.getInstance(context)
+        val allAIActions = aiWorkspaceManager.getAllEnabledActions()
+        val aiAction = allAIActions.find { it.title == buttonTitle }
+        
         // Get instruction for the button
-        val instruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
+        val instruction = if (aiAction != null) {
+            aiAction.prompt // Use custom prompt for AI Workspace actions
+        } else {
+            MagicWandInstructions.getInstructionForButton(buttonTitle) // Use standard instructions
+        }
         
         // Call Gemini API
         val result = GeminiApiService.transformText(allText, instruction, context)

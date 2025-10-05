@@ -82,6 +82,8 @@ import com.vishruth.key1.app.setup.SelectImeScreen
 import com.vishruth.key1.app.setup.NotificationPermissionScreen
 import com.vishruth.key1.app.setup.StartCustomizationScreen
 import com.vishruth.key1.ui.screens.SubscriptionScreen
+import com.vishruth.key1.app.settings.aiworkspace.AIWorkspaceScreen
+import com.vishruth.key1.app.settings.aiworkspace.CreateCustomAssistanceScreen
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
@@ -193,6 +195,14 @@ object Routes {
         @Serializable
         @Deeplink("settings/media")
         object Media
+
+        @Serializable
+        @Deeplink("settings/ai-workspace")
+        object AIWorkspace
+
+        @Serializable
+        @Deeplink("settings/ai-workspace/create")
+        object CreateCustomAssistance
 
         @Serializable
         @Deeplink("settings/other")
@@ -349,6 +359,20 @@ object Routes {
             composableWithDeepLink(Settings.Clipboard::class) { ClipboardScreen() }
 
             composableWithDeepLink(Settings.Media::class) { MediaScreen() }
+
+            composableWithDeepLink(Settings.AIWorkspace::class) { 
+                AIWorkspaceScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToCreateCustom = { navController.navigate(Settings.CreateCustomAssistance) }
+                )
+            }
+
+            composableWithDeepLink(Settings.CreateCustomAssistance::class) {
+                CreateCustomAssistanceScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onActionCreated = { navController.popBackStack() }
+                )
+            }
 
             composableWithDeepLink(Settings.Other::class) { OtherScreen() }
             composableWithDeepLink(Settings.PhysicalKeyboard::class) { PhysicalKeyboardScreen() }
