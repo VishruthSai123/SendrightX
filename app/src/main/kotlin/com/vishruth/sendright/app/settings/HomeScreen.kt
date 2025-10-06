@@ -132,6 +132,12 @@ fun HomeScreen() = FlorisScreen {
                 }
             }
         }*/
+        
+        Preference(
+            icon = Icons.Outlined.Workspaces,
+            title = "AI Workspace",
+            onClick = { navController.navigate(Routes.Settings.AIWorkspace) },
+        )
         Preference(
             icon = Icons.Filled.Language,
             title = stringRes(R.string.settings__localization__title),
@@ -161,11 +167,6 @@ fun HomeScreen() = FlorisScreen {
             icon = Icons.Outlined.TouchApp,
             title = stringRes(R.string.settings__gestures__title),
             onClick = { navController.navigate(Routes.Settings.Gestures) },
-        )
-        Preference(
-            icon = Icons.Outlined.Workspaces,
-            title = "AI Workspace",
-            onClick = { navController.navigate(Routes.Settings.AIWorkspace) },
         )
         Preference(
             icon = Icons.Default.RateReview,

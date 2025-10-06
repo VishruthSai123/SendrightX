@@ -7,6 +7,8 @@ package com.vishruth.key1.app.settings.aiworkspace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -55,14 +57,42 @@ fun AIWorkspaceScreen(
         }
     }
     
-    // Load actions when screen is first composed
+    // Dialog states for custom action management
+    var showCustomActionDialog by remember { mutableStateOf(false) }
+    var selectedCustomAction by remember { mutableStateOf<AIAction?>(null) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    
+    // Load actions when screen is first composed and on refresh counter changes
     LaunchedEffect(Unit) {
         aiWorkspaceManager.loadActions()
+    }
+    
+    // Force reload when refresh counter changes
+    LaunchedEffect(aiWorkspaceManager.refreshCounter.value) {
+        if (aiWorkspaceManager.refreshCounter.value > 0) {
+            // Small delay to ensure operations complete
+            kotlinx.coroutines.delay(100)
+            // Force a full reload from storage to ensure consistency
+            aiWorkspaceManager.loadActions()
+        }
     }
     
     val enabledPopularActions = aiWorkspaceManager.enabledPopularActions
     val customActions = aiWorkspaceManager.customActions
     val availablePopularActions = aiWorkspaceManager.getAvailablePopularActions()
+    
+    // Force recomposition by observing refresh counter
+    val refreshCounter by aiWorkspaceManager.refreshCounter
+    
+    // Filter custom actions reactively - this will recompose when customActions or refreshCounter changes
+    // Using remember with keys to ensure proper updates
+    val enabledCustomActions by remember(customActions.size, refreshCounter) {
+        derivedStateOf { customActions.filter { it.isEnabled } }
+    }
+    val disabledCustomActions by remember(customActions.size, refreshCounter) {
+        derivedStateOf { customActions.filter { !it.isEnabled } }
+    }
 
     Scaffold(
         topBar = {
@@ -164,13 +194,21 @@ fun AIWorkspaceScreen(
                     0 -> { // Popular tab
                         // Enabled popular actions
                         if (enabledPopularActions.isNotEmpty()) {
-                            items(enabledPopularActions) { action ->
+                            items(
+                                items = enabledPopularActions,
+                                key = { action -> action.id }
+                            ) { action ->
                                 AIActionCard(
                                     action = action,
                                     isEnabled = true,
                                     onActionClick = {
                                         scope.launch {
-                                            aiWorkspaceManager.removePopularAction(action.id)
+                                            try {
+                                                aiWorkspaceManager.removePopularAction(action.id)
+                                            } catch (e: Exception) {
+                                                // Handle error silently or show toast
+                                                e.printStackTrace()
+                                            }
                                         }
                                     },
                                     actionButtonText = "Remove",
@@ -181,13 +219,21 @@ fun AIWorkspaceScreen(
                         
                         // Available popular actions
                         if (availablePopularActions.isNotEmpty()) {
-                            items(availablePopularActions) { action ->
+                            items(
+                                items = availablePopularActions,
+                                key = { action -> action.id }
+                            ) { action ->
                                 AIActionCard(
                                     action = action,
                                     isEnabled = false,
                                     onActionClick = {
                                         scope.launch {
-                                            aiWorkspaceManager.addPopularAction(action)
+                                            try {
+                                                aiWorkspaceManager.addPopularAction(action)
+                                            } catch (e: Exception) {
+                                                // Handle error silently or show toast
+                                                e.printStackTrace()
+                                            }
                                         }
                                     },
                                     actionButtonText = "Add",
@@ -197,21 +243,62 @@ fun AIWorkspaceScreen(
                         }
                     }
                     1 -> { // Custom Assistance tab
-                        if (customActions.isNotEmpty()) {
-                            items(customActions) { action ->
-                                AIActionCard(
+                        // Enabled custom actions
+                        if (enabledCustomActions.isNotEmpty()) {
+                            items(
+                                items = enabledCustomActions,
+                                key = { action -> action.id }
+                            ) { action ->
+                                CustomAIActionCard(
                                     action = action,
                                     isEnabled = true,
-                                    onActionClick = {
-                                        scope.launch {
-                                            aiWorkspaceManager.removeCustomAction(action.id)
-                                        }
+                                    onLongPress = {
+                                        selectedCustomAction = action
+                                        showCustomActionDialog = true
                                     },
-                                    actionButtonText = "Remove",
-                                    showRemoveButton = true
+                                    onRemoveClick = {
+                                        scope.launch {
+                                            try {
+                                                aiWorkspaceManager.toggleCustomAction(action.id)
+                                            } catch (e: Exception) {
+                                                // Handle error silently or show toast
+                                                e.printStackTrace()
+                                            }
+                                        }
+                                    }
                                 )
                             }
-                        } else {
+                        }
+                        
+                        // Disabled custom actions
+                        if (disabledCustomActions.isNotEmpty()) {
+                            items(
+                                items = disabledCustomActions,
+                                key = { action -> action.id }
+                            ) { action ->
+                                CustomAIActionCard(
+                                    action = action,
+                                    isEnabled = false,
+                                    onLongPress = {
+                                        selectedCustomAction = action
+                                        showCustomActionDialog = true
+                                    },
+                                    onRemoveClick = {
+                                        scope.launch {
+                                            try {
+                                                aiWorkspaceManager.toggleCustomAction(action.id)
+                                            } catch (e: Exception) {
+                                                // Handle error silently or show toast
+                                                e.printStackTrace()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                        
+                        // Show empty state only if no actions at all
+                        if (enabledCustomActions.isEmpty() && disabledCustomActions.isEmpty()) {
                             item {
                                 EmptyCustomActionsCard(onCreateClick = onNavigateToCreateCustom)
                             }
@@ -220,6 +307,125 @@ fun AIWorkspaceScreen(
                 }
             }
         }
+    }
+    
+    // Custom Action Management Dialog
+    if (showCustomActionDialog && selectedCustomAction != null) {
+        AlertDialog(
+            onDismissRequest = { 
+                showCustomActionDialog = false
+                selectedCustomAction = null
+            },
+            title = { Text("Manage Action") },
+            text = { Text("What would you like to do with \"${selectedCustomAction!!.title}\"?") },
+            confirmButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            showCustomActionDialog = false
+                            showEditDialog = true
+                        }
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Edit")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = {
+                            showCustomActionDialog = false
+                            showDeleteConfirmDialog = true
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Delete")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showCustomActionDialog = false
+                    selectedCustomAction = null
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Delete Confirmation Dialog
+    if (showDeleteConfirmDialog && selectedCustomAction != null) {
+        AlertDialog(
+            onDismissRequest = { 
+                showDeleteConfirmDialog = false
+                selectedCustomAction = null
+            },
+            title = { Text("Delete Action") },
+            text = { Text("Are you sure you want to delete \"${selectedCustomAction!!.title}\"? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val actionId = selectedCustomAction?.id
+                        if (actionId != null) {
+                            scope.launch {
+                                try {
+                                    aiWorkspaceManager.deleteCustomAction(actionId)
+                                } catch (e: Exception) {
+                                    // Handle error silently or show toast
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                        showDeleteConfirmDialog = false
+                        selectedCustomAction = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showDeleteConfirmDialog = false
+                    selectedCustomAction = null
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Edit Dialog
+    if (showEditDialog && selectedCustomAction != null) {
+        EditCustomActionDialog(
+            action = selectedCustomAction!!,
+            onDismiss = {
+                showEditDialog = false
+                selectedCustomAction = null
+            },
+            onSave = { title, description, prompt ->
+                val actionId = selectedCustomAction?.id
+                if (actionId != null) {
+                    scope.launch {
+                        try {
+                            aiWorkspaceManager.updateCustomAction(
+                                actionId = actionId,
+                                title = title,
+                                description = description,
+                                prompt = prompt
+                            )
+                        } catch (e: Exception) {
+                            // Handle error silently or show toast
+                            e.printStackTrace()
+                        }
+                    }
+                }
+                showEditDialog = false
+                selectedCustomAction = null
+            }
+        )
     }
 }
 
@@ -332,6 +538,128 @@ private fun AIActionCard(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CustomAIActionCard(
+    action: AIAction,
+    isEnabled: Boolean,
+    onLongPress: () -> Unit,
+    onRemoveClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .combinedClickable(
+                onClick = { /* Handle regular click if needed */ },
+                onLongClick = onLongPress
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isEnabled) {
+                            MaterialTheme.colorScheme.secondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = action.getIcon(),
+                    contentDescription = null,
+                    tint = if (isEnabled) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    },
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Content
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = action.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isEnabled) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (isEnabled) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = action.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isEnabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    },
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            // Remove/Add Button based on state
+            Button(
+                onClick = onRemoveClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isEnabled) {
+                        Color(0xFF46BB23).copy(alpha = 0.12f) // Green for remove
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer
+                    }
+                ),
+                shape = RoundedCornerShape(20.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                if (isEnabled) {
+                    Text(
+                        text = "− Remove",
+                        color = Color(0xFF46BB23),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                } else {
+                    Text(
+                        text = "+ Add",
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun EmptyCustomActionsCard(onCreateClick: () -> Unit) {
     Card(
@@ -386,4 +714,76 @@ private fun EmptyCustomActionsCard(onCreateClick: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun EditCustomActionDialog(
+    action: AIAction,
+    onDismiss: () -> Unit,
+    onSave: (String, String, String) -> Unit
+) {
+    var titleText by remember { mutableStateOf(action.title) }
+    var descriptionText by remember { mutableStateOf(action.description) }
+    var promptText by remember { mutableStateOf(action.prompt) }
+    
+    val isFormValid = titleText.isNotBlank() && 
+                     descriptionText.isNotBlank() && 
+                     promptText.isNotBlank()
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Custom Action") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = titleText,
+                    onValueChange = { titleText = it },
+                    label = { Text("Action Title") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                OutlinedTextField(
+                    value = descriptionText,
+                    onValueChange = { descriptionText = it },
+                    label = { Text("Short Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                OutlinedTextField(
+                    value = promptText,
+                    onValueChange = { promptText = it },
+                    label = { Text("AI Prompt/Instructions") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    maxLines = 5,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (isFormValid) {
+                        onSave(titleText.trim(), descriptionText.trim(), promptText.trim())
+                    }
+                },
+                enabled = isFormValid
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

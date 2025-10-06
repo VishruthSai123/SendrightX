@@ -7,6 +7,7 @@ package com.vishruth.key1.app.settings.aiworkspace
 
 import android.content.Context
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import org.florisboard.lib.kotlin.tryOrNull
 import kotlinx.coroutines.Dispatchers
@@ -44,11 +45,33 @@ class AIWorkspaceManager private constructor(private val context: Context) {
     val enabledPopularActions: SnapshotStateList<AIAction> = _enabledPopularActions
     val customActions: SnapshotStateList<AIAction> = _customActions
     
+    // Add a version counter to force refresh
+    private var _refreshCounter = mutableStateOf(0)
+    val refreshCounter = _refreshCounter
+    
+    private fun triggerRefresh() {
+        _refreshCounter.value = _refreshCounter.value + 1
+    }
+    
     /**
      * Get all enabled AI actions (both popular and custom)
      */
     fun getAllEnabledActions(): List<AIAction> {
         return _enabledPopularActions + _customActions.filter { it.isEnabled }
+    }
+    
+    /**
+     * Get enabled custom actions
+     */
+    fun getEnabledCustomActions(): List<AIAction> {
+        return _customActions.filter { it.isEnabled }
+    }
+    
+    /**
+     * Get disabled custom actions
+     */
+    fun getDisabledCustomActions(): List<AIAction> {
+        return _customActions.filter { !it.isEnabled }
     }
     
     /**
@@ -91,7 +114,10 @@ class AIWorkspaceManager private constructor(private val context: Context) {
             isUserCreated = true,
             isEnabled = true
         )
-        _customActions.add(action)
+        withContext(Dispatchers.Main) {
+            _customActions.add(action)
+            triggerRefresh()
+        }
         saveActions()
         return action
     }
@@ -100,25 +126,62 @@ class AIWorkspaceManager private constructor(private val context: Context) {
      * Update an existing custom action
      */
     suspend fun updateCustomAction(actionId: String, title: String, description: String, prompt: String) {
-        val index = _customActions.indexOfFirst { it.id == actionId }
-        if (index != -1) {
-            val existingAction = _customActions[index]
-            val updatedAction = existingAction.copy(
-                title = title,
-                description = description,
-                prompt = prompt
-            )
-            _customActions[index] = updatedAction
-            saveActions()
+        android.util.Log.d("AIWorkspaceManager", "updateCustomAction called for ID: $actionId")
+        withContext(Dispatchers.Main) {
+            val index = _customActions.indexOfFirst { it.id == actionId }
+            android.util.Log.d("AIWorkspaceManager", "Found action at index: $index")
+            if (index != -1) {
+                val existingAction = _customActions[index]
+                val updatedAction = existingAction.copy(
+                    title = title,
+                    description = description,
+                    prompt = prompt
+                )
+                _customActions.removeAt(index)
+                _customActions.add(index, updatedAction)
+                triggerRefresh()
+                android.util.Log.d("AIWorkspaceManager", "Updated action: ${updatedAction.title}")
+            }
         }
+        saveActions()
     }
     
     /**
-     * Remove a custom action
+     * Toggle enable/disable status of a custom action (for Remove button)
+     */
+    suspend fun toggleCustomAction(actionId: String) {
+        withContext(Dispatchers.Main) {
+            val index = _customActions.indexOfFirst { it.id == actionId }
+            if (index != -1) {
+                val existingAction = _customActions[index]
+                val updatedAction = existingAction.copy(isEnabled = !existingAction.isEnabled)
+                _customActions.removeAt(index)
+                _customActions.add(index, updatedAction)
+                triggerRefresh()
+            }
+        }
+        saveActions()
+    }
+    
+    /**
+     * Permanently delete a custom action (for long press delete)
+     */
+    suspend fun deleteCustomAction(actionId: String) {
+        android.util.Log.d("AIWorkspaceManager", "deleteCustomAction called for ID: $actionId")
+        withContext(Dispatchers.Main) {
+            val initialSize = _customActions.size
+            _customActions.removeAll { it.id == actionId }
+            android.util.Log.d("AIWorkspaceManager", "Actions size: $initialSize -> ${_customActions.size}")
+            triggerRefresh()
+        }
+        saveActions()
+    }
+    
+    /**
+     * Remove a custom action (kept for backward compatibility - now toggles instead)
      */
     suspend fun removeCustomAction(actionId: String) {
-        _customActions.removeAll { it.id == actionId }
-        saveActions()
+        toggleCustomAction(actionId)
     }
     
     /**
@@ -160,14 +223,18 @@ class AIWorkspaceManager private constructor(private val context: Context) {
      */
     private suspend fun saveActions() {
         withContext(Dispatchers.IO) {
-            val file = File(context.filesDir, AI_ACTIONS_FILE)
-            val savedData = SavedAIActions(
-                enabledPopularActions = _enabledPopularActions.toList(),
-                customActions = _customActions.toList()
-            )
-            
-            tryOrNull {
-                file.writeText(json.encodeToString(savedData))
+            try {
+                val file = File(context.filesDir, AI_ACTIONS_FILE)
+                val savedData = SavedAIActions(
+                    enabledPopularActions = _enabledPopularActions.toList(),
+                    customActions = _customActions.toList()
+                )
+                
+                val jsonString = json.encodeToString(savedData)
+                file.writeText(jsonString)
+                android.util.Log.d("AIWorkspaceManager", "Saved ${_customActions.size} custom actions to storage")
+            } catch (e: Exception) {
+                android.util.Log.e("AIWorkspaceManager", "Failed to save actions", e)
             }
         }
     }

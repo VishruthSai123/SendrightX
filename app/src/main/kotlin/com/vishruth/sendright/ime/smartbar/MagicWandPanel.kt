@@ -280,13 +280,28 @@ fun MagicWandPanel(
     // State for managing expanded sections
     val expandedSections = remember { mutableStateMapOf<String, Boolean>() }
     
-    // Create AI Workspace section dynamically
+    // Create AI Workspace section dynamically with custom actions prioritized
     val aiWorkspaceButtons = remember(aiWorkspaceManager) {
         val buttons = mutableListOf<String>()
-        // Add enabled actions (first 6 for space optimization)
-        aiWorkspaceManager.getAllEnabledActions().take(6).forEach { action ->
+        
+        // Prioritize custom actions first
+        val customActions = aiWorkspaceManager.getEnabledCustomActions()
+        val popularActions = aiWorkspaceManager.enabledPopularActions
+        
+        // Add custom actions first (up to 6 total for space optimization)
+        customActions.take(6).forEach { action ->
             buttons.add(action.title)
         }
+        
+        // Fill remaining slots with popular actions if we have space
+        val remainingSlots = 6 - buttons.size
+        if (remainingSlots > 0) {
+            popularActions.take(remainingSlots).forEach { action ->
+                buttons.add(action.title)
+            }
+        }
+        
+        // Fallback if no actions available
         if (buttons.isEmpty()) {
             buttons.add("Humanise") // Default fallback
         }
