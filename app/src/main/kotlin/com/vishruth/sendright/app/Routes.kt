@@ -84,6 +84,8 @@ import com.vishruth.key1.app.setup.StartCustomizationScreen
 import com.vishruth.key1.ui.screens.SubscriptionScreen
 import com.vishruth.key1.app.settings.aiworkspace.AIWorkspaceScreen
 import com.vishruth.key1.app.settings.aiworkspace.CreateCustomAssistanceScreen
+import com.vishruth.key1.app.settings.context.ContextConfigurationScreen
+import com.vishruth.key1.app.settings.context.ExampleLibraryScreen
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
@@ -203,6 +205,14 @@ object Routes {
         @Serializable
         @Deeplink("settings/ai-workspace/create")
         object CreateCustomAssistance
+
+        @Serializable
+        @Deeplink("settings/ai-workspace/context")
+        object ContextConfiguration
+
+        @Serializable
+        @Deeplink("settings/ai-workspace/context/examples")
+        object ExampleLibrary
 
         @Serializable
         @Deeplink("settings/other")
@@ -363,7 +373,8 @@ object Routes {
             composableWithDeepLink(Settings.AIWorkspace::class) { 
                 AIWorkspaceScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onNavigateToCreateCustom = { navController.navigate(Settings.CreateCustomAssistance) }
+                    onNavigateToCreateCustom = { navController.navigate(Settings.CreateCustomAssistance) },
+                    onNavigateToContext = { navController.navigate(Settings.ContextConfiguration) }
                 )
             }
 
@@ -371,6 +382,19 @@ object Routes {
                 CreateCustomAssistanceScreen(
                     onNavigateBack = { navController.popBackStack() },
                     onActionCreated = { navController.popBackStack() }
+                )
+            }
+
+            composableWithDeepLink(Settings.ContextConfiguration::class) {
+                ContextConfigurationScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToExampleLibrary = { navController.navigate(Settings.ExampleLibrary) }
+                )
+            }
+
+            composableWithDeepLink(Settings.ExampleLibrary::class) {
+                ExampleLibraryScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
