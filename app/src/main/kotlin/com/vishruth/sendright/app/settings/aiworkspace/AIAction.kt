@@ -110,7 +110,7 @@ object PopularAIActions {
             id = "facebook_post",
             title = "Facebook Post",
             description = "Create a Caption for your Facebook post",
-            prompt = "Create an engaging Facebook post caption based on the following content. Make it social media friendly with appropriate tone:",
+            prompt = "Create an engaging Facebook post caption based on the following content. Make it social media friendly",
             iconName = "facebook",
             isPopular = true
         )
