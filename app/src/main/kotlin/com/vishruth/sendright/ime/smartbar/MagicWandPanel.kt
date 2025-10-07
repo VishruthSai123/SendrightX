@@ -283,32 +283,22 @@ fun MagicWandPanel(
         }
     }
     
-    // Create AI Workspace section dynamically with custom actions prioritized
+    // Create AI Workspace section dynamically with all available actions (no limit)
     val aiWorkspaceButtons = remember(aiWorkspaceManager) {
         val buttons = mutableListOf<String>()
         
-        // Check if Context action is enabled
-        val contextManager = com.vishruth.key1.app.settings.context.ContextManager.getInstance(context)
-        if (contextManager.isContextActionEnabled.value && contextManager.isContextConfigured()) {
-            buttons.add("Context")
-        }
-        
-        // Prioritize custom actions after Context
+        // Get all available actions
         val customActions = aiWorkspaceManager.getEnabledCustomActions()
         val popularActions = aiWorkspaceManager.enabledPopularActions
         
-        // Add custom actions (up to 6 total for space optimization, accounting for Context)
-        val maxCustomActions = 6 - buttons.size
-        customActions.take(maxCustomActions).forEach { action ->
+        // Add all custom actions first (prioritized)
+        customActions.forEach { action ->
             buttons.add(action.title)
         }
         
-        // Fill remaining slots with popular actions if we have space
-        val remainingSlots = 6 - buttons.size
-        if (remainingSlots > 0) {
-            popularActions.take(remainingSlots).forEach { action ->
-                buttons.add(action.title)
-            }
+        // Add all popular actions
+        popularActions.forEach { action ->
+            buttons.add(action.title)
         }
         
         // Fallback if no actions available
@@ -1049,18 +1039,16 @@ suspend fun handleMagicWandButtonClick(
         val allAIActions = aiWorkspaceManager.getAllEnabledActions()
         val aiAction = allAIActions.find { it.title == buttonTitle }
         
-        // Check if this is the Context action
-        val contextManager = com.vishruth.key1.app.settings.context.ContextManager.getInstance(context)
-        val isContextAction = buttonTitle == "Context" && contextManager.isContextActionEnabled.value
-        
         // Get instruction for the button
         val instruction = when {
-            isContextAction -> {
-                // Generate intelligent context-aware instruction with text analysis
-                contextManager.generateIntelligentContextInstruction(allText)
-            }
             aiAction != null -> {
-                aiAction.prompt // Use custom prompt for AI Workspace actions
+                // Build enhanced prompt for AI Workspace actions with context options
+                if (aiAction.includePersonalDetails || aiAction.includeDateTime) {
+                    val contextManager = com.vishruth.key1.app.settings.context.ContextManager.getInstance(context)
+                    buildEnhancedPrompt(aiAction, contextManager)
+                } else {
+                    aiAction.prompt // Use basic custom prompt
+                }
             }
             else -> {
                 MagicWandInstructions.getInstructionForButton(buttonTitle) // Use standard instructions
@@ -1120,3 +1108,29 @@ suspend fun handleMagicWandButtonClick(
         flogDebug { "Error in handleMagicWandButtonClick: ${e.message}" }
     }
 }
+
+private fun buildEnhancedPrompt(
+    aiAction: com.vishruth.key1.app.settings.aiworkspace.AIAction, 
+    contextManager: com.vishruth.key1.app.settings.context.ContextManager
+): String {
+    val basePrompt = aiAction.prompt
+    val enhancements = mutableListOf<String>()
+    
+    // Always include action title and description with clear user perspective
+    enhancements.add("🎯 USER'S CUSTOM ACTION:\n• User named this action: \"${aiAction.title}\"\n• User's description: \"${aiAction.description}\"\n• Important: All references (like 'my coach', 'my boss', 'my friend') refer to the USER'S relationships, not yours. When user asks to write emails or messages, you're helping the USER communicate with THEIR contacts.")
+    
+    if (aiAction.includePersonalDetails) {
+        val contextInstruction = contextManager.generateContextInstruction()
+        enhancements.add(contextInstruction)
+    }
+    
+    if (aiAction.includeDateTime) {
+        val currentDateTime = java.time.LocalDateTime.now()
+        val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")
+        val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
+        enhancements.add("📅 CURRENT CONTEXT:\n• Today is: ${currentDateTime.format(dateFormatter)}\n• Current time: ${currentDateTime.format(timeFormatter)}")
+    }
+    
+    return enhancements.joinToString("\n\n") + "\n\n" + basePrompt
+}
+

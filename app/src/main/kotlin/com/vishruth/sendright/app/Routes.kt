@@ -84,8 +84,9 @@ import com.vishruth.key1.app.setup.StartCustomizationScreen
 import com.vishruth.key1.ui.screens.SubscriptionScreen
 import com.vishruth.key1.app.settings.aiworkspace.AIWorkspaceScreen
 import com.vishruth.key1.app.settings.aiworkspace.CreateCustomAssistanceScreen
-import com.vishruth.key1.app.settings.context.ContextConfigurationScreen
-import com.vishruth.key1.app.settings.context.ExampleLibraryScreen
+import com.vishruth.key1.app.settings.context.PersonalDetailsScreen
+
+import com.vishruth.key1.app.settings.magicwand.MagicWandSectionSettingsScreen
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
@@ -210,9 +211,11 @@ object Routes {
         @Deeplink("settings/ai-workspace/context")
         object ContextConfiguration
 
+
+
         @Serializable
-        @Deeplink("settings/ai-workspace/context/examples")
-        object ExampleLibrary
+        @Deeplink("settings/magicwand-sections")
+        object MagicWandSectionSettings
 
         @Serializable
         @Deeplink("settings/other")
@@ -374,7 +377,8 @@ object Routes {
                 AIWorkspaceScreen(
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToCreateCustom = { navController.navigate(Settings.CreateCustomAssistance) },
-                    onNavigateToContext = { navController.navigate(Settings.ContextConfiguration) }
+                    onNavigateToContext = { navController.navigate(Settings.ContextConfiguration) },
+                    onNavigateToMagicWandSettings = { navController.navigate(Settings.MagicWandSectionSettings) }
                 )
             }
 
@@ -386,14 +390,13 @@ object Routes {
             }
 
             composableWithDeepLink(Settings.ContextConfiguration::class) {
-                ContextConfigurationScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onNavigateToExampleLibrary = { navController.navigate(Settings.ExampleLibrary) }
+                PersonalDetailsScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
-            composableWithDeepLink(Settings.ExampleLibrary::class) {
-                ExampleLibraryScreen(
+            composableWithDeepLink(Settings.MagicWandSectionSettings::class) {
+                MagicWandSectionSettingsScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

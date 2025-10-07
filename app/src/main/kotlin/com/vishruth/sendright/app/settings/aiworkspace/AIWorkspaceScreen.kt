@@ -35,13 +35,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.platform.LocalDensity
 import kotlinx.coroutines.launch
 import com.vishruth.key1.app.settings.context.ContextManager
+import org.florisboard.lib.android.showShortToast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AIWorkspaceScreen(
     onNavigateBack: () -> Unit,
     onNavigateToCreateCustom: () -> Unit,
-    onNavigateToContext: () -> Unit = {}
+    onNavigateToContext: () -> Unit = {},
+    onNavigateToMagicWandSettings: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -103,6 +105,17 @@ fun AIWorkspaceScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = onNavigateToMagicWandSettings
+                    ) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Section Settings",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             )
@@ -245,7 +258,7 @@ fun AIWorkspaceScreen(
                         }
                     }
                     1 -> { // Custom Assistance tab
-                        // Context Configuration Section (only in Custom tab)
+                        // Personal Details Section (only in Custom tab)
                         item {
                             ContextActionCard(
                                 onNavigateToContext = onNavigateToContext
@@ -415,15 +428,18 @@ fun AIWorkspaceScreen(
                 selectedCustomAction = null
             },
             onSave = { title, description, prompt ->
-                val actionId = selectedCustomAction?.id
-                if (actionId != null) {
+                val action = selectedCustomAction
+                val actionId = action?.id
+                if (actionId != null && action != null) {
                     scope.launch {
                         try {
                             aiWorkspaceManager.updateCustomAction(
                                 actionId = actionId,
                                 title = title,
                                 description = description,
-                                prompt = prompt
+                                prompt = prompt,
+                                includePersonalDetails = action.includePersonalDetails,
+                                includeDateTime = action.includeDateTime
                             )
                         } catch (e: Exception) {
                             // Handle error silently or show toast
@@ -676,8 +692,6 @@ private fun ContextActionCard(
 ) {
     val context = LocalContext.current
     val contextManager = remember { ContextManager.getInstance(context) }
-    val isContextActionEnabled by contextManager.isContextActionEnabled
-    val scope = rememberCoroutineScope()
     
     // Load context configuration
     LaunchedEffect(Unit) {
@@ -690,10 +704,7 @@ private fun ContextActionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .combinedClickable(
-                onClick = { onNavigateToContext() },
-                onLongClick = { onNavigateToContext() }
-            ),
+            .clickable { onNavigateToContext() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -711,7 +722,7 @@ private fun ContextActionCard(
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(
-                        if (isConfigured && isContextActionEnabled) {
+                        if (isConfigured) {
                             MaterialTheme.colorScheme.secondaryContainer
                         } else {
                             MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
@@ -720,9 +731,9 @@ private fun ContextActionCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.Psychology,
+                    Icons.Default.Person,
                     contentDescription = null,
-                    tint = if (isConfigured && isContextActionEnabled) {
+                    tint = if (isConfigured) {
                         MaterialTheme.colorScheme.onSecondaryContainer
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
@@ -736,32 +747,24 @@ private fun ContextActionCard(
             // Content
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Context",
+                    text = "Personal Details",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (isConfigured && isContextActionEnabled) FontWeight.SemiBold else FontWeight.Normal,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = if (isConfigured && isContextActionEnabled) {
-                        MaterialTheme.colorScheme.onSurface
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
                     text = if (isConfigured) {
-                        if (isContextActionEnabled) "Personal AI context active" else "Personal AI context configured"
+                        "Tap to view and edit your personal details"
                     } else {
-                        "Configure personal context for AI"
+                        "Add your personal details for AI personalization"
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (isConfigured && isContextActionEnabled) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                    },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -769,59 +772,13 @@ private fun ContextActionCard(
             
             Spacer(modifier = Modifier.width(12.dp))
             
-            // Action Button matching other custom buttons
-            if (isConfigured) {
-                // Add/Remove Button based on state
-                Button(
-                    onClick = {
-                        scope.launch {
-                            contextManager.setContextActionEnabled(!isContextActionEnabled)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isContextActionEnabled) {
-                            Color(0xFF46BB23).copy(alpha = 0.12f) // Green for remove
-                        } else {
-                            MaterialTheme.colorScheme.primaryContainer
-                        }
-                    ),
-                    shape = RoundedCornerShape(20.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    if (isContextActionEnabled) {
-                        Text(
-                            text = "− Remove",
-                            color = Color(0xFF46BB23),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    } else {
-                        Text(
-                            text = "+ Add",
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            } else {
-                // Configure button
-                Button(
-                    onClick = onNavigateToContext,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    shape = RoundedCornerShape(20.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "Configure",
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+            // Navigation Arrow
+            Icon(
+                Icons.Default.ArrowForward,
+                contentDescription = "Open Personal Details",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

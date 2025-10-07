@@ -414,7 +414,104 @@ object GeminiApiService {
             """.trimIndent()
         }
         
-        // Standard prompt for text transformation features
+        return buildSimplePrompt(inputText, instruction)
+    }
+    
+
+    
+    /**
+     * Build simple clean prompt 
+     */
+    private fun buildSimplePrompt(inputText: String, instruction: String): String {
+        return buildString {
+            appendLine("🎯 TASK:")
+            appendLine(instruction)
+            appendLine()
+            appendLine("📝 USER'S INPUT:")
+            appendLine("\"$inputText\"")
+            appendLine()
+            appendLine("✅ RULES:")
+            appendLine("• Provide only the final result - no explanations")
+            appendLine("• Be natural and contextually appropriate")
+            appendLine("• Match the expected language and tone")
+            appendLine("• IMPORTANT: You are helping the USER - all personal references (my coach, my boss, etc.) refer to the USER'S relationships")
+            appendLine("• When writing emails/messages, you're helping the USER communicate with THEIR contacts")
+        }
+    }
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    /**
+     * Extract the primary instruction without context details
+     */
+    private fun extractPrimaryInstruction(instruction: String): String {
+        val lines = instruction.lines()
+        val cleanLines = mutableListOf<String>()
+        
+        for (line in lines) {
+            val trimmedLine = line.trim()
+            // Skip context-heavy lines and metadata
+            if (!isContextLine(trimmedLine) && !isMetadataLine(trimmedLine)) {
+                cleanLines.add(trimmedLine)
+            }
+        }
+        
+        return cleanLines.joinToString(" ").trim().takeIf { it.isNotBlank() } 
+            ?: "Transform the given text according to the context requirements."
+    }
+    
+    /**
+     * Extract context details from surrounding lines
+     */
+    private fun extractContextDetails(lines: List<String>, startIndex: Int): String {
+        val details = mutableListOf<String>()
+        val endIndex = minOf(startIndex + 10, lines.size) // Look ahead up to 10 lines
+        
+        for (i in startIndex until endIndex) {
+            val line = lines[i].trim()
+            if (line.isNotBlank() && !isMetadataLine(line)) {
+                details.add(line)
+            }
+        }
+        
+        return details.joinToString(". ").take(200) // Limit details to 200 chars
+    }
+    
+    /**
+     * Check if a line contains context information
+     */
+    private fun isContextLine(line: String): Boolean {
+        val contextKeywords = listOf(
+            "context", "relationship", "database", "profile", "user",
+            "cultural", "linguistic", "detected", "relevant", "guidelines"
+        )
+        return contextKeywords.any { keyword -> line.contains(keyword, ignoreCase = true) }
+    }
+    
+    /**
+     * Check if a line is metadata (emojis, headers, decorative)
+     */
+    private fun isMetadataLine(line: String): Boolean {
+        return line.startsWith("🎯") || line.startsWith("📋") || line.startsWith("•") ||
+               line.startsWith("━") || line.contains("SYSTEM:") || line.contains("GUIDELINES:")
+    }
+    
+    /**
+     * Build standard prompt for non-context instructions
+     */
+    private fun buildStandardPrompt(inputText: String, instruction: String): String {
         return """
             $instruction
             
@@ -423,4 +520,6 @@ object GeminiApiService {
             Important: Provide ONLY the transformed text as your response. No explanations, no prefixes like "Here is the answer", no suffixes like "Would you like me to do...", just the direct transformed text result.
         """.trimIndent()
     }
+    
+
 }

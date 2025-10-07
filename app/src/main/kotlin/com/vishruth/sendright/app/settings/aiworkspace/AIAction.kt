@@ -22,7 +22,9 @@ data class AIAction(
     val iconName: String = "auto_awesome",
     val isPopular: Boolean = false,
     val isUserCreated: Boolean = false,
-    val isEnabled: Boolean = true
+    val isEnabled: Boolean = true,
+    val includePersonalDetails: Boolean = false,
+    val includeDateTime: Boolean = false
 ) {
     /**
      * Get the appropriate icon for this AI action
@@ -68,7 +70,7 @@ object PopularAIActions {
             id = "genz_translate",
             title = "GenZ",
             description = "Translate to Gen Z slang and style",
-            prompt = "Rewrite the following text using Gen Z slang, expressions, and communication style. Make it sound trendy and authentic to how Gen Z speaks:",
+            prompt = "rewrite this text in a way that sounds more natural and relatable, Use some casual Gen Z expressions and vibes, but keep it readable and not too over-the-top. Just make it sound like how someone our age would actually say it",
             iconName = "trending_up",
             isPopular = true
         ),

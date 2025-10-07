@@ -103,7 +103,13 @@ class AIWorkspaceManager private constructor(private val context: Context) {
     /**
      * Create a new custom action
      */
-    suspend fun createCustomAction(title: String, description: String, prompt: String): AIAction {
+    suspend fun createCustomAction(
+        title: String, 
+        description: String, 
+        prompt: String,
+        includePersonalDetails: Boolean = false,
+        includeDateTime: Boolean = false
+    ): AIAction {
         val action = AIAction(
             id = UUID.randomUUID().toString(),
             title = title,
@@ -112,7 +118,9 @@ class AIWorkspaceManager private constructor(private val context: Context) {
             iconName = "auto_awesome",
             isPopular = false,
             isUserCreated = true,
-            isEnabled = true
+            isEnabled = true,
+            includePersonalDetails = includePersonalDetails,
+            includeDateTime = includeDateTime
         )
         withContext(Dispatchers.Main) {
             _customActions.add(action)
@@ -125,7 +133,14 @@ class AIWorkspaceManager private constructor(private val context: Context) {
     /**
      * Update an existing custom action
      */
-    suspend fun updateCustomAction(actionId: String, title: String, description: String, prompt: String) {
+    suspend fun updateCustomAction(
+        actionId: String, 
+        title: String, 
+        description: String, 
+        prompt: String,
+        includePersonalDetails: Boolean = false,
+        includeDateTime: Boolean = false
+    ) {
         android.util.Log.d("AIWorkspaceManager", "updateCustomAction called for ID: $actionId")
         withContext(Dispatchers.Main) {
             val index = _customActions.indexOfFirst { it.id == actionId }
@@ -135,7 +150,9 @@ class AIWorkspaceManager private constructor(private val context: Context) {
                 val updatedAction = existingAction.copy(
                     title = title,
                     description = description,
-                    prompt = prompt
+                    prompt = prompt,
+                    includePersonalDetails = includePersonalDetails,
+                    includeDateTime = includeDateTime
                 )
                 _customActions.removeAt(index)
                 _customActions.add(index, updatedAction)

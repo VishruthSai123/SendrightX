@@ -28,6 +28,15 @@ import kotlinx.serialization.json.Json
 import java.util.concurrent.ConcurrentHashMap
 
 /**
+ * Data class representing section settings for manual vs auto arrangement
+ */
+@Serializable
+data class SectionSettings(
+    val isAutoArrangeEnabled: Boolean = false,
+    val manualOrder: List<String> = emptyList()
+)
+
+/**
  * Data class representing usage statistics for a MagicWand section
  */
 @Serializable
@@ -72,6 +81,7 @@ class MagicWandUsageTracker private constructor(context: Context) {
     companion object {
         private const val PREFS_NAME = "magic_wand_usage_prefs"
         private const val USAGE_STATS_KEY = "section_usage_stats"
+        private const val SECTION_SETTINGS_KEY = "section_settings"
         private const val RECENT_USAGE_WINDOW_DAYS = 7
         
         @Volatile
@@ -94,8 +104,13 @@ class MagicWandUsageTracker private constructor(context: Context) {
     private val _orderedSections = MutableStateFlow<List<String>>(emptyList())
     val orderedSections: StateFlow<List<String>> = _orderedSections.asStateFlow()
     
+    // StateFlow for section settings
+    private val _sectionSettings = MutableStateFlow(SectionSettings())
+    val sectionSettings: StateFlow<SectionSettings> = _sectionSettings.asStateFlow()
+    
     init {
         loadUsageStats()
+        loadSectionSettings()
     }
     
     /**
@@ -120,22 +135,32 @@ class MagicWandUsageTracker private constructor(context: Context) {
     }
     
     /**
-     * Get the current ordered list of sections based on usage
+     * Get the current ordered list of sections based on settings (auto vs manual)
      */
     fun getOrderedSections(defaultSections: List<String>): List<String> {
-        // Ensure all default sections have stats entries
-        defaultSections.forEach { sectionTitle ->
-            if (!usageStatsMap.containsKey(sectionTitle)) {
-                usageStatsMap[sectionTitle] = SectionUsageStats(sectionTitle)
+        val currentSettings = _sectionSettings.value
+        
+        return if (currentSettings.isAutoArrangeEnabled) {
+            // Auto arrange based on usage
+            // Ensure all default sections have stats entries
+            defaultSections.forEach { sectionTitle ->
+                if (!usageStatsMap.containsKey(sectionTitle)) {
+                    usageStatsMap[sectionTitle] = SectionUsageStats(sectionTitle)
+                }
+            }
+            
+            // Sort sections by priority score (highest first)
+            defaultSections.sortedByDescending { sectionTitle ->
+                usageStatsMap[sectionTitle]?.calculatePriorityScore() ?: 0.0
+            }
+        } else {
+            // Use manual order if available, otherwise default
+            if (currentSettings.manualOrder.isNotEmpty()) {
+                currentSettings.manualOrder
+            } else {
+                defaultSections
             }
         }
-        
-        // Sort sections by priority score (highest first)
-        val sortedSections = defaultSections.sortedByDescending { sectionTitle ->
-            usageStatsMap[sectionTitle]?.calculatePriorityScore() ?: 0.0
-        }
-        
-        return sortedSections
     }
     
     /**
@@ -225,5 +250,77 @@ class MagicWandUsageTracker private constructor(context: Context) {
      */
     fun getUsageStats(): Map<String, SectionUsageStats> {
         return usageStatsMap.toMap()
+    }
+    
+    /**
+     * Toggle auto arrange mode on/off
+     * Handles edge cases: reset to original order when switching modes
+     */
+    fun toggleAutoArrangeMode() {
+        val currentSettings = _sectionSettings.value
+        val wasAutoEnabled = currentSettings.isAutoArrangeEnabled
+        
+        val newSettings = if (wasAutoEnabled) {
+            // Switching from Auto to Manual: reset to original order
+            currentSettings.copy(
+                isAutoArrangeEnabled = false,
+                manualOrder = emptyList() // Clear manual order to use default
+            )
+        } else {
+            // Switching from Manual to Auto: reset to original order first, then auto-arrange
+            currentSettings.copy(
+                isAutoArrangeEnabled = true,
+                manualOrder = emptyList() // Clear manual order
+            )
+        }
+        
+        _sectionSettings.value = newSettings
+        saveSectionSettings()
+        refreshOrderedSections() // Update sections immediately when toggling
+    }
+    
+    /**
+     * Update manual order of sections
+     */
+    fun updateManualOrder(newOrder: List<String>) {
+        val currentSettings = _sectionSettings.value
+        val newSettings = currentSettings.copy(manualOrder = newOrder)
+        _sectionSettings.value = newSettings
+        saveSectionSettings()
+        
+        // Update sections immediately if manual mode is active
+        if (!currentSettings.isAutoArrangeEnabled) {
+            refreshOrderedSections()
+        }
+    }
+    
+    /**
+     * Load section settings from SharedPreferences
+     */
+    private fun loadSectionSettings() {
+        try {
+            val settingsJson = preferences.getString(SECTION_SETTINGS_KEY, null)
+            if (settingsJson != null) {
+                val settings: SectionSettings = json.decodeFromString(settingsJson)
+                _sectionSettings.value = settings
+            }
+        } catch (e: Exception) {
+            // If loading fails, use default settings
+            _sectionSettings.value = SectionSettings()
+        }
+    }
+    
+    /**
+     * Save section settings to SharedPreferences
+     */
+    private fun saveSectionSettings() {
+        try {
+            val settingsJson = json.encodeToString(_sectionSettings.value)
+            preferences.edit()
+                .putString(SECTION_SETTINGS_KEY, settingsJson)
+                .apply()
+        } catch (e: Exception) {
+            // Handle save errors gracefully
+        }
     }
 }

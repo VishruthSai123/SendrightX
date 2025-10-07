@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Reorder
 import androidx.compose.material.icons.outlined.SmartButton
 import androidx.compose.material.icons.outlined.Spellcheck
 import androidx.compose.material.icons.outlined.TouchApp
@@ -137,6 +138,11 @@ fun HomeScreen() = FlorisScreen {
             icon = Icons.Outlined.Workspaces,
             title = "AI Workspace",
             onClick = { navController.navigate(Routes.Settings.AIWorkspace) },
+        )
+        Preference(
+            icon = Icons.Outlined.Reorder,
+            title = "Section Settings",
+            onClick = { navController.navigate(Routes.Settings.MagicWandSectionSettings) },
         )
         Preference(
             icon = Icons.Filled.Language,
