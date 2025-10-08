@@ -232,20 +232,10 @@ class AiUsageTracker private constructor() {
         prefs.isRewardWindowActive.set(false)
         prefs.rewardWindowStartTime.set(0L)
         
-        // Check if we need to apply a delayed daily reset
-        val lastActionDay = prefs.lastActionDay.get()
-        val shouldApplyDelayedReset = shouldResetDailyCount(lastActionDay)
-        
-        if (shouldApplyDelayedReset) {
-            val currentCount = prefs.dailyActionCount.get()
-            Log.d(TAG, "Applying delayed daily reset after reward window ended: $currentCount -> 0")
-            prefs.dailyActionCount.set(0)
-        }
-        
-        // Update the state flow
+        // Update the state flow (this will automatically handle daily reset if needed)
         loadUsageStats()
         
-        Log.d(TAG, "Reward window ended" + if (shouldApplyDelayedReset) " with delayed daily reset applied" else "")
+        Log.d(TAG, "Reward window ended")
     }
     
     /**
@@ -283,25 +273,16 @@ class AiUsageTracker private constructor() {
             val isRewardWindowActive = prefs.isRewardWindowActive.get()
             val rewardWindowStartTime = prefs.rewardWindowStartTime.get()
             
-            // Reset daily count if it's a new day
+            // Reset daily count if it's a new day - always reset regardless of reward window status
+            // This ensures that midnight reset works correctly for all users regardless of timezone
+            // and guarantees that users get fresh 5 AI actions every day at their local midnight
             val shouldResetToday = shouldResetDailyCount(lastActionDay)
             var actuallyReset = false
             
             if (shouldResetToday) {
-                // Smart reset logic: If user is in an active reward window that started recently (< 2 hours ago),
-                // consider if we should delay the reset to be more user-friendly
-                val shouldDelayReset = isRewardWindowActive && rewardWindowStartTime > 0 && 
-                                     (System.currentTimeMillis() - rewardWindowStartTime) < (2 * 60 * 60 * 1000L) // 2 hours
-                
-                if (shouldDelayReset) {
-                    Log.d(TAG, "Daily reset deferred - user is in recent reward window (< 2h old)")
-                    // Don't reset daily count yet, let them enjoy their reward window
-                    // Daily count will reset naturally when reward window ends or on next app start
-                } else {
-                    Log.d(TAG, "Resetting daily action count from $dailyActionCount to 0")
-                    prefs.dailyActionCount.set(0)
-                    actuallyReset = true
-                }
+                Log.d(TAG, "Resetting daily action count from $dailyActionCount to 0 (new day detected)")
+                prefs.dailyActionCount.set(0)
+                actuallyReset = true
             }
             
             // Calculate reward window end time

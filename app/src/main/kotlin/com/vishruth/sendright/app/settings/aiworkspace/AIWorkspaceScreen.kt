@@ -747,7 +747,7 @@ private fun ContextActionCard(
             // Content
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Personal Details",
+                    text = "Preferences",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -759,9 +759,9 @@ private fun ContextActionCard(
                 
                 Text(
                     text = if (isConfigured) {
-                        "Tap to view and edit your personal details"
+                        "Tap to view and edit your preferences and details"
                     } else {
-                        "Add your personal details for AI personalization"
+                        "Add your preferences and details for AI personalization"
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -775,7 +775,7 @@ private fun ContextActionCard(
             // Navigation Arrow
             Icon(
                 Icons.Default.ArrowForward,
-                contentDescription = "Open Personal Details",
+                contentDescription = "Open Preferences",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )

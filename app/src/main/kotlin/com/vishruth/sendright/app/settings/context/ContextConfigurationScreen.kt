@@ -54,6 +54,8 @@ fun PersonalDetailsScreen(
     var typingStyle by remember { mutableStateOf("Professional") }
     var email by remember { mutableStateOf("") }
     
+
+    
     // Track changes for save button state
     val hasChanges = remember {
         derivedStateOf {
@@ -84,7 +86,7 @@ fun PersonalDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Personal Details") },
+                title = { Text("Preferences") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -187,7 +189,7 @@ private fun PersonalDetailsSection(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
-                text = "Personal Details & Preferences",
+                text = "Preferences and Details",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = GreenOnContainer
@@ -421,7 +423,7 @@ private fun PrivacyNoticeSection() {
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "We do not collect, store, or share your personal details with any third parties. All your personal information is completely saved in your local device storage and remains private.",
+                    text = "We do not collect, store, or share your preferences and details with any third parties. All your information is completely saved in your local device storage and remains private.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 20.sp
@@ -430,3 +432,4 @@ private fun PrivacyNoticeSection() {
         }
     }
 }
+

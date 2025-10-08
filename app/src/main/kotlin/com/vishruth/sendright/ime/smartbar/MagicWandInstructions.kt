@@ -46,7 +46,7 @@ object MagicWandInstructions {
     const val SOLUTION = "Provide a detailed step-by-step solution for this academic problem. Identify the subject area (mathematics, physics, chemistry, biology, etc.) and solve accordingly. For math problems: show all calculation steps, formulas used, and intermediate results. For science problems: explain the concepts, apply relevant formulas, and show work. Use Unicode mathematical symbols (², ³, √, ±, ×, ÷, ≈, ≠, ≤, ≥, π, etc.) where appropriate. Format as clear text suitable for display in a text field. Only provide the solution."
     
     // Tone Changer Section Instructions
-    const val CASUAL = "Rewrite the given text in a casual tone. Only provide the rewritten text."
+    const val CASUAL = "Rewrite the given text in a casual tone. Only provide the rewritten text, no double quotes needed as prefix or suffix"
 
     const val FRIENDLY = "Rewrite the given text in a friendly and approachable way. Only provide the rewritten text."
 

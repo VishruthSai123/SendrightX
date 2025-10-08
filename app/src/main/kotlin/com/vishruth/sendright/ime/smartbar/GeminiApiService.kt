@@ -403,7 +403,28 @@ object GeminiApiService {
     }
     
     private fun buildPrompt(inputText: String, instruction: String): String {
-        // Special handling for chat functionality - treat as direct conversation
+        // Check if the instruction is already enhanced with context (contains context markers)
+        val isEnhancedInstruction = instruction.contains("🧠 CONTEXT INTELLIGENCE SYSTEM:") ||
+                                   instruction.contains("👤 USER PROFILE:") ||
+                                   instruction.contains("🎯 USER'S CUSTOM ACTION:")
+        
+        if (isEnhancedInstruction) {
+            // For enhanced instructions, use them directly with the input text
+            return buildString {
+                appendLine(instruction)
+                appendLine()
+                appendLine("📝 USER'S INPUT:")
+                appendLine("\"$inputText\"")
+                appendLine()
+                appendLine("✅ RESPONSE RULES:")
+                appendLine("• Provide only the final result - no explanations unless asked")
+                appendLine("• Be natural and contextually appropriate")
+                appendLine("• Use the personal context intelligently")
+                appendLine("• All personal references (my coach, my boss, etc.) refer to the USER'S relationships")
+            }
+        }
+        
+        // Special handling for basic chat functionality - treat as direct conversation
         if (instruction == MagicWandInstructions.CHAT) {
             return """
                 $instruction

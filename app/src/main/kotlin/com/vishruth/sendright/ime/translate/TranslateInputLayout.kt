@@ -242,12 +242,10 @@ fun TranslateInputLayout(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
+                    SnyggText(
+                        elementName = FlorisImeUi.SmartbarActionTileText.elementName,
                         text = "Basic Languages",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.onSurface
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     
                     // Basic language buttons in rows of 2

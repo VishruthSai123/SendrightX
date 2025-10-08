@@ -1040,18 +1040,27 @@ suspend fun handleMagicWandButtonClick(
         val aiAction = allAIActions.find { it.title == buttonTitle }
         
         // Get instruction for the button
+        val contextManager = com.vishruth.key1.app.settings.context.ContextManager.getInstance(context)
         val instruction = when {
             aiAction != null -> {
                 // Build enhanced prompt for AI Workspace actions with context options
                 if (aiAction.includePersonalDetails || aiAction.includeDateTime) {
-                    val contextManager = com.vishruth.key1.app.settings.context.ContextManager.getInstance(context)
                     buildEnhancedPrompt(aiAction, contextManager)
                 } else {
                     aiAction.prompt // Use basic custom prompt
                 }
             }
             else -> {
-                MagicWandInstructions.getInstructionForButton(buttonTitle) // Use standard instructions
+                // Enhanced handling for standard AI Actions and Chat
+                val baseInstruction = MagicWandInstructions.getInstructionForButton(buttonTitle)
+                
+                // Check if context is configured for Advanced Actions and Chat (built-in when configured)
+                if (contextManager.isContextConfigured() && 
+                    (isAdvancedSectionAction(buttonTitle) || buttonTitle == "Chat")) {
+                    buildEnhancedStandardPrompt(baseInstruction, contextManager)
+                } else {
+                    baseInstruction // Use basic standard instruction
+                }
             }
         }
         
@@ -1132,5 +1141,26 @@ private fun buildEnhancedPrompt(
     }
     
     return enhancements.joinToString("\n\n") + "\n\n" + basePrompt
+}
+
+/**
+ * Check if a button title belongs to the Advanced section
+ */
+private fun isAdvancedSectionAction(buttonTitle: String): Boolean {
+    val advancedSectionButtons = listOf("Summarise", "Letter", "Optimise", "Formal", "Post Ready")
+    return buttonTitle in advancedSectionButtons
+}
+
+/**
+ * Build enhanced prompt for standard AI Actions and Chat with personal details
+ */
+private fun buildEnhancedStandardPrompt(
+    baseInstruction: String,
+    contextManager: com.vishruth.key1.app.settings.context.ContextManager
+): String {
+    // Get contextual intelligence (already includes date/time)
+    val contextInstruction = contextManager.generateContextInstruction()
+    
+    return contextInstruction + "\n\n🎯 PRIMARY TASK:\n" + baseInstruction
 }
 

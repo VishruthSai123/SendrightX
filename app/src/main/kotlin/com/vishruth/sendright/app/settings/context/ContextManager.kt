@@ -211,6 +211,8 @@ class ContextManager private constructor(private val context: Context) {
         android.util.Log.d("ContextManager", "Context action enabled: $enabled")
     }
     
+
+    
     /**
      * Generate the context instruction to be injected into AI prompts
      */
@@ -223,13 +225,15 @@ class ContextManager private constructor(private val context: Context) {
             appendLine("You are an intelligent AI assistant with deep understanding of the user's personal context and relationships.")
             appendLine()
             
-            // Add current date and time context
+            // Add current date and time context with improved prompting
             val currentDateTime = LocalDateTime.now()
             val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")
             val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
-            appendLine("📅 CURRENT CONTEXT:")
-            appendLine("• Today is: ${currentDateTime.format(dateFormatter)}")
-            appendLine("• Current time: ${currentDateTime.format(timeFormatter)}")
+            appendLine("📅 CURRENT DATE & TIME CONTEXT:")
+            appendLine("• Today's date: ${currentDateTime.format(dateFormatter)}")
+            appendLine("• Present time: ${currentDateTime.format(timeFormatter)}")
+            appendLine("• IMPORTANT: Use today's date when needed for greetings, scheduling, deadlines, or time-sensitive content")
+            appendLine("• Include appropriate dates in letters, emails, or formal documents")
             appendLine()
             
             appendLine("👤 USER PROFILE:")
@@ -261,8 +265,16 @@ class ContextManager private constructor(private val context: Context) {
             appendLine("1. ANALYZE the user's request to understand WHO they're referring to and WHAT they want to accomplish")
             appendLine("2. MATCH entities in the request with your context database (people, relationships, situations)")
             appendLine("3. APPLY appropriate cultural norms, relationship dynamics, and communication styles")
-            appendLine("4. GENERATE responses that show deep understanding of the context, not just translation")
-            appendLine("5. USE natural, culturally appropriate language that reflects the relationship dynamics")
+            appendLine("4. UTILIZE today's date intelligently - include dates in letters, emails, schedules, or time-sensitive content")
+            appendLine("5. GENERATE responses that show deep understanding of the context, not just translation")
+            appendLine("6. USE natural, culturally appropriate language that reflects the relationship dynamics")
+            
+            appendLine()
+            appendLine("📅 DATE-AWARE INTELLIGENCE:")
+            appendLine("• For letters/emails: Automatically include today's date in proper format")
+            appendLine("• For scheduling: Reference current date for deadlines, appointments, meetings")
+            appendLine("• For greetings: Use time-appropriate greetings (Good morning/afternoon/evening)")
+            appendLine("• For formal documents: Include date headers where professionally appropriate")
             
             if (variables.any { it.description.contains("telugu", ignoreCase = true) || it.description.contains("teacher", ignoreCase = true) }) {
                 appendLine()
@@ -273,8 +285,9 @@ class ContextManager private constructor(private val context: Context) {
             }
             
             appendLine()
-            appendLine("✨ Your task is to understand the context deeply and respond intelligently, not just translate or follow basic instructions.")
-            appendLine("Now process this user request with full contextual understanding:")
+            appendLine("✨ Your task is to understand the context deeply and respond intelligently, utilizing today's date when relevant.")
+            appendLine("Remember: Include dates naturally in letters, formal documents, schedules, or any time-sensitive content.")
+            appendLine("Now process this user request with full contextual and temporal understanding:")
         }
         
         return instruction.trim()
