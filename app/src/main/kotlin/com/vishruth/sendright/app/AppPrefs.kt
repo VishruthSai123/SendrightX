@@ -444,6 +444,10 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "internal__home_is_beta_toolbox_collapsed_040a01",
             default = false,
         )
+        val isOnboardingCompleted = boolean(
+            key = "internal__is_onboarding_completed",
+            default = false,
+        )
         val isImeSetUp = boolean(
             key = "internal__is_ime_set_up",
             default = false,

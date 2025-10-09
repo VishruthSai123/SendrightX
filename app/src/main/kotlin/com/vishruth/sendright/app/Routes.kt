@@ -76,6 +76,10 @@ import com.vishruth.key1.app.settings.theme.ThemeManagerScreen
 import com.vishruth.key1.app.settings.theme.ThemeManagerScreenAction
 import com.vishruth.key1.app.settings.theme.ThemeScreen
 import com.vishruth.key1.app.settings.typing.TypingScreen
+import com.vishruth.key1.app.onboarding.OnboardingScreen1
+import com.vishruth.key1.app.onboarding.OnboardingScreen2
+import com.vishruth.key1.app.onboarding.OnboardingScreen3
+import com.vishruth.key1.app.onboarding.OnboardingScreen4
 import com.vishruth.key1.app.setup.SetupScreen
 import com.vishruth.key1.app.setup.EnableImeScreen
 import com.vishruth.key1.app.setup.SelectImeScreen
@@ -109,6 +113,24 @@ inline fun <reified T : Any> NavGraphBuilder.composableWithDeepLink(
 }
 
 object Routes {
+    object Onboarding {
+        @Serializable
+        @Deeplink("onboarding/screen1")
+        object Screen1
+        
+        @Serializable
+        @Deeplink("onboarding/screen2")
+        object Screen2
+        
+        @Serializable
+        @Deeplink("onboarding/screen3")
+        object Screen3
+        
+        @Serializable
+        @Deeplink("onboarding/screen4")
+        object Screen4
+    }
+
     object Setup {
         @Serializable
         object Screen
@@ -328,6 +350,11 @@ object Routes {
                 ) + fadeOut(spring(stiffness = Spring.StiffnessMedium))
             },
         ) {
+            composableWithDeepLink(Onboarding.Screen1::class) { OnboardingScreen1() }
+            composableWithDeepLink(Onboarding.Screen2::class) { OnboardingScreen2() }
+            composableWithDeepLink(Onboarding.Screen3::class) { OnboardingScreen3() }
+            composableWithDeepLink(Onboarding.Screen4::class) { OnboardingScreen4() }
+
             composable<Setup.Screen> { SetupScreen() }
             composableWithDeepLink(Setup.EnableIme::class) { EnableImeScreen() }
             composableWithDeepLink(Setup.SelectIme::class) { SelectImeScreen() }
