@@ -96,8 +96,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggButton
@@ -200,27 +198,14 @@ fun MagicWandPanel(
     val aiUsageTracker = remember { AiUsageTracker.getInstance() }
     val aiUsageStats by aiUsageTracker.usageStats.collectAsState()
     
-    // Lightweight background refresh for usage stats only (non-blocking)
+    // IMMEDIATE cache-free refresh when panel opens (no continuous background loops)
     LaunchedEffect(Unit) {
-        // Initial refresh when panel opens
         try {
-            aiUsageTracker.forceRefreshUsageStats()
+            // Complete cache-free refresh when panel opens - ensures fresh data
+            aiUsageTracker.forceCompleteRefresh()
+            Log.d("MagicWandPanel", "Complete cache-free refresh done on panel open")
         } catch (e: Exception) {
-            Log.e("MagicWandPanel", "Error in initial usage stats refresh", e)
-        }
-        
-        // Background refresh loop - runs on separate dispatcher to avoid UI blocking
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            while (true) {
-                try {
-                    delay(30000) // Wait 30 seconds
-                    // Only refresh usage stats, don't interfere with other operations
-                    aiUsageTracker.forceRefreshUsageStats()
-                } catch (e: Exception) {
-                    Log.e("MagicWandPanel", "Error in background usage stats refresh", e)
-                    // Continue the loop even if one refresh fails
-                }
-            }
+            Log.e("MagicWandPanel", "Error in cache-free refresh on panel open", e)
         }
     }
     
@@ -445,7 +430,8 @@ fun MagicWandPanel(
                                         loadingButton = null
                                     }
                                 } else {
-                                    // Efficient usage check for free users (canUseAiAction already forces refresh)
+                                    // Complete cache-free usage check for free users
+                                    aiUsageTracker.forceCompleteRefresh()
                                     val isAllowed = aiUsageTracker.canUseAiAction()
                                     
                                     if (isAllowed) {
@@ -479,9 +465,11 @@ fun MagicWandPanel(
                                             loadingButton = null
                                         }
                                     } else {
-                                        // Efficient double-check for race conditions (getUsageStats already forces refresh)
+                                        // IMMEDIATE cache-free refresh and check - no continuous loops
+                                        aiUsageTracker.forceCompleteRefresh()
                                         val updatedStats = aiUsageTracker.getUsageStats()
                                         
+                                        // SMART CHECK: Only show limit dialog if user actually has 0 remaining actions
                                         if (updatedStats.remainingActions() == 0) {
                                             val canUseAd = userManager.canUseRewardedAd()
                                             if (canUseAd) {
@@ -491,7 +479,8 @@ fun MagicWandPanel(
                                                 context.showShortToast("You've reached your daily limit and used your free ad. Upgrade to Pro or wait until tomorrow!")
                                             }
                                         } else {
-                                            // Usage was just reset during the check, proceed with action
+                                            // User has available actions (midnight reset occurred), proceed with action
+                                            Log.d("MagicWandPanel", "Usage available after refresh (${updatedStats.remainingActions()} remaining), proceeding with action")
                                             loadingButton = buttonTitle
                                             try {
                                                 handleMagicWandButtonClick(
@@ -500,7 +489,6 @@ fun MagicWandPanel(
                                                     context = context,
                                                     aiUsageTracker = aiUsageTracker
                                                 )
-                                                // No need to force refresh - handleMagicWandButtonClick handles it
                                             } catch (e: Exception) {
                                                 context.showShortToast("Error: ${e.message}")
                                             } finally {
@@ -633,32 +621,8 @@ fun MagicWandPanel(
         }
     }
     
-    // Handle limit dialog dismissal with efficient refresh (only when dialog is visible)
-    if (showLimitDialog) {
-        // Lightweight background check for usage reset - runs on IO dispatcher
-        LaunchedEffect(showLimitDialog) {
-            withContext(Dispatchers.IO) {
-                while (showLimitDialog) {
-                    try {
-                        delay(5000) // Check every 5 seconds only when dialog is shown
-                        // Quick check for usage reset without blocking UI
-                        aiUsageTracker.forceRefreshUsageStats()
-                        val currentStats = aiUsageTracker.getUsageStats()
-                        if (currentStats.remainingActions() > 0) {
-                            // Usage has been reset, dismiss the dialog on main thread
-                            withContext(Dispatchers.Main) {
-                                showLimitDialog = false
-                            }
-                            break
-                        }
-                    } catch (e: Exception) {
-                        Log.e("MagicWandPanel", "Error checking usage during limit dialog", e)
-                        // Continue checking even if one attempt fails
-                    }
-                }
-            }
-        }
-    }
+    // NO continuous background loops for limit dialog - battery efficient approach
+    // The limit dialog will be handled by immediate refresh when needed
 }
 
 @Composable

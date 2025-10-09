@@ -114,16 +114,28 @@ class AiUsageTracker private constructor() {
     
     /**
      * Check if the user has pro subscription from multiple sources.
+     * Uses fresh data from multiple sources to avoid cache issues.
      *
      * @return true if the user is a pro user, false otherwise
      */
     fun isProUser(): Boolean {
         val userManager = UserManager.getInstance()
-        val userData = userManager.userData.value
-        val subscriptionManager = userManager.getSubscriptionManager()
         
-        return userData?.subscriptionStatus == "pro" || 
-               subscriptionManager?.isPro?.value == true
+        // Get fresh user data (this is reactive and should be current)
+        val userData = userManager.userData.value
+        
+        // Get fresh subscription manager status
+        val subscriptionManager = userManager.getSubscriptionManager()
+        val isProFromSubscription = subscriptionManager?.isPro?.value == true
+        
+        // Check multiple sources for pro status
+        val isProFromUserData = userData?.subscriptionStatus == "pro"
+        
+        val isProUser = isProFromUserData || isProFromSubscription
+        
+        Log.d(TAG, "Pro status check: userData=$isProFromUserData, subscription=$isProFromSubscription, final=$isProUser")
+        
+        return isProUser
     }
     
     /**
@@ -261,10 +273,42 @@ class AiUsageTracker private constructor() {
     /**
      * Force refresh usage stats immediately.
      * Call this when you need to ensure the UI shows the most current data.
+     * This method is completely cache-free and always reads fresh data from datastore.
      */
     suspend fun forceRefreshUsageStats() {
-        Log.d(TAG, "Force refreshing usage stats to avoid cache issues")
+        Log.d(TAG, "Force refreshing usage stats to avoid cache issues - reading fresh from datastore")
+        
+        // Force load fresh data from datastore
         loadUsageStats()
+        
+        // Log current state after refresh for debugging
+        val currentStats = _usageStats.value
+        Log.d(TAG, "Fresh stats loaded: dailyCount=${currentStats.dailyActionCount}/${DAILY_LIMIT}, " +
+                  "rewardActive=${currentStats.isRewardWindowActive}, " +
+                  "remaining=${currentStats.remainingActions()}")
+    }
+    
+    /**
+     * Force complete refresh of all usage data from datastore.
+     * This is the most comprehensive refresh method, ensuring zero cache dependency.
+     */
+    suspend fun forceCompleteRefresh() {
+        Log.d(TAG, "Performing complete cache-free refresh of all usage data")
+        
+        // Force refresh usage stats
+        loadUsageStats()
+        
+        // Force check reward window expiry
+        checkAndEndExpiredRewardWindow()
+        
+        // Force another refresh after potential reward window changes
+        loadUsageStats()
+        
+        val stats = _usageStats.value
+        Log.d(TAG, "Complete refresh finished: dailyCount=${stats.dailyActionCount}, " +
+                  "rewardActive=${stats.isRewardWindowActive}, " +
+                  "remaining=${stats.remainingActions()}, " +
+                  "proUser=${isProUser()}")
     }
     
     /**
@@ -383,12 +427,17 @@ class AiUsageTracker private constructor() {
     /**
      * Check if daily usage has been reset (new day detected).
      * This can be used by UI components to detect when limits have been refreshed.
+     * ALWAYS forces fresh data loading to detect resets accurately.
      *
      * @return true if daily usage was just reset, false otherwise
      */
     suspend fun hasUsageBeenReset(): Boolean {
+        // Force refresh to ensure we have the most current data
+        loadUsageStats()
         val oldStats = _usageStats.value
-        loadUsageStats() // Force refresh
+        
+        // Force another refresh to detect any changes
+        loadUsageStats()
         val newStats = _usageStats.value
         
         // If daily count went from non-zero to zero, usage was reset

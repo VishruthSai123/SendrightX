@@ -69,7 +69,6 @@ import com.vishruth.key1.ime.media.KeyboardLikeButton
 import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import com.vishruth.key1.keyboardManager
 import com.vishruth.key1.user.UserManager
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
@@ -124,32 +123,30 @@ fun AiLimitPanel(
                    isProFromSubscriptionManager
     }
     
-    // Auto-dismiss panel when daily limits reset (midnight reset detection)
+    // IMMEDIATE cache-free check on panel open - no continuous battery-draining loops
     LaunchedEffect(Unit) {
-        while (true) {
-            delay(10000) // Check every 10 seconds for daily reset
-            try {
-                // Force refresh usage stats to detect midnight reset
-                aiUsageTracker.forceRefreshUsageStats()
-                
-                // Check if usage has been reset (from limit reached to available actions)
-                val currentStats = aiUsageTracker.getUsageStats()
-                if (currentStats.remainingActions() > 0 && !isProUser) {
-                    // Usage has been reset, dismiss the panel
-                    Log.d("AiLimitPanel", "Daily usage reset detected, dismissing limit panel")
-                    onDismiss()
-                    break
-                }
-                
-                // Also dismiss if user becomes pro
-                if (isProUser) {
-                    Log.d("AiLimitPanel", "User became pro, dismissing limit panel")
-                    onDismiss()
-                    break
-                }
-            } catch (e: Exception) {
-                Log.e("AiLimitPanel", "Error checking for usage reset", e)
+        try {
+            // Complete cache-free refresh when panel opens
+            aiUsageTracker.forceCompleteRefresh()
+            val currentStats = aiUsageTracker.getUsageStats()
+            
+            // Auto-dismiss immediately if user actually has available actions (shouldn't show limit panel)
+            if (currentStats.remainingActions() > 0 && !isProUser) {
+                Log.d("AiLimitPanel", "Cache-free check: User has available actions (${currentStats.remainingActions()}), dismissing limit panel immediately")
+                onDismiss()
+                return@LaunchedEffect
             }
+            
+            // Also dismiss immediately if user is pro
+            if (isProUser) {
+                Log.d("AiLimitPanel", "Cache-free check: User is pro, dismissing limit panel immediately")
+                onDismiss()
+                return@LaunchedEffect
+            }
+            
+            Log.d("AiLimitPanel", "Cache-free check: Limit panel properly shown - user has 0 remaining actions and is not pro")
+        } catch (e: Exception) {
+            Log.e("AiLimitPanel", "Error in cache-free check on panel open", e)
         }
     }
     
