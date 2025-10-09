@@ -129,14 +129,18 @@ class AiUsageTracker private constructor() {
     /**
      * Check if an AI action is allowed without recording it.
      * This method should be called before performing any AI operation to check limits.
+     * ALWAYS refreshes stats from datastore to avoid cache issues.
      *
      * @return true if the action is allowed, false if the limit has been reached
      */
     suspend fun canUseAiAction(): Boolean {
+        // ALWAYS refresh stats first to avoid cache issues with midnight reset
+        loadUsageStats()
+        
         // First, check and update reward window status
         checkAndEndExpiredRewardWindow()
         
-        // Get current stats
+        // Get current stats (freshly loaded)
         val currentStats = _usageStats.value
         
         // If we're in a reward window, allow unlimited actions
@@ -153,20 +157,24 @@ class AiUsageTracker private constructor() {
         
         // Check if we've reached the daily limit
         if (currentStats.dailyActionCount >= DAILY_LIMIT) {
-            Log.d(TAG, "AI action denied - daily limit reached for free user")
+            Log.d(TAG, "AI action denied - daily limit reached for free user (${currentStats.dailyActionCount}/${DAILY_LIMIT})")
             return false
         }
         
-        Log.d(TAG, "AI action allowed - under daily limit")
+        Log.d(TAG, "AI action allowed - under daily limit (${currentStats.dailyActionCount}/${DAILY_LIMIT})")
         return true
     }
     
     /**
      * Record a successful AI action (only call this after a successful API response).
      * This method should be called only when an AI operation completes successfully.
+     * ALWAYS refreshes stats to ensure accurate counting.
      */
     suspend fun recordSuccessfulAiAction() {
-        // Only record for non-pro users who are not in reward window
+        // ALWAYS refresh stats first to get the latest data (handles daily resets)
+        loadUsageStats()
+        
+        // Get current stats after refresh
         val currentStats = _usageStats.value
         
         // Don't count actions for pro users or during reward windows
@@ -180,7 +188,7 @@ class AiUsageTracker private constructor() {
         prefs.dailyActionCount.set(newCount)
         prefs.lastActionDay.set(System.currentTimeMillis())
         
-        // Update the state flow
+        // Force refresh the state flow immediately
         loadUsageStats()
         
         Log.d(TAG, "Successful AI action recorded - count: $newCount")
@@ -240,12 +248,23 @@ class AiUsageTracker private constructor() {
     
     /**
      * Get the current usage statistics.
+     * ALWAYS forces a fresh load from datastore to avoid cache issues.
      *
-     * @return Current AI usage statistics
+     * @return Current AI usage statistics (fresh from datastore)
      */
     suspend fun getUsageStats(): AiUsageStats {
+        // ALWAYS force refresh to ensure no cache issues
         loadUsageStats()
         return _usageStats.value
+    }
+    
+    /**
+     * Force refresh usage stats immediately.
+     * Call this when you need to ensure the UI shows the most current data.
+     */
+    suspend fun forceRefreshUsageStats() {
+        Log.d(TAG, "Force refreshing usage stats to avoid cache issues")
+        loadUsageStats()
     }
     
     /**
@@ -359,5 +378,26 @@ class AiUsageTracker private constructor() {
         if (currentStats.isRewardWindowActive && currentStats.isRewardWindowExpired()) {
             endRewardWindow()
         }
+    }
+    
+    /**
+     * Check if daily usage has been reset (new day detected).
+     * This can be used by UI components to detect when limits have been refreshed.
+     *
+     * @return true if daily usage was just reset, false otherwise
+     */
+    suspend fun hasUsageBeenReset(): Boolean {
+        val oldStats = _usageStats.value
+        loadUsageStats() // Force refresh
+        val newStats = _usageStats.value
+        
+        // If daily count went from non-zero to zero, usage was reset
+        val wasReset = oldStats.dailyActionCount > 0 && newStats.dailyActionCount == 0
+        
+        if (wasReset) {
+            Log.d(TAG, "Daily usage reset detected: ${oldStats.dailyActionCount} -> ${newStats.dailyActionCount}")
+        }
+        
+        return wasReset
     }
 }

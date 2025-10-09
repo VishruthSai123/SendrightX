@@ -71,8 +71,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import android.util.Log
 import androidx.compose.ui.unit.sp
+import android.util.Log
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -96,6 +96,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggButton
@@ -194,9 +196,33 @@ fun MagicWandPanel(
     val editorInstance by context.editorInstance()
     val scope = rememberCoroutineScope()
     
-    // AI Usage Tracking
+    // AI Usage Tracking with forced refresh
     val aiUsageTracker = remember { AiUsageTracker.getInstance() }
     val aiUsageStats by aiUsageTracker.usageStats.collectAsState()
+    
+    // Lightweight background refresh for usage stats only (non-blocking)
+    LaunchedEffect(Unit) {
+        // Initial refresh when panel opens
+        try {
+            aiUsageTracker.forceRefreshUsageStats()
+        } catch (e: Exception) {
+            Log.e("MagicWandPanel", "Error in initial usage stats refresh", e)
+        }
+        
+        // Background refresh loop - runs on separate dispatcher to avoid UI blocking
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            while (true) {
+                try {
+                    delay(30000) // Wait 30 seconds
+                    // Only refresh usage stats, don't interfere with other operations
+                    aiUsageTracker.forceRefreshUsageStats()
+                } catch (e: Exception) {
+                    Log.e("MagicWandPanel", "Error in background usage stats refresh", e)
+                    // Continue the loop even if one refresh fails
+                }
+            }
+        }
+    }
     
     // User Manager for subscription status
     val userManager = remember { UserManager.getInstance() }
@@ -419,7 +445,7 @@ fun MagicWandPanel(
                                         loadingButton = null
                                     }
                                 } else {
-                                    // Check AI usage for free users
+                                    // Efficient usage check for free users (canUseAiAction already forces refresh)
                                     val isAllowed = aiUsageTracker.canUseAiAction()
                                     
                                     if (isAllowed) {
@@ -431,6 +457,8 @@ fun MagicWandPanel(
                                                 context = context,
                                                 aiUsageTracker = aiUsageTracker // Pass tracker for recording successful actions
                                             )
+                                            
+                                            // No need to force refresh here - handleMagicWandButtonClick already does it
                                         } catch (e: Exception) {
                                             val errorMessage = e.message ?: "Something went wrong"
                                             when {
@@ -451,16 +479,32 @@ fun MagicWandPanel(
                                             loadingButton = null
                                         }
                                     } else {
-                                        // Force refresh the UI by getting the latest stats
+                                        // Efficient double-check for race conditions (getUsageStats already forces refresh)
                                         val updatedStats = aiUsageTracker.getUsageStats()
-                                        val canUseAd = userManager.canUseRewardedAd()
                                         
                                         if (updatedStats.remainingActions() == 0) {
+                                            val canUseAd = userManager.canUseRewardedAd()
                                             if (canUseAd) {
                                                 context.showShortToast("Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI.")
                                                 showLimitDialog = true
                                             } else {
                                                 context.showShortToast("You've reached your daily limit and used your free ad. Upgrade to Pro or wait until tomorrow!")
+                                            }
+                                        } else {
+                                            // Usage was just reset during the check, proceed with action
+                                            loadingButton = buttonTitle
+                                            try {
+                                                handleMagicWandButtonClick(
+                                                    buttonTitle = buttonTitle,
+                                                    editorInstance = editorInstance,
+                                                    context = context,
+                                                    aiUsageTracker = aiUsageTracker
+                                                )
+                                                // No need to force refresh - handleMagicWandButtonClick handles it
+                                            } catch (e: Exception) {
+                                                context.showShortToast("Error: ${e.message}")
+                                            } finally {
+                                                loadingButton = null
                                             }
                                         }
                                     }
@@ -589,8 +633,32 @@ fun MagicWandPanel(
         }
     }
     
-    // Limit Reached Panel - will be handled by a separate panel component
-    // This section is intentionally left empty as the AI limit panel will be shown instead
+    // Handle limit dialog dismissal with efficient refresh (only when dialog is visible)
+    if (showLimitDialog) {
+        // Lightweight background check for usage reset - runs on IO dispatcher
+        LaunchedEffect(showLimitDialog) {
+            withContext(Dispatchers.IO) {
+                while (showLimitDialog) {
+                    try {
+                        delay(5000) // Check every 5 seconds only when dialog is shown
+                        // Quick check for usage reset without blocking UI
+                        aiUsageTracker.forceRefreshUsageStats()
+                        val currentStats = aiUsageTracker.getUsageStats()
+                        if (currentStats.remainingActions() > 0) {
+                            // Usage has been reset, dismiss the dialog on main thread
+                            withContext(Dispatchers.Main) {
+                                showLimitDialog = false
+                            }
+                            break
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MagicWandPanel", "Error checking usage during limit dialog", e)
+                        // Continue checking even if one attempt fails
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -1076,6 +1144,9 @@ suspend fun handleMagicWandButtonClick(
             
             // Record successful AI action only after we have a valid response
             aiUsageTracker.recordSuccessfulAiAction()
+            
+            // Force immediate refresh to update UI instantly
+            aiUsageTracker.forceRefreshUsageStats()
             
             // Get or create the ActionResultPanelManager instance
             val actionResultManager = ActionResultPanelManager.getCurrentInstance() 

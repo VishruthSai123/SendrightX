@@ -77,7 +77,7 @@ android {
 
         buildConfigField("String", "BUILD_COMMIT_HASH", "\"${getGitCommitHash()}\"")
         buildConfigField("String", "FLADDONS_API_VERSION", "\"v~draft2\"")
-        buildConfigField("String", "FLADDONS_STORE_URL", "\"beta.addons.sendrightx.org\"")
+        buildConfigField("String", "FLADDONS_STORE_URL", "\"beta.addons.florisboard.org\"")
 
         // NDK configuration for debug symbols
         ndk {

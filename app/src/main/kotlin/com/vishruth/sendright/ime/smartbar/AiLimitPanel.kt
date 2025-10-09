@@ -21,6 +21,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -68,6 +69,7 @@ import com.vishruth.key1.ime.media.KeyboardLikeButton
 import com.vishruth.key1.ime.text.keyboard.TextKeyData
 import com.vishruth.key1.keyboardManager
 import com.vishruth.key1.user.UserManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 import org.florisboard.lib.snygg.ui.SnyggBox
@@ -120,6 +122,35 @@ fun AiLimitPanel(
     LaunchedEffect(userData, isProFromSubscriptionManager) {
         isProUser = userData?.subscriptionStatus == "pro" || 
                    isProFromSubscriptionManager
+    }
+    
+    // Auto-dismiss panel when daily limits reset (midnight reset detection)
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(10000) // Check every 10 seconds for daily reset
+            try {
+                // Force refresh usage stats to detect midnight reset
+                aiUsageTracker.forceRefreshUsageStats()
+                
+                // Check if usage has been reset (from limit reached to available actions)
+                val currentStats = aiUsageTracker.getUsageStats()
+                if (currentStats.remainingActions() > 0 && !isProUser) {
+                    // Usage has been reset, dismiss the panel
+                    Log.d("AiLimitPanel", "Daily usage reset detected, dismissing limit panel")
+                    onDismiss()
+                    break
+                }
+                
+                // Also dismiss if user becomes pro
+                if (isProUser) {
+                    Log.d("AiLimitPanel", "User became pro, dismissing limit panel")
+                    onDismiss()
+                    break
+                }
+            } catch (e: Exception) {
+                Log.e("AiLimitPanel", "Error checking for usage reset", e)
+            }
+        }
     }
     
     if (showAsLayout) {
