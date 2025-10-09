@@ -19,14 +19,12 @@ package com.vishruth.key1.ime.smartbar
 object MagicWandInstructions {
     
     // Enhance Section Instructions
-    const val REPHRASE = "Fix any grammar, spelling, and punctuation errors in the given text while preserving the original meaning, tone, and style. Improve sentence structure for better flow and readability without making the text more verbose or changing the language. Only correct mistakes and enhance clarity minimally. Only provide the corrected text."
-    
     const val GRAMMAR_FIX = "Correct grammar, spelling, and punctuation errors in the given text while keeping the original meaning and tone unchanged. Only fix grammatical mistakes without changing the style or making it more verbose. Only provide the corrected text."
     
     const val REALISTIC = "Make the given text sound more human-like, natural, and conversational. Remove any robotic or artificial language patterns. Make it flow naturally as if spoken by a real person. Only provide the enhanced text."
 
     // Advanced Section Instructions
-    const val REWRITE = "Fix any grammar, spelling, and punctuation errors in the given text while preserving the original meaning, tone, and style. Improve sentence structure for better flow and readability without making the text more verbose or changing the language. Only correct mistakes and enhance clarity minimally. Only provide the corrected text."
+    const val REWRITE = "Fix any grammar, spelling, and punctuation errors in the given text while preserving the original meaning, tone, and style. Improve sentence structure for better flow and readability without making the text more verbose or changing the language. Only correct mistakes and enhance clarity minimally. Only provide the corrected text, no double quotes needed as prefix or suffix."
 
     const val SUMMARISE = "Summarise the given text briefly, keeping only the key points. Only provide the summary."
 
@@ -107,7 +105,6 @@ object MagicWandInstructions {
     fun getInstructionForButton(buttonTitle: String): String {
         return when (buttonTitle) {
             // Enhance Section
-            "Rephrase" -> REPHRASE
             "Grammar Fix" -> GRAMMAR_FIX
             "Realistic" -> REALISTIC
             
