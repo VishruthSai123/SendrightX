@@ -16,6 +16,13 @@
 
 package com.vishruth.key1.app.onboarding
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -32,8 +39,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,6 +69,15 @@ fun OnboardingScreen1() {
     val prefs by FlorisPreferenceStore
     val scope = rememberCoroutineScope()
     var videoProgress by remember { mutableFloatStateOf(0f) }
+    var showButton by remember { mutableStateOf(false) }
+    var timerFinished by remember { mutableStateOf(false) }
+    
+    // 30-second timer
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(30000) // 30 seconds
+        timerFinished = true
+        showButton = true
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -81,17 +99,39 @@ fun OnboardingScreen1() {
             }
         )
 
-        // Bottom frame with video progress bar
+        // Bottom frame with animated expansion
+        val bottomPadding by animateDpAsState(
+            targetValue = if (showButton) 24.dp else 24.dp,
+            animationSpec = tween(600),
+            label = "bottomPadding"
+        )
+        
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 .background(Color.White.copy(alpha = 0.95f))
-                .padding(24.dp)
+                .padding(bottomPadding)
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Show title when button is not visible
+            AnimatedVisibility(
+                visible = !timerFinished,
+                enter = fadeIn(animationSpec = tween(300)),
+                exit = fadeOut(animationSpec = tween(300))
+            ) {
+                Text(
+                    text = "Welcome to SendRight",
+                    fontSize = 24.sp,
+                    color = Color(0xFF1F2937),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+            
             // Video progress bar
             LinearProgressIndicator(
                 progress = { videoProgress },
@@ -103,31 +143,46 @@ fun OnboardingScreen1() {
                 trackColor = Color(0xFFE5E7EB)
             )
             
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            Button(
-                onClick = {
-                    scope.launch {
-                        prefs.internal.isOnboardingCompleted.set(true)
-                        navController.navigate(Routes.Setup.EnableIme) {
-                            popUpTo(Routes.Onboarding.Screen1) { inclusive = true }
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4AA60D)
-                ),
-                shape = RoundedCornerShape(16.dp)
+            // Animated button appearance
+            AnimatedVisibility(
+                visible = showButton,
+                enter = expandVertically(
+                    animationSpec = tween(600)
+                ) + fadeIn(animationSpec = tween(300, delayMillis = 200)),
+                exit = shrinkVertically(
+                    animationSpec = tween(400)
+                ) + fadeOut()
             ) {
-                Text(
-                    text = "Get Started",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                prefs.internal.isOnboardingCompleted.set(true)
+                                navController.navigate(Routes.Setup.EnableIme) {
+                                    popUpTo(Routes.Onboarding.Screen1) { inclusive = true }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4AA60D)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(
+                            text = "Get Started",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White
+                        )
+                    }
+                }
             }
         }
     }
