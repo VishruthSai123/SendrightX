@@ -56,6 +56,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
+import android.view.WindowManager
+import android.app.Activity
 import com.vishruth.key1.R
 import com.vishruth.key1.app.LocalNavController
 import com.vishruth.key1.app.Routes
@@ -68,9 +72,20 @@ fun OnboardingScreen1() {
     val navController = LocalNavController.current
     val prefs by FlorisPreferenceStore
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var videoProgress by remember { mutableFloatStateOf(0f) }
     var showButton by remember { mutableStateOf(false) }
     var timerFinished by remember { mutableStateOf(false) }
+    
+    // Keep screen awake while video is playing
+    DisposableEffect(Unit) {
+        val window = (context as? Activity)?.window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
     
     // 20-second timer
     LaunchedEffect(Unit) {
