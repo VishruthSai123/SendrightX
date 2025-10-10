@@ -296,6 +296,11 @@ dependencies {
     implementation("com.google.android.play:integrity:1.5.0")
     implementation("com.google.android.play:review:2.0.2")
     implementation("com.google.android.play:review-ktx:2.0.2")
+    
+    // Media3 ExoPlayer for video playback
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.common)
 
     implementation(project(":lib:android"))
     implementation(project(":lib:color"))

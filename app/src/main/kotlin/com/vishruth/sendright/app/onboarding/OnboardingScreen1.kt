@@ -29,8 +29,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,26 +46,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.rememberCoroutineScope
 import com.vishruth.key1.R
 import com.vishruth.key1.app.LocalNavController
 import com.vishruth.key1.app.Routes
+import com.vishruth.key1.app.FlorisPreferenceStore
+import com.vishruth.key1.app.components.VideoBackground
+import kotlinx.coroutines.launch
 
 @Composable
 fun OnboardingScreen1() {
     val navController = LocalNavController.current
+    val prefs by FlorisPreferenceStore
+    val scope = rememberCoroutineScope()
+    var videoProgress by remember { mutableFloatStateOf(0f) }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Background image
+        // Background image (fallback)
         Image(
-            painter = painterResource(R.drawable.setupbgimage),
+            painter = painterResource(R.drawable.setupbgimage2),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+        
+        // Video background overlay
+        VideoBackground(
+            rawVideoRes = R.raw.onboardingvideo,
+            modifier = Modifier.fillMaxSize(),
+            onProgressUpdate = { progress ->
+                videoProgress = progress
+            }
+        )
 
-        // Bottom frame (20% of screen height)
+        // Bottom frame with video progress bar
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -71,30 +92,26 @@ fun OnboardingScreen1() {
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Welcome to SendRight",
-                fontSize = 24.sp,
-                color = Color(0xFF1F2937),
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Text(
-                text = "The AI-powered keyboard that transforms your typing experience with intelligent suggestions and automation.",
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center,
-                color = Color(0xFF6B7280),
-                lineHeight = 22.sp
+            // Video progress bar
+            LinearProgressIndicator(
+                progress = { videoProgress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = Color(0xFF4AA60D),
+                trackColor = Color(0xFFE5E7EB)
             )
             
             Spacer(modifier = Modifier.height(32.dp))
             
             Button(
                 onClick = {
-                    navController.navigate(Routes.Onboarding.Screen2) {
-                        popUpTo(Routes.Onboarding.Screen1) { inclusive = true }
+                    scope.launch {
+                        prefs.internal.isOnboardingCompleted.set(true)
+                        navController.navigate(Routes.Setup.EnableIme) {
+                            popUpTo(Routes.Onboarding.Screen1) { inclusive = true }
+                        }
                     }
                 },
                 modifier = Modifier
@@ -106,7 +123,7 @@ fun OnboardingScreen1() {
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    text = "Next",
+                    text = "Get Started",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White

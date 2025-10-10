@@ -25,6 +25,7 @@ google-mobile-ads = "24.6.0"
 google-auth = "21.3.0"
 google-billing = "8.0.0"
 firebase-bom = "33.1.1"  # Updated to a stable version
+androidx-media3 = "1.5.1"  # Media3 ExoPlayer for video playback
 
 # Testing
 androidx-benchmark = "1.3.4"
@@ -75,6 +76,9 @@ google-billing = { module = "com.android.billingclient:billing-ktx", version.ref
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }  # Updated Firebase BOM
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }  # Added Firebase Auth
 firebase-firestore-ktx = { module = "com.google.firebase:firebase-firestore-ktx" }  # Added Firestore
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "androidx-media3" }
+androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "androidx-media3" }
+androidx-media3-common = { module = "androidx.media3:media3-common", version.ref = "androidx-media3" }
 
 # Testing
 androidx-benchmark-macro = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "androidx-benchmark" }
