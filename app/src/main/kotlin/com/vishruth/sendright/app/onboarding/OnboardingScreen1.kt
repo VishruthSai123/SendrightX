@@ -72,9 +72,9 @@ fun OnboardingScreen1() {
     var showButton by remember { mutableStateOf(false) }
     var timerFinished by remember { mutableStateOf(false) }
     
-    // 30-second timer
+    // 20-second timer
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(30000) // 30 seconds
+        kotlinx.coroutines.delay(20000) // 20 seconds
         timerFinished = true
         showButton = true
     }

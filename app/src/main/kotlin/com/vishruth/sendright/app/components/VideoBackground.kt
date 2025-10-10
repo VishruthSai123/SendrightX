@@ -39,6 +39,7 @@ import androidx.media3.ui.PlayerView
 fun VideoBackground(
     rawVideoRes: Int,
     modifier: Modifier = Modifier,
+    shouldLoop: Boolean = true,
     onVideoReady: () -> Unit = {},
     onProgressUpdate: (Float) -> Unit = {},
 ) {
@@ -51,7 +52,7 @@ fun VideoBackground(
             .apply {
                 // Optimize for fast startup
                 setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
-                repeatMode = Player.REPEAT_MODE_ONE
+                repeatMode = if (shouldLoop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
                 volume = 0f // Mute the video for background playback
                 
                 // Set up media item from raw resource
