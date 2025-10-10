@@ -120,7 +120,7 @@ fun StartCustomizationScreen() {
     ) {
         // Background image (fallback)
         Image(
-            painter = painterResource(R.drawable.setupbgimage3),
+            painter = painterResource(R.drawable.setupbgimage2),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
