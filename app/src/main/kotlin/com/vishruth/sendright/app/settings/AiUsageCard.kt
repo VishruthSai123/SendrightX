@@ -53,12 +53,15 @@ fun AiUsageCard(
     // Determine if user is pro from multiple sources
     val isProUser = userData?.subscriptionStatus == "pro" || isProFromSubscription
     
+    // Check if user is in rewarded window (24h unlimited access after ads)
+    val isInRewardWindow = aiUsageStats.isRewardWindowActive
+    
     // Calculate usage statistics
     val dailyLimit = 5 // Free daily limit
     val usedCount = aiUsageStats.dailyActionCount
     val remainingCount = maxOf(0, dailyLimit - usedCount)
     val progress = if (dailyLimit > 0) usedCount.toFloat() / dailyLimit.toFloat() else 0f
-    val isLimitReached = usedCount >= dailyLimit && !isProUser
+    val isLimitReached = usedCount >= dailyLimit && !isProUser && !isInRewardWindow
     
     // Force refresh usage stats when card is displayed to ensure cache-free data
     LaunchedEffect(Unit) {
@@ -107,19 +110,31 @@ fun AiUsageCard(
                     )
                     Spacer(modifier = Modifier.width(5.dp))
                     Text(
-                        text = if (isProUser) "Premium Plan" else "Free Plan",
+                        text = when {
+                            isProUser -> "Premium Plan"
+                            isInRewardWindow -> "Reward Active"
+                            else -> "Free Plan"
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (isProUser) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
+                        color = when {
+                            isProUser -> Color(0xFF2E7D32) // Green for premium
+                            isInRewardWindow -> Color(0xFF2E7D32) // Green for reward (matching premium)
+                            else -> MaterialTheme.colorScheme.onSurface
+                        }
                     )
                 }
                 
                 if (!isProUser) {
                     Text(
-                        text = "$usedCount/$dailyLimit",
+                        text = if (isInRewardWindow) "Unlimited" else "$usedCount/$dailyLimit",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = if (isLimitReached) Color(0xFFD32F2F) else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = when {
+                            isInRewardWindow -> Color(0xFF2E7D32) // Green for unlimited (matching reward active)
+                            isLimitReached -> Color(0xFFD32F2F)
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 }
             }
@@ -128,12 +143,37 @@ fun AiUsageCard(
             
             if (isProUser) {
                 // Pro user content
-
+                Text(
+                    text = "✨ You are a Premium User",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF2E7D32)
+                )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "Thanks for subscribing! Enjoy unlimited AI features.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF388E3C)
+                )
+            } else if (isInRewardWindow) {
+                // Rewarded window content
+                Text(
+                    text = "🎉 Enjoying 24h unlimited access!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF2E7D32) // Green to match reward active text
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Show remaining time
+                val remainingMs = aiUsageStats.rewardWindowTimeRemaining()
+                val remainingHours = remainingMs / (1000 * 60 * 60)
+                val remainingMinutes = (remainingMs % (1000 * 60 * 60)) / (1000 * 60)
+                
+                Text(
+                    text = "Time remaining: ${remainingHours}h ${remainingMinutes}m",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF388E3C) // Lighter green for remaining time
                 )
             } else {
                 // Free user content
@@ -154,38 +194,40 @@ fun AiUsageCard(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 
-                // Progress bar
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFFE0E0E0))
-                ) {
+                // Progress bar (only show for regular free users, not during reward window)
+                if (!isInRewardWindow) {
                     Box(
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(progress.coerceIn(0f, 1f))
-                            .background(
-                                color = when {
-                                    isLimitReached -> Color(0xFFD32F2F)
-                                    progress > 0.8f -> Color(0xFFFF9800)
-                                    else -> Color(0xFFFFFFFF)
-                                },
-                                shape = RoundedCornerShape(4.dp)
-                            )
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFFE0E0E0))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                                .background(
+                                    color = when {
+                                        isLimitReached -> Color(0xFFD32F2F)
+                                        progress > 0.8f -> Color(0xFFFF9800)
+                                        else -> Color(0xFF4CAF50)
+                                    },
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Animated Upgrade button (only show for regular free users)
+                    AnimatedUpgradeButton(
+                        onClick = onUpgradeClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
                     )
                 }
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                // Animated Upgrade button
-                AnimatedUpgradeButton(
-                    onClick = onUpgradeClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                )
                 
                 if (isLimitReached) {
                     Spacer(modifier = Modifier.height(8.dp))
