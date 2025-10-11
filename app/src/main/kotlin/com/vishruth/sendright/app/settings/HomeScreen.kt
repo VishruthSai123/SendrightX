@@ -42,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -57,6 +58,10 @@ import org.florisboard.lib.android.stringRes
 import org.florisboard.lib.compose.FlorisErrorCard
 import org.florisboard.lib.compose.FlorisWarningCard
 import org.florisboard.lib.compose.stringRes
+
+//colors
+private val SubscriptionGreenDark = Color(0xFF2A7A15)
+private val SubscriptionGreen = Color(0xFF46BB23)
 
 @Composable
 fun HomeScreen() = FlorisScreen {
@@ -77,7 +82,7 @@ fun HomeScreen() = FlorisScreen {
                 painter = painterResource(R.drawable.premium),
                 contentDescription = "Premium",
                 modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = SubscriptionGreen
             )
         }
     }
@@ -133,6 +138,12 @@ fun HomeScreen() = FlorisScreen {
                 }
             }
         }*/
+        
+        // AI Usage Tracking Card
+        AiUsageCard(
+            onUpgradeClick = { navController.navigate(Routes.Subscription.Screen) },
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
         
         Preference(
             icon = Icons.Outlined.Workspaces,
