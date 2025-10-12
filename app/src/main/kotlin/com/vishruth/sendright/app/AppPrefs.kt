@@ -83,7 +83,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
     inner class Clipboard {
         val useInternalClipboard = boolean(
             key = "clipboard__use_internal_clipboard",
-            default = false,
+            default = true,
         )
         val syncToFloris = boolean(
             key = "clipboard__sync_to_floris",
@@ -91,11 +91,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val syncToSystem = boolean(
             key = "clipboard__sync_to_system",
-            default = false,
+            default = true,
         )
         val historyEnabled = boolean(
             key = "clipboard__history_enabled",
-            default = false,
+            default = true,
         )
         val numHistoryGridColumnsPortrait = int(
             key = "clipboard__num_history_grid_columns_portrait",
@@ -164,7 +164,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val autoSpacePunctuation = boolean(
             key = "correction__auto_space_punctuation",
-            default = false,
+            default = true,
         )
         val doubleSpacePeriod = boolean(
             key = "correction__double_space_period",
@@ -172,7 +172,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val rememberCapsLockState = boolean(
             key = "correction__remember_caps_lock_state",
-            default = false,
+            default = true,
         )
     }
 
@@ -269,11 +269,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionCandidateShowName = boolean(
             key = "emoji__suggestion_candidate_show_name",
-            default = false,
+            default = true,
         )
         val suggestionQueryMinLength = int(
             key = "emoji__suggestion_query_min_length",
-            default = 3,
+            default = 2,
         )
         val suggestionCandidateMaxCount = int(
             key = "emoji__suggestion_candidate_max_count",
