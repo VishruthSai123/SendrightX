@@ -83,22 +83,46 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                 wordData.containsKey(wordLower) || wordData.containsKey(word) -> {
                     SpellingResult.validWord()
                 }
-                // For longer words, check for typos using edit distance
+                // Enhanced typo detection for better spell checking
                 wordLower.length > 2 -> {
-                    val suggestions = mutableListOf<String>()
+                    val suggestions = mutableListOf<Pair<String, Int>>()
                     
-                    // More sophisticated typo detection
-                    wordData.keys.forEach { dictWord ->
-                        val distance = calculateEditDistance(wordLower, dictWord.lowercase())
-                        // Only consider words with edit distance <= 2 and length difference <= 2
-                        if (distance <= 2 && kotlin.math.abs(wordLower.length - dictWord.length) <= 2) {
-                            suggestions.add(dictWord)
+                    // Enhanced typo detection with better scoring
+                    wordData.forEach { (dictWord, frequency) ->
+                        val dictWordLower = dictWord.lowercase()
+                        val distance = calculateEditDistance(wordLower, dictWordLower)
+                        val lengthDiff = kotlin.math.abs(wordLower.length - dictWordLower.length)
+                        
+                        // More lenient criteria for spell checking suggestions
+                        val isGoodMatch = when {
+                            // Allow 1 edit distance for similar length words
+                            distance == 1 && lengthDiff <= 1 -> true
+                            // Allow 2 edit distance for longer words
+                            distance == 2 && wordLower.length >= 5 && lengthDiff <= 2 -> true
+                            // Special handling for transposition typos
+                            distance == 2 && isTranspositionTypo(wordLower, dictWordLower) -> true
+                            // Allow prefix matches for completion
+                            dictWordLower.startsWith(wordLower) && dictWordLower.length <= wordLower.length + 3 -> true
+                            else -> false
+                        }
+                        
+                        if (isGoodMatch) {
+                            // Score based on edit distance and frequency
+                            val distanceScore = when (distance) {
+                                0 -> 1000 // Exact match (shouldn't happen here but just in case)
+                                1 -> 900  // Single character difference
+                                2 -> 700  // Two character difference
+                                else -> 500
+                            }
+                            val finalScore = distanceScore + (frequency / 10)
+                            suggestions.add(dictWord to finalScore)
                         }
                     }
                     
                     val sortedSuggestions = suggestions
-                        .sortedByDescending { wordData[it] ?: 0 }
+                        .sortedByDescending { it.second }
                         .take(maxSuggestionCount)
+                        .map { it.first }
                         .toTypedArray()
                     
                     if (sortedSuggestions.isNotEmpty()) {
@@ -141,6 +165,67 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         }
         
         return matrix[len1][len2]
+    }
+    
+    /**
+     * Detects common transposition typos where characters are swapped or inserted/deleted in common patterns
+     * For example: "ipdate" -> "update", "recieve" -> "receive", "teh" -> "the"
+     */
+    private fun isTranspositionTypo(typed: String, correct: String): Boolean {
+        if (kotlin.math.abs(typed.length - correct.length) > 2) return false
+        
+        // Check for adjacent character swaps (like "teh" -> "the")
+        if (typed.length == correct.length) {
+            var swapCount = 0
+            for (i in 0 until typed.length - 1) {
+                if (typed[i] == correct[i + 1] && typed[i + 1] == correct[i]) {
+                    swapCount++
+                    if (swapCount > 1) return false // Only allow one swap
+                }
+            }
+            if (swapCount == 1) return true
+        }
+        
+        // Check for common insertion/deletion patterns (like "ipdate" -> "update")
+        // This checks if removing one character from the longer string makes them similar
+        val longer = if (typed.length > correct.length) typed else correct
+        val shorter = if (typed.length > correct.length) correct else typed
+        
+        if (longer.length - shorter.length == 1) {
+            for (i in longer.indices) {
+                val withoutChar = longer.removeRange(i, i + 1)
+                if (calculateEditDistance(withoutChar, shorter) <= 1) {
+                    return true
+                }
+            }
+        }
+        
+        // Check for keyboard layout proximity (characters that are close on QWERTY keyboard)
+        val proximityMap = mapOf(
+            'i' to listOf('u', 'o', 'j', 'k', '8', '9'),
+            'u' to listOf('i', 'y', 'h', 'j', '7', '8'),
+            'o' to listOf('i', 'p', 'k', 'l', '9', '0'),
+            'e' to listOf('w', 'r', 's', 'd', '3', '4'),
+            'r' to listOf('e', 't', 'd', 'f', '4', '5'),
+            't' to listOf('r', 'y', 'f', 'g', '5', '6')
+        )
+        
+        // Check if the difference is just nearby keys
+        if (typed.length == correct.length) {
+            var proximityErrors = 0
+            for (i in typed.indices) {
+                if (typed[i] != correct[i]) {
+                    val proximityChars = proximityMap[typed[i].lowercaseChar()]
+                    if (proximityChars?.contains(correct[i].lowercaseChar()) != true) {
+                        proximityErrors++
+                        if (proximityErrors > 1) return false
+                    }
+                }
+            }
+            return proximityErrors <= 1
+        }
+        
+        return false
     }
 
     override suspend fun suggest(
@@ -220,6 +305,37 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
             return prefixCandidates
         }
         
+        // For 2-character input, be less restrictive to help with early suggestions
+        if (composingText.length == 2) {
+            val candidates = combinedWordData.entries
+                .filter { (word, _) -> 
+                    val wordLower = word.lowercase()
+                    when {
+                        wordLower.startsWith(composingTextLower) -> true  // Prefix match
+                        wordLower.length >= 3 && calculateEditDistance(composingTextLower, wordLower.take(2)) <= 1 -> true  // Early typo detection
+                        else -> false
+                    }
+                }
+                .sortedByDescending { it.value }
+                .take(maxCandidateCount)
+                .map { (word, frequency) ->
+                    val wordLower = word.lowercase()
+                    val confidence = when {
+                        wordLower.startsWith(composingTextLower) -> frequency / 255.0
+                        else -> (frequency / 255.0) * 0.7  // Lower confidence for fuzzy matches
+                    }
+                    
+                    WordSuggestionCandidate(
+                        text = word,
+                        confidence = confidence,
+                        isEligibleForAutoCommit = false,  // Don't auto-commit on short input
+                        sourceProvider = this@LatinLanguageProvider,
+                    )
+                }
+            flogDebug { "Returning ${candidates.size} candidates for 2-character input '$composingText'" }
+            return candidates
+        }
+        
         // Process words with much stricter similarity requirements
         val exactMatches = mutableListOf<WordSuggestionCandidate>()
         val prefixMatches = mutableListOf<WordSuggestionCandidate>()
@@ -286,15 +402,37 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         ))
                     }
                 }
-                // Much more restrictive fuzzy matching - only for clear typos
+                // Enhanced fuzzy matching for typos and similar words
                 composingTextLower.length >= 3 && wordLower.length >= 3 -> {
                     val distance = calculateEditDistance(composingTextLower, wordLower)
-                    val maxLength = kotlin.math.max(composingTextLower.length, wordLower.length)
-                    val similarity = 1.0 - (distance.toDouble() / maxLength.toDouble())
+                    val lengthDiff = kotlin.math.abs(composingTextLower.length - wordLower.length)
                     
-                    // Very strict similarity threshold - only obvious typos
-                    if (similarity >= 0.9) {
-                        val adjustedConfidence = (confidence * similarity * 0.8).coerceAtMost(0.9)
+                    // More lenient matching for common typo patterns
+                    val isValidFuzzyMatch = when {
+                        // Allow 1 edit distance for words of similar length (common typos)
+                        distance == 1 && lengthDiff <= 1 -> true
+                        // Allow 2 edit distance for longer words with small length difference
+                        distance == 2 && composingTextLower.length >= 5 && lengthDiff <= 2 -> true
+                        // Special case for transposition typos (like "ipdate" -> "update")
+                        distance == 2 && isTranspositionTypo(composingTextLower, wordLower) -> true
+                        else -> false
+                    }
+                    
+                    if (isValidFuzzyMatch) {
+                        // Calculate similarity score with better weighting
+                        val maxLength = kotlin.math.max(composingTextLower.length, wordLower.length)
+                        val baseSimilarity = 1.0 - (distance.toDouble() / maxLength.toDouble())
+                        
+                        // Boost similarity for common patterns
+                        val boostedSimilarity = when {
+                            // High boost for single character changes
+                            distance == 1 -> baseSimilarity * 1.1
+                            // Medium boost for transposition typos
+                            isTranspositionTypo(composingTextLower, wordLower) -> baseSimilarity * 1.05
+                            else -> baseSimilarity
+                        }.coerceAtMost(1.0)
+                        
+                        val adjustedConfidence = (confidence * boostedSimilarity * 0.85).coerceAtMost(0.95)
                         
                         // Preserve case for typo corrections
                         val finalWord = if (composingText.firstOrNull()?.isUpperCase() == true) {
@@ -306,7 +444,7 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         fuzzyMatches.add(WordSuggestionCandidate(
                             text = finalWord,
                             confidence = adjustedConfidence,
-                            isEligibleForAutoCommit = similarity > 0.95 && adjustedConfidence > 0.8,
+                            isEligibleForAutoCommit = distance == 1 && adjustedConfidence > 0.75,
                             sourceProvider = this@LatinLanguageProvider,
                         ))
                     }
