@@ -316,15 +316,18 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     fun commitGesture(word: String) {
-        // For glide typing, only apply case changes if caps lock is active
-        // This preserves saved words' original case in most situations
+        // Apply appropriate case changes based on current shift state
         val processedWord = when (activeState.inputShiftState) {
             InputShiftState.CAPS_LOCK -> {
-                // Only apply caps lock - this is a strong user intention
+                // Apply caps lock - strong user intention
                 word.uppercase(subtypeManager.activeSubtype.primaryLocale.base)
             }
+            InputShiftState.SHIFTED_MANUAL, InputShiftState.SHIFTED_AUTOMATIC -> {
+                // Apply title case for shifted state - user wants capitalization
+                word.titlecase(subtypeManager.activeSubtype.primaryLocale)
+            }
             else -> {
-                // Preserve the original case of saved words for other states
+                // Preserve the original case for unshifted state
                 word
             }
         }
