@@ -238,7 +238,7 @@ fun AiLimitPanel(
                         }
                         "Watch a short ad to unlock $durationText of unlimited AI actions!"
                     } else {
-                        "You've used your monthly free ad extension. Upgrade to Pro for unlimited access."
+                        "Oops,You've used Unlimited AD Reward ,Go Pro for unlimited access at just the price of a pani puri..💚😎 "
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
