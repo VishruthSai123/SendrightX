@@ -316,7 +316,7 @@ private fun sendEmailReport(
     }
 
     val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-        data = Uri.parse("mailto:vishruthsait@gmail.com")
+        data = Uri.parse("mailto:sendrightai@gmail.com")
         putExtra(Intent.EXTRA_SUBJECT, subject)
         putExtra(Intent.EXTRA_TEXT, body)
     }
@@ -327,7 +327,7 @@ private fun sendEmailReport(
         // Fallback to general email intent
         val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
             type = "message/rfc822"
-            putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("sendrightai@gmail.com"))
             putExtra(Intent.EXTRA_SUBJECT, subject)
             putExtra(Intent.EXTRA_TEXT, body)
         }

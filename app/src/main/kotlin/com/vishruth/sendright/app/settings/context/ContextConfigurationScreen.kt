@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.florisboard.lib.android.showShortToast
 
+@ExperimentalMaterial3Api
+
 // Green theme colors - consistent across app
 private val GreenPrimary = Color(0xFF46BB23)
 private val GreenContainer = Color(0xFF46BB23).copy(alpha = 0.12f)
@@ -52,6 +54,7 @@ fun PersonalDetailsScreen(
     var age by remember { mutableStateOf("") }
     var preferredLanguage by remember { mutableStateOf("English") }
     var typingStyle by remember { mutableStateOf("Professional") }
+    var responseLength by remember { mutableStateOf("Medium") }
     var email by remember { mutableStateOf("") }
     
 
@@ -64,6 +67,7 @@ fun PersonalDetailsScreen(
             age != (personalDetails.age?.toString() ?: "") ||
             preferredLanguage != personalDetails.preferredLanguage ||
             typingStyle != personalDetails.typingStyle ||
+            responseLength != personalDetails.responseLength ||
             email != personalDetails.email
         }
     }
@@ -75,6 +79,7 @@ fun PersonalDetailsScreen(
         age = personalDetails.age?.toString() ?: ""
         preferredLanguage = personalDetails.preferredLanguage
         typingStyle = personalDetails.typingStyle
+        responseLength = personalDetails.responseLength
         email = personalDetails.email
     }
     
@@ -103,6 +108,7 @@ fun PersonalDetailsScreen(
                                     age = ageInt,
                                     preferredLanguage = preferredLanguage,
                                     typingStyle = typingStyle,
+                                    responseLength = responseLength,
                                     email = email.trim()
                                 )
                                 contextManager.updatePersonalDetails(details)
@@ -148,6 +154,8 @@ fun PersonalDetailsScreen(
                 onPreferredLanguageChange = { preferredLanguage = it },
                 typingStyle = typingStyle,
                 onTypingStyleChange = { typingStyle = it },
+                responseLength = responseLength,
+                onResponseLengthChange = { responseLength = it },
                 email = email,
                 onEmailChange = { email = it }
             )
@@ -161,6 +169,7 @@ fun PersonalDetailsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PersonalDetailsSection(
     name: String,
@@ -173,6 +182,8 @@ private fun PersonalDetailsSection(
     onPreferredLanguageChange: (String) -> Unit,
     typingStyle: String,
     onTypingStyleChange: (String) -> Unit,
+    responseLength: String,
+    onResponseLengthChange: (String) -> Unit,
     email: String,
     onEmailChange: (String) -> Unit
 ) {
@@ -258,6 +269,13 @@ private fun PersonalDetailsSection(
             TypingStyleDropdown(
                 selectedStyle = typingStyle,
                 onStyleSelected = onTypingStyleChange,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            // Response Length dropdown - full width
+            ResponseLengthDropdown(
+                selectedLength = responseLength,
+                onLengthSelected = onResponseLengthChange,
                 modifier = Modifier.fillMaxWidth()
             )
             
@@ -376,6 +394,67 @@ private fun TypingStyleDropdown(
                     text = { Text(style.displayName) },
                     onClick = {
                         onStyleSelected(style.displayName)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ResponseLengthDropdown(
+    selectedLength: String,
+    onLengthSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val lengths = ResponseLength.values()
+    
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = selectedLength,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Response Length", color = GreenOnContainer) },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = GreenPrimary,
+                unfocusedBorderColor = GreenPrimary.copy(alpha = 0.2f),
+                focusedLabelColor = GreenPrimary,
+                cursorColor = GreenPrimary
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+        
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            lengths.forEach { length ->
+                DropdownMenuItem(
+                    text = { 
+                        Column {
+                            Text(length.displayName)
+                            Text(
+                                text = length.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = {
+                        onLengthSelected(length.displayName)
                         expanded = false
                     }
                 )

@@ -84,6 +84,26 @@ class ContextManager private constructor(private val context: Context) {
     }
     
     /**
+     * Load context configuration from storage synchronously for immediate use
+     */
+    private fun loadConfigurationSync() {
+        try {
+            if (contextFile.exists()) {
+                val jsonContent = contextFile.readText()
+                val config = Json.decodeFromString<ContextConfiguration>(jsonContent)
+                
+                _personalDetails.value = config.personalDetails
+                _customVariables.clear()
+                _customVariables.addAll(config.customVariables)
+                _isContextActionEnabled.value = config.isContextActionEnabled
+                android.util.Log.d("ContextManager", "Configuration loaded synchronously for context generation")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ContextManager", "Error loading configuration synchronously", e)
+        }
+    }
+    
+    /**
      * Save context configuration to storage
      */
     suspend fun saveConfiguration() {
@@ -217,6 +237,9 @@ class ContextManager private constructor(private val context: Context) {
      * Generate the context instruction to be injected into AI prompts
      */
     fun generateContextInstruction(): String {
+        // Load fresh configuration to ensure we have the latest preferences
+        loadConfigurationSync()
+        
         val details = _personalDetails.value
         val variables = _customVariables.toList()
         
@@ -269,6 +292,16 @@ class ContextManager private constructor(private val context: Context) {
             appendLine("5. GENERATE responses that show deep understanding of the context, not just translation")
             appendLine("6. USE natural, culturally appropriate language that reflects the relationship dynamics")
             
+            // Add response length preference
+            val responseLengthInstruction = when (details.responseLength.lowercase()) {
+                "short" -> "7. RESPONSE LENGTH: Keep responses concise and to-the-point. Provide brief, clear answers without unnecessary elaboration."
+                "medium" -> "7. RESPONSE LENGTH: Provide balanced responses with adequate detail. Include necessary explanations while maintaining clarity."
+                "lengthy" -> "7. RESPONSE LENGTH: Provide comprehensive, detailed responses. Include thorough explanations, examples, and additional context when helpful."
+                else -> "7. RESPONSE LENGTH: Provide balanced responses with adequate detail. Include necessary explanations while maintaining clarity."
+            }
+            
+            appendLine(responseLengthInstruction)
+
             appendLine()
             appendLine("📅 DATE-AWARE INTELLIGENCE:")
             appendLine("• For letters/emails: Automatically include today's date in proper format")
@@ -294,6 +327,14 @@ class ContextManager private constructor(private val context: Context) {
     }
     
 
+    
+    /**
+     * Get fresh personal details by loading from storage if needed
+     */
+    fun getFreshPersonalDetails(): PersonalDetails {
+        loadConfigurationSync()
+        return _personalDetails.value
+    }
     
     /**
      * Check if we can add more custom variables

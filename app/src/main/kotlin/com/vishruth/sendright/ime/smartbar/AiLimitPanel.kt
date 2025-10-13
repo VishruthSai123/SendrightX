@@ -36,7 +36,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -192,6 +194,7 @@ fun AiLimitPanel(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -338,7 +341,7 @@ fun AiLimitPanel(
                     }
                 }
             }
-            }
+        }
         }
     } else {
         // Original panel version
@@ -351,6 +354,7 @@ fun AiLimitPanel(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -397,7 +401,7 @@ fun AiLimitPanel(
                             }
                             "Watch a short ad to unlock $durationText of unlimited AI actions!"
                         } else {
-                            "You've used your monthly free ad extension. Upgrade to Pro for unlimited access."
+                            "Oops,You've used monthly Unlimited AD Reward ,Go Pro for unlimited access at just the price of a pani puri..💚😎"
                         },
                         modifier = Modifier.fillMaxWidth()
                     )

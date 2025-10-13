@@ -1166,6 +1166,17 @@ private fun buildEnhancedPrompt(
     if (aiAction.includePersonalDetails) {
         val contextInstruction = contextManager.generateContextInstruction()
         enhancements.add(contextInstruction)
+    } else {
+        // Even without personal details, include response length preference
+        // Get fresh personal details to ensure we have the latest response length setting
+        val personalDetails = contextManager.getFreshPersonalDetails()
+        val responseLengthInstruction = when (personalDetails.responseLength.lowercase()) {
+            "short" -> "7. RESPONSE LENGTH: Keep responses concise and to-the-point. Provide brief, clear answers without unnecessary elaboration."
+            "medium" -> "7. RESPONSE LENGTH: Provide balanced responses with adequate detail. Include necessary explanations while maintaining clarity."
+            "lengthy" -> "7. RESPONSE LENGTH: Provide comprehensive, detailed responses. Include thorough explanations, examples, and additional context when helpful."
+            else -> "7. RESPONSE LENGTH: Provide balanced responses with adequate detail. Include necessary explanations while maintaining clarity."
+        }
+        enhancements.add(responseLengthInstruction)
     }
     
     if (aiAction.includeDateTime) {

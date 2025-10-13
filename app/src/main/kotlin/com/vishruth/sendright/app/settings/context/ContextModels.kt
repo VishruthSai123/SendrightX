@@ -17,6 +17,7 @@ data class PersonalDetails(
     val age: Int? = null,
     val preferredLanguage: String = "English",
     val typingStyle: String = "Professional", // Polite, Professional, Casual, Gen Z
+    val responseLength: String = "Medium", // Short, Medium, Lengthy
     val email: String = ""
 )
 
@@ -64,4 +65,13 @@ enum class TypingStyle(val displayName: String) {
     PROFESSIONAL("Professional"), 
     CASUAL("Casual"),
     GEN_Z("Gen Z")
+}
+
+/**
+ * Enumeration of available response lengths
+ */
+enum class ResponseLength(val displayName: String, val description: String) {
+    SHORT("Short", "Concise, brief responses"),
+    MEDIUM("Medium", "Balanced, moderate length"),
+    LENGTHY("Lengthy", "Detailed, comprehensive responses")
 }

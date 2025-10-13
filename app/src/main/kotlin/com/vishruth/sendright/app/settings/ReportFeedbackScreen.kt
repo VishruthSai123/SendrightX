@@ -198,7 +198,7 @@ Device Model: ${Build.DEVICE}""".trimIndent()
                             val gmailIntent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 setPackage("com.google.android.gm") // Force Gmail app
-                                putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf("sendrightai@gmail.com"))
                                 putExtra(Intent.EXTRA_SUBJECT, subject)
                                 putExtra(Intent.EXTRA_TEXT, emailBody)
                             }
@@ -209,7 +209,7 @@ Device Model: ${Build.DEVICE}""".trimIndent()
                                 // If Gmail app not available, try generic email
                                 val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "message/rfc822"
-                                    putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+                                    putExtra(Intent.EXTRA_EMAIL, arrayOf("sendrightai@gmail.com"))
                                     putExtra(Intent.EXTRA_SUBJECT, subject)
                                     putExtra(Intent.EXTRA_TEXT, emailBody)
                                 }
@@ -257,7 +257,7 @@ Thank you for helping improve SendRight!"""
                 val gmailIntent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
                     setPackage("com.google.android.gm") // Force Gmail app
-                    putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+                    putExtra(Intent.EXTRA_EMAIL, arrayOf("sendrightai@gmail.com"))
                     putExtra(Intent.EXTRA_SUBJECT, quickSubject)
                     putExtra(Intent.EXTRA_TEXT, quickBody)
                 }
@@ -268,7 +268,7 @@ Thank you for helping improve SendRight!"""
                     // If Gmail app not available, try generic email
                     val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "message/rfc822"
-                        putExtra(Intent.EXTRA_EMAIL, arrayOf("vishruthsait@gmail.com"))
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf("sendrightai@gmail.com"))
                         putExtra(Intent.EXTRA_SUBJECT, quickSubject)
                         putExtra(Intent.EXTRA_TEXT, quickBody)
                     }
@@ -284,7 +284,7 @@ Thank you for helping improve SendRight!"""
         Preference(
             icon = Icons.AutoMirrored.Filled.Help,
             title = "Contact Information",
-            summary = "Email: vishruthsait@gmail.com • Response within 24-48 hours"
+            summary = "Email: sendrightai@gmail.com • Response within 24-48 hours"
         )
     }
 }

@@ -3273,8 +3273,8 @@
     <issue
         id="UseKtx"
         message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="        data = Uri.parse(&quot;mailto:vishruthsait@gmail.com&quot;)"
-        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="        data = Uri.parse(&quot;mailto:sendrightai@gmail.com&quot;)"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/vishruth/sendright/app/settings/about/ReportFeedbackScreen.kt"
             line="319"
@@ -3284,8 +3284,8 @@
     <issue
         id="UseKtx"
         message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="        data = Uri.parse(&quot;mailto:vishruthsait@gmail.com&quot;)"
-        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="        data = Uri.parse(&quot;mailto:sendrightai@gmail.com&quot;)"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/vishruth/sendright/app/settings/about/ReportFeedbackScreen.kt"
             line="319"

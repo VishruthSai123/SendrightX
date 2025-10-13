@@ -269,7 +269,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionCandidateShowName = boolean(
             key = "emoji__suggestion_candidate_show_name",
-            default = true,
+            default = false,
         )
         val suggestionQueryMinLength = int(
             key = "emoji__suggestion_query_min_length",

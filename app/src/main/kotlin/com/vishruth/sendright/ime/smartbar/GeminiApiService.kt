@@ -416,11 +416,13 @@ object GeminiApiService {
                 appendLine("📝 USER'S INPUT:")
                 appendLine("\"$inputText\"")
                 appendLine()
-                appendLine("✅ RESPONSE RULES:")
+                appendLine("✅ CRITICAL RESPONSE RULES:")
+                appendLine("• STRICTLY FOLLOW the RESPONSE LENGTH REQUIREMENT specified above")
                 appendLine("• Provide only the final result - no explanations unless asked")
                 appendLine("• Be natural and contextually appropriate")
                 appendLine("• Use the personal context intelligently")
                 appendLine("• All personal references (my coach, my boss, etc.) refer to the USER'S relationships")
+                appendLine("• IMPORTANT: Respect the exact sentence count/length specified in the RESPONSE LENGTH REQUIREMENT")
             }
         }
         
