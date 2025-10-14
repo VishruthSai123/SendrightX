@@ -36,6 +36,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.vishruth.key1.app.devtools.AndroidLocalesScreen
 import com.vishruth.key1.app.devtools.AndroidSettingsScreen
 import com.vishruth.key1.app.devtools.DevtoolsScreen
@@ -77,6 +79,7 @@ import com.vishruth.key1.app.settings.theme.ThemeManagerScreenAction
 import com.vishruth.key1.app.settings.theme.ThemeScreen
 import com.vishruth.key1.app.settings.typing.TypingScreen
 import com.vishruth.key1.app.onboarding.OnboardingScreen1
+import com.vishruth.key1.app.onboarding.PersonalizationIntroScreen
 import com.vishruth.key1.app.setup.SetupScreen
 import com.vishruth.key1.app.setup.EnableImeScreen
 import com.vishruth.key1.app.setup.SelectImeScreen
@@ -114,6 +117,14 @@ object Routes {
         @Serializable
         @Deeplink("onboarding/screen1")
         object Screen1
+        
+        @Serializable
+        @Deeplink("onboarding/personalization-intro")
+        object PersonalizationIntro
+        
+        @Serializable
+        @Deeplink("onboarding/context-configuration")
+        object ContextConfiguration
     }
 
     object Setup {
@@ -336,6 +347,15 @@ object Routes {
             },
         ) {
             composableWithDeepLink(Onboarding.Screen1::class) { OnboardingScreen1() }
+            composableWithDeepLink(Onboarding.PersonalizationIntro::class) { PersonalizationIntroScreen() }
+            composableWithDeepLink(Onboarding.ContextConfiguration::class) {
+                PersonalDetailsScreen(
+                    onNavigateBack = {
+                        // Simple navigation back - no preference tracking needed
+                        navController.popBackStack()
+                    }
+                )
+            }
 
             composable<Setup.Screen> { SetupScreen() }
             composableWithDeepLink(Setup.EnableIme::class) { EnableImeScreen() }

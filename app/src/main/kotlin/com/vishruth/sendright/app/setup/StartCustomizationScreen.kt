@@ -179,7 +179,7 @@ fun StartCustomizationScreen() {
                         scope.launch { 
                             prefs.internal.isImeSetUp.set(true) 
                         }
-                        navController.navigate(Routes.Settings.Home) {
+                        navController.navigate(Routes.Onboarding.PersonalizationIntro) {
                             popUpTo(Routes.Setup.StartCustomization) {
                                 inclusive = true
                             }

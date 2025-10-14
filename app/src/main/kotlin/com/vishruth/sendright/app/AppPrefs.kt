@@ -452,6 +452,10 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "internal__is_ime_set_up",
             default = false,
         )
+        val isPersonalizationIntroCompleted = boolean(
+            key = "internal__is_personalization_intro_completed",
+            default = false,
+        )
         val versionOnInstall = string(
             key = "internal__version_on_install",
             default = VersionName.DEFAULT_RAW,

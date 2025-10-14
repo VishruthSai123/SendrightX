@@ -1,13 +1,13 @@
 <img align="left" width="80" height="80"
 src=".github/repo_icon.png" alt="App icon">
 
-# SendRight Keyboard (Based on FlorisBoard)
+# SendRight - AI-Enhanced Keyboard
 
-> **Note**: This repository contains SendRight, an AI-enhanced Android keyboard based on the original FlorisBoard project by Patrick Zedler and The FlorisBoard Contributors. The original FlorisBoard project can be found at: https://github.com/florisboard/florisboard
+> **Note**: This repository contains SendRight, an AI-enhanced Android keyboard based on the original FlorisBoard project by Patrick Goldinger and The FlorisBoard Contributors. The original FlorisBoard project can be found at: https://github.com/florisboard/florisboard
 
-[![Crowdin](https://badges.crowdin.net/florisboard/localized.svg)](https://crowdin.florisboard.org) [![Matrix badge](https://img.shields.io/badge/chat-%23florisboard%3amatrix.org-blue)](https://matrix.to/#/#florisboard:matrix.org) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md) [![FlorisBoard CI](https://github.com/florisboard/florisboard/actions/workflows/android.yml/badge.svg?event=push)](https://github.com/florisboard/florisboard/actions/workflows/android.yml)
+[![Crowdin](https://badges.crowdin.net/florisboard/localized.svg)](https://crowdin.florisboard.org) [![Matrix badge](https://img.shields.io/badge/chat-%23florisboard%3amatrix.org-blue)](https://matrix.to/#/#florisboard:matrix.org) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-**SendRight** is an AI-enhanced Android keyboard based on **FlorisBoard**. It includes all the features of FlorisBoard plus additional AI-powered functionality including Magic Wand text processing, Gemini API integration, and enhanced user experience improvements.
+**SendRight 4.1** combines FlorisBoard's solid foundation with cutting-edge AI features. Experience intelligent typing with Magic Wand text processing, custom AI assistants, intelligent workspaces, seamless Gemini API integration, and advanced personalization.
 
 ## Attribution
 
@@ -72,35 +72,62 @@ This project is based on [FlorisBoard](https://github.com/florisboard/florisboar
 
 Beginning with v0.7 FlorisBoard will enter the public beta on Google Play.
 
-## Highlighted features
-- Integrated clipboard manager / history
-- Advanced theming support and customization
-- Integrated extension support (still evolving)
-- Emoji keyboard / history / suggestions
+## Highlighted Features
+
+### 🪄 AI-Powered Magic Wand
+- **Study Tools**: Explain concepts, format equations, step-by-step solutions
+- **Writing Enhancement**: Rewrite, summarize, optimize, and formalize text
+- **Tone Control**: Switch between casual, professional, friendly, and creative styles
+- **Translation Hub**: Multi-language support with intelligent context awareness
+- **Chat Integration**: Direct conversational AI for real-time assistance
+
+### 🤖 Custom AI Assistants & AI Workspace
+- **Custom AI Actions**: Create personalized AI commands with custom prompts
+- **Popular Actions**: Pre-built actions like "Humanise", "GenZ Translate", "Reply"
+- **Dynamic Workspace**: Context-aware AI suggestions that adapt to your usage
+- **Personal Context**: AI can learn your personal details and preferences
+- **Pro Features**: Advanced AI capabilities with subscription support
+
+### 🎨 Advanced Customization & Theming
+- **Snygg Theming System**: Material You integration with comprehensive customization
+- **Smart Clipboard**: Intelligent history management with organization features
+- **Glide Typing**: Precision gesture recognition with visual feedback trails
+- **Voice Integration**: Seamless Google Voice Typing handoff
+- **Emoji Intelligence**: Complete Unicode support with smart suggestions
+
+### 🌐 Core Keyboard Features
+- **50+ Languages**: Multi-language support with RTL script compatibility
+- **Gesture Support**: Customizable swipe actions and precision controls
+- **Extension Support**: Evolving ecosystem for themes and functionality
+- **Privacy-First**: Local processing with encrypted AI communications
 
 > [!IMPORTANT]
-> Word suggestions/spell checking are not included in the current releases
-> and are a major goal for the v0.6 milestone.
+> SendRight includes advanced AI features powered by Gemini API integration.
+> AI usage tracking and Pro subscription features are available for enhanced functionality.
 
-Feature roadmap: See [ROADMAP.md](ROADMAP.md)
+## 🔒 Privacy & Security
+- **Zero Data Collection**: Complete privacy protection with local processing priority
+- **Encrypted AI Communications**: Secure API interactions with fallback systems
+- **Transparent Permissions**: Clear control over data access and AI features
+- **Open Source Foundation**: Built on trusted FlorisBoard architecture with enhancements
+
+## 🎯 Perfect For
+- **Professionals**: AI-assisted business communication and multilingual correspondence
+- **Students**: Academic writing with equation support and research assistance
+- **Content Creators**: Smart social media optimization and creative writing tools
+- **Power Users**: Custom AI integration, advanced workspace features, and pro capabilities
 
 ## Contributing
-Want to contribute to FlorisBoard? That's great to hear! There are lots of
-different ways to help out, please see the [contribution guidelines](CONTRIBUTING.md) for more info.
+Want to contribute to SendRight? We welcome contributions! Please see the [contribution guidelines](CONTRIBUTING.md) for more info. This project maintains compatibility with FlorisBoard's contribution standards while adding AI-specific enhancements.
 
 ## Addons Store
-The official [Addons Store](https://beta.addons.florisboard.org) offers the possibility for the community to share and download FlorisBoard extensions.
-Instructions on how to publish addons can be found [here](https://github.com/florisboard/florisboard/wiki/How-to-publish-on-FlorisBoard-Addons).
-
-Many thanks to Ali ([@4H1R](https://github.com/4H1R)) for implementing the store!
+The official [FlorisBoard Addons Store](https://beta.addons.florisboard.org) remains compatible with SendRight for themes and extensions.
 
 > [!NOTE]
-> During the initial beta release phase, the Addons Store _will_ only accept theme extensions.
-> Later on we plan to add support for language packs and keyboard extensions.
+> SendRight extends FlorisBoard with AI features while maintaining full compatibility with existing FlorisBoard themes and extensions.
 
-## List of permissions FlorisBoard requests
-Please refer to this [page](https://github.com/florisboard/florisboard/wiki/List-of-permissions-FlorisBoard-requests)
-to get more information on this topic.
+## List of Permissions SendRight Requests
+Please refer to this [page](https://github.com/florisboard/florisboard/wiki/List-of-permissions-FlorisBoard-requests) for detailed information about permissions. SendRight includes additional AI-related permissions for enhanced functionality including internet access for Gemini API integration.
 
 ## APK signing certificate hashes
 
@@ -118,21 +145,23 @@ dev.patrickgold.florisboard.beta<br>
 0B:80:71:64:50:8E:AF:EB:1F:BB:81:5B:E7:A2:3C:77:FE:68:9D:94:B1:43:75:C9:9B:DA:A9:B6:57:7F:D6:D6
 
 
-## Used libraries, components and icons
-* [AndroidX libraries](https://github.com/androidx/androidx) by
-  [Android Jetpack](https://github.com/androidx)
-* [AboutLibraries](https://github.com/mikepenz/AboutLibraries) by
-  [mikepenz](https://github.com/mikepenz)
-* [Google Material icons](https://github.com/google/material-design-icons) by
-  [Google](https://github.com/google)
-* [JetPref preference library](https://github.com/patrickgold/jetpref) by
-  [patrickgold](https://github.com/patrickgold)
-* [KotlinX coroutines library](https://github.com/Kotlin/kotlinx.coroutines) by
-  [Kotlin](https://github.com/Kotlin)
-* [KotlinX serialization library](https://github.com/Kotlin/kotlinx.serialization) by
-  [Kotlin](https://github.com/Kotlin)
+## Used Libraries and Components
+### Core FlorisBoard Libraries
+* [AndroidX libraries](https://github.com/androidx/androidx) by [Android Jetpack](https://github.com/androidx)
+* [AboutLibraries](https://github.com/mikepenz/AboutLibraries) by [mikepenz](https://github.com/mikepenz)
+* [Google Material icons](https://github.com/google/material-design-icons) by [Google](https://github.com/google)
+* [JetPref preference library](https://github.com/patrickgold/jetpref) by [patrickgold](https://github.com/patrickgold)
+* [KotlinX coroutines library](https://github.com/Kotlin/kotlinx.coroutines) by [Kotlin](https://github.com/Kotlin)
+* [KotlinX serialization library](https://github.com/Kotlin/kotlinx.serialization) by [Kotlin](https://github.com/Kotlin)
 
-Many thanks to [Nikolay Anzarov](https://www.behance.net/nikolayanzarov) ([@BloodRaven0](https://github.com/BloodRaven0)) for designing and providing the main app icons to this project!
+### SendRight AI Enhancements
+* **Google Gemini API** - Advanced AI text processing and enhancement
+* **Custom AI Framework** - Personalized assistant and workspace intelligence
+* **Context Management System** - Personal details and custom variable handling
+* **Usage Tracking & Analytics** - AI feature usage monitoring and optimization
+* **Subscription Management** - Pro feature access and billing integration
+
+Many thanks to [Nikolay Anzarov](https://www.behance.net/nikolayanzarov) ([@BloodRaven0](https://github.com/BloodRaven0)) for designing the original FlorisBoard icon foundation!
 
 ## License
 ```
@@ -151,7 +180,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-Thanks to [The FlorisBoard Contributors](https://github.com/florisboard/florisboard/graphs/contributors) for making this project possible!
+**SendRight**: Where Intelligence Meets Artistry  
+*Enhanced AI Features • Built on FlorisBoard Excellence*
+
+Crafted with 💚 by **Vishruth Technologies**  
+Special thanks to Patrick Goldinger and The FlorisBoard Contributors for the exceptional foundation.
 
 <!-- BEGIN SECTION: obtainium_links -->
 <!-- auto-generated link templates, do NOT edit by hand -->

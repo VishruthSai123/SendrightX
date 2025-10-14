@@ -211,6 +211,7 @@ class FlorisAppActivity : ComponentActivity() {
 
         val isOnboardingCompleted by prefs.internal.isOnboardingCompleted.observeAsState()
         val isImeSetUp by prefs.internal.isImeSetUp.observeAsState()
+        val isPersonalizationIntroCompleted by prefs.internal.isPersonalizationIntroCompleted.observeAsState()
 
         CompositionLocalProvider(
             LocalNavController provides navController,
@@ -236,6 +237,7 @@ class FlorisAppActivity : ComponentActivity() {
                         startDestination = when {
                             !isOnboardingCompleted -> Routes.Onboarding.Screen1::class
                             !isImeSetUp -> Routes.Setup.Screen::class
+                            !isPersonalizationIntroCompleted -> Routes.Onboarding.PersonalizationIntro::class
                             else -> Routes.Settings.Home::class
                         },
                     )
