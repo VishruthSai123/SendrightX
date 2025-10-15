@@ -1,6 +1,16 @@
 # Disable obfuscation (we use Proguard exclusively for optimization)
 -dontobfuscate
 
+# Keep all navigation route classes and their serializers
+-keep class com.vishruth.key1.app.Routes** { *; }
+-keep class com.vishruth.key1.app.Routes$** { *; }
+
+# Keep context configuration classes to prevent navigation issues
+-keep class com.vishruth.key1.app.settings.context.** { *; }
+
+# Keep navigation composable functions
+-keep class com.vishruth.key1.app.onboarding.** { *; }
+
 # Keep `Companion` object fields of serializable classes.
 # This avoids serializer lookup through `getDeclaredClasses` as done for named companion objects.
 -if @kotlinx.serialization.Serializable class **
@@ -27,3 +37,17 @@
 
 # @Serializable and @Polymorphic are used at runtime for polymorphic serialization.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault
+
+# Keep Compose Navigation classes and serialization
+-keep class androidx.navigation.** { *; }
+-keep class * extends androidx.navigation.NavDestination { *; }
+
+# Keep all Deeplink annotation classes
+-keep @com.vishruth.key1.app.Deeplink class * { *; }
+-keepclasseswithmembers class * {
+    @com.vishruth.key1.app.Deeplink <methods>;
+}
+
+# Ensure Compose functions are not stripped
+-keep class androidx.compose.runtime.** { *; }
+-keep class androidx.compose.ui.** { *; }
