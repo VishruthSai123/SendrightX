@@ -109,15 +109,9 @@ fun TextInputLayout(
                                    usageStats.remainingActions() == 0 && 
                                    !usageStats.isRewardWindowActive
                 
-                if (isLimitReached) {
-                    AiLimitPanel(
-                        onDismiss = {
-                            keyboardManager.closeMagicWandPanel()
-                        }
-                    )
-                } else {
-                    MagicWandPanel()
-                }
+                // Always show MagicWandPanel - it will handle limit checking internally
+                // and switch to ImeUiMode.AI_LIMIT when needed
+                MagicWandPanel()
             } else {
                 Box {
                     val incognitoDisplayMode by prefs.keyboard.incognitoDisplayMode.observeAsState()
