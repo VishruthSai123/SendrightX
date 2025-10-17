@@ -161,7 +161,7 @@ object GeminiApiService {
         }
     }
     
-    suspend fun transformText(inputText: String, instruction: String, context: Context? = null): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun transformText(inputText: String, instruction: String, context: Context? = null, bypassCache: Boolean = false): Result<String> = withContext(Dispatchers.IO) {
         // Check network connectivity if context is provided
         context?.let {
             if (!NetworkUtils.isNetworkAvailable(it)) {
@@ -172,40 +172,49 @@ object GeminiApiService {
         // Create cache key for request deduplication and caching
         val cacheKey = generateCacheKey(inputText, instruction)
         
-        // Check if there's already an active request for the same input
-        activeRequests[cacheKey]?.let { activeRequest ->
-            try {
-                return@withContext activeRequest.await()
-            } catch (e: Exception) {
-                // Remove failed request from active requests
-                activeRequests.remove(cacheKey)
+        // For regenerate requests, skip cache and active request checks to ensure fresh responses
+        if (!bypassCache) {
+            // Check if there's already an active request for the same input
+            activeRequests[cacheKey]?.let { activeRequest ->
+                try {
+                    return@withContext activeRequest.await()
+                } catch (e: Exception) {
+                    // Remove failed request from active requests
+                    activeRequests.remove(cacheKey)
+                }
+            }
+            
+            // Check cache first to avoid repeated API calls (only if not bypassing cache)
+            getCachedResponse(cacheKey)?.let { cachedResponse ->
+                return@withContext Result.success(cachedResponse)
             }
         }
         
-        // Check cache first to avoid repeated API calls
-        getCachedResponse(cacheKey)?.let { cachedResponse ->
-            return@withContext Result.success(cachedResponse)
-        }
-        
-        // Create deferred for this request to prevent duplicates
+        // Create deferred for this request to prevent duplicates (unless bypassing cache)
         val deferred = async {
             performApiRequest(inputText, instruction, cacheKey)
         }
         
-        activeRequests[cacheKey] = deferred
+        if (!bypassCache) {
+            activeRequests[cacheKey] = deferred
+        }
         
         try {
             val result = deferred.await()
             
-            // Cache successful responses
-            result.onSuccess { response ->
-                cacheResponse(cacheKey, response)
+            // Cache successful responses (unless bypassing cache)
+            if (!bypassCache) {
+                result.onSuccess { response ->
+                    cacheResponse(cacheKey, response)
+                }
             }
             
             return@withContext result
         } finally {
-            // Always remove from active requests when done
-            activeRequests.remove(cacheKey)
+            // Always remove from active requests when done (only if we added it)
+            if (!bypassCache) {
+                activeRequests.remove(cacheKey)
+            }
         }
     }
     

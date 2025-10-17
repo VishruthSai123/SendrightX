@@ -495,7 +495,7 @@ class ActionResultPanelManager(
     }
 
     /**
-     * Regenerate the response with the same instruction
+     * Regenerate the response with the same instruction (bypasses cache for fresh results)
      */
     suspend fun regenerateText() {
         if (_state.isLoading) return
@@ -509,8 +509,8 @@ class ActionResultPanelManager(
                 return
             }
             
-            // Call Gemini API again with the same parameters
-            val result = GeminiApiService.transformText(_state.originalText, _state.instruction, context)
+            // Call Gemini API again with cache bypass to ensure fresh response
+            val result = GeminiApiService.transformText(_state.originalText, _state.instruction, context, bypassCache = true)
             
             result.onSuccess { newTransformedText ->
                 if (newTransformedText.isBlank()) {

@@ -80,6 +80,7 @@ import android.widget.TextView
 import com.vishruth.key1.editorInstance
 import com.vishruth.key1.ime.ai.AiUsageTracker
 import com.vishruth.key1.ime.ai.AiUsageStats
+import com.vishruth.key1.ime.ImeUiMode
 import com.vishruth.key1.ime.keyboard.FlorisImeSizing
 import com.vishruth.key1.ime.theme.FlorisImeTheme
 import com.vishruth.key1.ime.theme.FlorisImeUi
@@ -200,92 +201,27 @@ fun MagicWandPanel(
     val subscriptionManager = userManager.getSubscriptionManager()
     val isPro by subscriptionManager?.isPro?.collectAsState() ?: remember { mutableStateOf(false) }
     
-    // Real-time pro status - initialize dynamically with keys to prevent caching issues
-    var isProUser by remember(isPro, userData?.subscriptionStatus) { 
-        mutableStateOf(
-            // Initialize with best available info immediately, keys ensure reset on changes
-            isPro || userData?.subscriptionStatus in listOf("pro", "premium")
-        ) 
-    }
+    // Simple pro status detection (same as TranslationPanel)
+    val isProUser = isPro || userData?.subscriptionStatus in listOf("pro", "premium")
+
     
-    // IMMEDIATE Pro status update when collectAsState values change - no waiting for background refresh
-    LaunchedEffect(isPro, userData?.subscriptionStatus) {
-        val immediateProStatus = isPro || userData?.subscriptionStatus in listOf("pro", "premium")
-        isProUser = immediateProStatus
-    }
-    
-    // Force refresh pro status on every panel open with immediate fallback handling
-    LaunchedEffect(Unit) {
-        try {
-            // Force subscription status refresh
-            subscriptionManager?.forceRefreshSubscriptionStatus()
-            delay(200) // Allow refresh to complete
-            
-            // Get fresh status from all sources
-            val freshSubscriptionStatus = subscriptionManager?.isPro?.value ?: false
-            val freshUserDataStatus = userData?.subscriptionStatus in listOf("pro", "premium")
-            val newProStatus = freshSubscriptionStatus || freshUserDataStatus
-            
-            // Update Pro status
-            isProUser = newProStatus
-            
-            // If user is NOT pro, immediately refresh usage stats to show current limits
-            if (!newProStatus) {
-                try {
-                    AiUsageTracker.getInstance().forceCompleteRefresh()
-                } catch (e: Exception) {
-                    // Silent fail for usage tracking
-                }
-            }
-        } catch (e: Exception) {
-            // Fallback - ensure we default to non-pro if checks fail
-            val fallbackProStatus = isPro || userData?.subscriptionStatus in listOf("pro", "premium")
-            isProUser = fallbackProStatus
-            
-            // If fallback shows non-pro, refresh usage stats
-            if (!fallbackProStatus) {
-                try {
-                    AiUsageTracker.getInstance().forceCompleteRefresh()
-                } catch (e: Exception) {
-                    // Silent fail
-                }
-            }
-        }
-    }
-    
-    // Dynamic AI Usage Stats - initialize with keys to prevent caching on subscription changes
+    // Simple AI Usage Stats (same as TranslationPanel)
     var aiUsageStats by remember(isProUser) { 
-        mutableStateOf(
-            if (isProUser) {
-                // Pro user - no limits
-                AiUsageStats.empty() 
-            } else {
-                // Free user - will be updated by LaunchedEffect, but start with empty to avoid null
-                AiUsageStats.empty()
-            }
-        )
+        mutableStateOf(AiUsageStats.empty())
     }
     
-    // Update usage stats whenever Pro status changes
+    // Update usage stats for free users only (same as TranslationPanel)
     LaunchedEffect(isProUser) {
         if (!isProUser) {
-            // User is not pro - collect real usage stats
             try {
                 val aiUsageTrackerInstance = AiUsageTracker.getInstance()
-                aiUsageTrackerInstance.forceCompleteRefresh()
-                // Start collecting live usage stats
-                launch {
-                    aiUsageTrackerInstance.usageStats.collect { stats ->
-                        aiUsageStats = stats
-                    }
+                aiUsageTrackerInstance.usageStats.collect { stats ->
+                    aiUsageStats = stats
                 }
             } catch (e: Exception) {
                 // Fallback to empty stats
                 aiUsageStats = AiUsageStats.empty()
             }
-        } else {
-            // User is pro - use empty stats (no limits)
-            aiUsageStats = AiUsageStats.empty()
         }
     }
     
@@ -304,29 +240,15 @@ fun MagicWandPanel(
         usageTracker.refreshOrderedSections()
     }
     
-    // Usage tracking only for confirmed non-pro users - reactive to status changes
-    LaunchedEffect(isProUser) {
-        if (!isProUser) {
-            delay(100)
-            try {
-                aiUsageTracker.forceCompleteRefresh()
-            } catch (e: Exception) {
-                // Silent fail for usage tracking
-            }
-        }
-    }
-    
     // State management - reactive to Pro status changes
     val rewardedAdManager = remember(isProUser) { 
         if (!isProUser) RewardedAdManager(context) else null 
     }
-    var showLimitDialog by remember { mutableStateOf(false) }
     var loadingButton by remember { mutableStateOf<String?>(null) }
     
-    // Pro user welcome - stable
+    // Pro user welcome (same as TranslationPanel)
     LaunchedEffect(isProUser) {
         if (isProUser && !userManager.hasProFeaturesToastBeenShown()) {
-            delay(200)
             context.showShortToast("🎉 Pro features unlocked!")
             userManager.markProFeaturesToastAsShown()
         }
@@ -451,23 +373,9 @@ fun MagicWandPanel(
                                 // IMMEDIATELY show loading state for instant user feedback
                                 loadingButton = buttonTitle
                                 
-                                // Always refresh and check pro status in real-time (cache-free)
-                                var isCurrentlyPro = false
-                                try {
-                                    // Force fresh subscription check
-                                    subscriptionManager?.forceRefreshSubscriptionStatus()
-                                    delay(100) // Small delay for refresh
-                                    
-                                    // Get real-time status from all sources
-                                    val liveSubscriptionStatus = subscriptionManager?.isPro?.value ?: false
-                                    val liveUserDataStatus = userData?.subscriptionStatus in listOf("pro", "premium")
-                                    isCurrentlyPro = liveSubscriptionStatus || liveUserDataStatus
-                                } catch (e: Exception) {
-                                    // Fallback check
-                                    isCurrentlyPro = isProUser
-                                }
-                                
-                                if (isCurrentlyPro) {
+                                // Check if user is pro (same as TranslationPanel)
+                                if (isProUser) {
+                                    // Pro users get unlimited access
                                     try {
                                         handleMagicWandButtonClick(
                                             buttonTitle = buttonTitle,
@@ -481,9 +389,8 @@ fun MagicWandPanel(
                                         loadingButton = null
                                     }
                                 } else {
-                                    try {
-                                        aiUsageTracker.forceCompleteRefresh()
-                                        val isAllowed = aiUsageTracker.canUseAiAction()
+                                    // Free user - check usage limits (same as TranslationPanel)
+                                    val isAllowed = aiUsageTracker.canUseAiAction()
                                         
                                         if (isAllowed) {
                                             try {
@@ -499,20 +406,11 @@ fun MagicWandPanel(
                                                 loadingButton = null
                                             }
                                         } else {
-                                            // Stop loading since we're showing limit dialog instead
+                                            // Stop loading since we're showing limit layout instead
                                             loadingButton = null
-                                            val canUseAd = userManager.canUseRewardedAd()
-                                            if (canUseAd && rewardedAdManager != null) {
-                                                context.showShortToast("Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI.")
-                                                showLimitDialog = true
-                                            } else {
-                                                context.showShortToast("You've reached your daily limit. Upgrade to Pro or wait until tomorrow!")
-                                            }
+                                            // Switch to AI limit layout (same as Translation and AI Chat)
+                                            keyboardManager.activeState.imeUiMode = ImeUiMode.AI_LIMIT
                                         }
-                                    } catch (e: Exception) {
-                                        loadingButton = null // Stop loading on error
-                                        context.showShortToast("Error checking limits. Please try again.")
-                                    }
                                 }
                             }
                         },
@@ -620,35 +518,6 @@ fun MagicWandPanel(
                     }
                 }
             }
-        }
-    }
-    
-    // Limit dialog for free users only - reactive to Pro status changes
-    if (!isProUser && showLimitDialog && rewardedAdManager != null) {
-        AiLimitDialog(
-            usageStats = aiUsageStats,
-            onWatchAd = {
-                showLimitDialog = false
-                scope.launch {
-                    // Handle rewarded ad watching
-                    try {
-                        // Implementation would go here
-                        context.showShortToast("Watching ad...")
-                    } catch (e: Exception) {
-                        context.showShortToast("Ad not available. Please try again later.")
-                    }
-                }
-            },
-            onDismiss = {
-                showLimitDialog = false
-            }
-        )
-    }
-    
-    // Auto-dismiss limit dialog if user becomes Pro
-    LaunchedEffect(isProUser) {
-        if (isProUser && showLimitDialog) {
-            showLimitDialog = false
         }
     }
 }
@@ -776,165 +645,6 @@ private fun AiUsageStatsHeader(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Watch Ad",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        SnyggText(
-                            elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                            text = "Watch Ad"
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AiLimitDialog(
-    usageStats: AiUsageStats,
-    onWatchAd: () -> Unit,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    
-    // User Manager for real-time subscription status
-    val userManager = remember { UserManager.getInstance() }
-    val userData by userManager.userData.collectAsState()
-    
-    // Enhanced subscription observation for immediate updates
-    val subscriptionManager = remember { userManager.getSubscriptionManager() }
-    var isProFromSubscriptionManager by remember(subscriptionManager) { mutableStateOf(false) }
-    
-    // Observe subscription manager's isPro StateFlow if available
-    LaunchedEffect(subscriptionManager) {
-        subscriptionManager?.isPro?.collect { isPro ->
-            isProFromSubscriptionManager = isPro
-        }
-    }
-    
-    // Check if user is pro from multiple sources for immediate updates
-    var isProUser by remember(userData?.subscriptionStatus, isProFromSubscriptionManager) { mutableStateOf(false) }
-    
-    // Update pro status from all available sources
-    LaunchedEffect(userData, isProFromSubscriptionManager) {
-        isProUser = userData?.subscriptionStatus == "pro" || isProFromSubscriptionManager
-    }
-    
-    // Auto-dismiss dialog if user becomes Pro (same logic as AiLimitPanel)
-    LaunchedEffect(isProUser) {
-        if (isProUser) {
-            onDismiss()
-        }
-    }
-    
-    // IMMEDIATE cache-free check on dialog open - no continuous battery-draining loops
-    LaunchedEffect(Unit) {
-        try {
-            // Complete cache-free refresh when dialog opens
-            val aiUsageTracker = AiUsageTracker.getInstance()
-            aiUsageTracker.forceCompleteRefresh()
-            val currentStats = aiUsageTracker.getUsageStats()
-            
-            // Auto-dismiss immediately if user actually has available actions (shouldn't show limit dialog)
-            if (currentStats.remainingActions() > 0 && !isProUser) {
-                onDismiss()
-                return@LaunchedEffect
-            }
-            
-            // Also dismiss immediately if user is pro
-            if (isProUser) {
-                onDismiss()
-                return@LaunchedEffect
-            }
-        } catch (e: Exception) {
-            // If refresh fails, continue showing dialog
-        }
-    }
-    
-    SnyggBox(
-        elementName = FlorisImeUi.SmartbarActionsOverflow.elementName,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .clip(RoundedCornerShape(12.dp))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Info",
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                SnyggText(
-                    elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                    text = "AI Limit Reached"
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            SnyggText(
-                elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                text = "You've used all ${AiUsageStats.DAILY_LIMIT} free AI actions for today.",
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            SnyggText(
-                elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                text = "Watch a short ad to unlock 60 minutes of unlimited AI actions!",
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                SnyggButton(
-                    elementName = FlorisImeUi.SmartbarActionTile.elementName,
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                ) {
-                    SnyggText(
-                        elementName = FlorisImeUi.SmartbarActionTileText.elementName,
-                        text = "Later"
-                    )
-                }
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                SnyggButton(
-                    elementName = FlorisImeUi.SmartbarActionTile.elementName,
-                    onClick = onWatchAd,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
