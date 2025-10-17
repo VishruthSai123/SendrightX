@@ -38,7 +38,8 @@ fun AiLimitInputLayout(
     // Show AiLimitPanel as layout with same height as translation layout
     AiLimitPanel(
         onDismiss = {
-            // Go back to previous mode (typically TEXT mode)
+            // Close any open panels (like MagicWand) and go back to keyboard
+            keyboardManager.closeMagicWandPanel()
             keyboardManager.activeState.imeUiMode = ImeUiMode.TEXT
         },
         showAsLayout = true,
