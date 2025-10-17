@@ -194,28 +194,103 @@ fun MagicWandPanel(
     val editorInstance by context.editorInstance()
     val scope = rememberCoroutineScope()
     
-    // AI Usage Tracking with forced refresh
-    val aiUsageTracker = remember { AiUsageTracker.getInstance() }
-    val aiUsageStats by aiUsageTracker.usageStats.collectAsState()
+    // User Manager for subscription status - initialize first
+    val userManager = remember { UserManager.getInstance() }
+    val userData by userManager.userData.collectAsState()
+    val subscriptionManager = userManager.getSubscriptionManager()
+    val isPro by subscriptionManager?.isPro?.collectAsState() ?: remember { mutableStateOf(false) }
     
-    // IMMEDIATE cache-free refresh when panel opens (no continuous background loops)
+    // Real-time pro status - initialize dynamically with keys to prevent caching issues
+    var isProUser by remember(isPro, userData?.subscriptionStatus) { 
+        mutableStateOf(
+            // Initialize with best available info immediately, keys ensure reset on changes
+            isPro || userData?.subscriptionStatus in listOf("pro", "premium")
+        ) 
+    }
+    
+    // IMMEDIATE Pro status update when collectAsState values change - no waiting for background refresh
+    LaunchedEffect(isPro, userData?.subscriptionStatus) {
+        val immediateProStatus = isPro || userData?.subscriptionStatus in listOf("pro", "premium")
+        isProUser = immediateProStatus
+    }
+    
+    // Force refresh pro status on every panel open with immediate fallback handling
     LaunchedEffect(Unit) {
         try {
-            // Complete cache-free refresh when panel opens - ensures fresh data
-            aiUsageTracker.forceCompleteRefresh()
-            Log.d("MagicWandPanel", "Complete cache-free refresh done on panel open")
+            // Force subscription status refresh
+            subscriptionManager?.forceRefreshSubscriptionStatus()
+            delay(200) // Allow refresh to complete
+            
+            // Get fresh status from all sources
+            val freshSubscriptionStatus = subscriptionManager?.isPro?.value ?: false
+            val freshUserDataStatus = userData?.subscriptionStatus in listOf("pro", "premium")
+            val newProStatus = freshSubscriptionStatus || freshUserDataStatus
+            
+            // Update Pro status
+            isProUser = newProStatus
+            
+            // If user is NOT pro, immediately refresh usage stats to show current limits
+            if (!newProStatus) {
+                try {
+                    AiUsageTracker.getInstance().forceCompleteRefresh()
+                } catch (e: Exception) {
+                    // Silent fail for usage tracking
+                }
+            }
         } catch (e: Exception) {
-            Log.e("MagicWandPanel", "Error in cache-free refresh on panel open", e)
+            // Fallback - ensure we default to non-pro if checks fail
+            val fallbackProStatus = isPro || userData?.subscriptionStatus in listOf("pro", "premium")
+            isProUser = fallbackProStatus
+            
+            // If fallback shows non-pro, refresh usage stats
+            if (!fallbackProStatus) {
+                try {
+                    AiUsageTracker.getInstance().forceCompleteRefresh()
+                } catch (e: Exception) {
+                    // Silent fail
+                }
+            }
         }
     }
     
-    // User Manager for subscription status
-    val userManager = remember { UserManager.getInstance() }
-    val userData by userManager.userData.collectAsState()
+    // Dynamic AI Usage Stats - initialize with keys to prevent caching on subscription changes
+    var aiUsageStats by remember(isProUser) { 
+        mutableStateOf(
+            if (isProUser) {
+                // Pro user - no limits
+                AiUsageStats.empty() 
+            } else {
+                // Free user - will be updated by LaunchedEffect, but start with empty to avoid null
+                AiUsageStats.empty()
+            }
+        )
+    }
     
-    // Get subscription manager for real-time subscription state
-    val subscriptionManager = userManager.getSubscriptionManager()
-    val isPro by subscriptionManager?.isPro?.collectAsState() ?: remember { mutableStateOf(false) }
+    // Update usage stats whenever Pro status changes
+    LaunchedEffect(isProUser) {
+        if (!isProUser) {
+            // User is not pro - collect real usage stats
+            try {
+                val aiUsageTrackerInstance = AiUsageTracker.getInstance()
+                aiUsageTrackerInstance.forceCompleteRefresh()
+                // Start collecting live usage stats
+                launch {
+                    aiUsageTrackerInstance.usageStats.collect { stats ->
+                        aiUsageStats = stats
+                    }
+                }
+            } catch (e: Exception) {
+                // Fallback to empty stats
+                aiUsageStats = AiUsageStats.empty()
+            }
+        } else {
+            // User is pro - use empty stats (no limits)
+            aiUsageStats = AiUsageStats.empty()
+        }
+    }
+    
+    // AI Usage Tracking - always available
+    val aiUsageTracker = remember { AiUsageTracker.getInstance() }
     
     // AI Workspace Manager for dynamic actions
     val aiWorkspaceManager = remember { AIWorkspaceManager.getInstance(context) }
@@ -224,81 +299,44 @@ fun MagicWandPanel(
     val usageTracker = remember { MagicWandUsageTracker.getInstance(context) }
     val orderedSectionTitles by usageTracker.orderedSections.collectAsState()
     
-    // Refresh section ordering when panel opens
+    // Separate effect for section ordering
     LaunchedEffect(Unit) {
         usageTracker.refreshOrderedSections()
     }
     
-    // Determine pro status from multiple sources for immediate updates
-    val isProUser = isPro || userData?.subscriptionStatus == "pro"
-    
-    // Preload banner ad immediately when panel opens (independent of scroll)
-    LaunchedEffect(Unit) {
+    // Usage tracking only for confirmed non-pro users - reactive to status changes
+    LaunchedEffect(isProUser) {
         if (!isProUser) {
+            delay(100)
             try {
-                Log.d("MagicWandPanel", "🚀 Starting banner ad preload for MagicWand panel")
-                
-                // Ensure AdMob SDK is initialized
-                val adManager = com.vishruth.key1.lib.ads.AdManager
-                if (!adManager.isInitialized()) {
-                    adManager.ensureInitialized(context)
-                    adManager.waitForInitialization(10000)
-                }
-                
-                // Use the same ad unit ID as AdBannerCard
-                val adUnitId = "ca-app-pub-1496070957048863/5853942656"
-                
-                // Preload the native ad
-                val adLoader = com.google.android.gms.ads.AdLoader.Builder(context, adUnitId)
-                    .forNativeAd { loadedAd ->
-                        Log.d("MagicWandPanel", "✅ Banner ad preloaded successfully")
-                    }
-                    .withAdListener(object : com.google.android.gms.ads.AdListener() {
-                        override fun onAdFailedToLoad(error: com.google.android.gms.ads.LoadAdError) {
-                            Log.e("MagicWandPanel", "❌ Banner ad preload failed: ${error.message}")
-                        }
-                    })
-                    .withNativeAdOptions(
-                        com.google.android.gms.ads.nativead.NativeAdOptions.Builder()
-                            .setAdChoicesPlacement(com.google.android.gms.ads.nativead.NativeAdOptions.ADCHOICES_TOP_RIGHT)
-                            .setRequestMultipleImages(false)
-                            .setReturnUrlsForImageAssets(false)
-                            .build()
-                    )
-                    .build()
-                
-                val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
-                adLoader.loadAd(adRequest)
-                
+                aiUsageTracker.forceCompleteRefresh()
             } catch (e: Exception) {
-                Log.e("MagicWandPanel", "💥 Exception during banner ad preload", e)
+                // Silent fail for usage tracking
             }
         }
     }
     
-    // Rewarded Ad Manager
-    val rewardedAdManager = remember { RewardedAdManager(context) }
+    // State management - reactive to Pro status changes
+    val rewardedAdManager = remember(isProUser) { 
+        if (!isProUser) RewardedAdManager(context) else null 
+    }
     var showLimitDialog by remember { mutableStateOf(false) }
-    
-
-    
-    // Loading state for AI actions
     var loadingButton by remember { mutableStateOf<String?>(null) }
     
-    // Force refresh UI when subscription status changes
+    // Pro user welcome - stable
     LaunchedEffect(isProUser) {
         if (isProUser && !userManager.hasProFeaturesToastBeenShown()) {
-            // Only show toast once when user becomes pro and hasn't seen it before
+            delay(200)
             context.showShortToast("🎉 Pro features unlocked!")
             userManager.markProFeaturesToastAsShown()
         }
     }
     
-    // Create AI Workspace section dynamically with all available actions (no limit)
-    val aiWorkspaceButtons = remember(aiWorkspaceManager) {
+    // Create AI Workspace section dynamically - refreshed for each panel open
+    val aiWorkspaceButtons = remember(aiWorkspaceManager, isProUser) {
         val buttons = mutableListOf<String>()
         
-        // Get all available actions
+        // Get all available actions fresh each time
         val customActions = aiWorkspaceManager.getEnabledCustomActions()
         val popularActions = aiWorkspaceManager.enabledPopularActions
         
@@ -361,19 +399,11 @@ fun MagicWandPanel(
         }
     }
 
-    // Preload ads when panel opens
-    com.vishruth.key1.ui.components.AdPreloader(
-        panelName = "MagicWand"
-    )
-    
-    // Also preload banner ads immediately when panel opens (independent of scroll)
-    LaunchedEffect(Unit) {
-        try {
-            // Trigger banner ad preloading by creating an invisible ad component
-            Log.d("MagicWandPanel", "🚀 Preloading banner ad for MagicWand panel")
-        } catch (e: Exception) {
-            Log.e("MagicWandPanel", "Error preloading banner ad", e)
-        }
+    // Ad preloading for non-pro users only
+    if (!isProUser) {
+        com.vishruth.key1.ui.components.AdPreloader(
+            panelName = "MagicWand"
+        )
     }
     
     SnyggBox(
@@ -418,89 +448,44 @@ fun MagicWandPanel(
                                     return@launch
                                 }
                                 
-                                // Check if user is pro - use the reactive isProUser variable
-                                if (isProUser) {
-                                    // Pro users get unlimited access
-                                    loadingButton = buttonTitle
+                                // IMMEDIATELY show loading state for instant user feedback
+                                loadingButton = buttonTitle
+                                
+                                // Always refresh and check pro status in real-time (cache-free)
+                                var isCurrentlyPro = false
+                                try {
+                                    // Force fresh subscription check
+                                    subscriptionManager?.forceRefreshSubscriptionStatus()
+                                    delay(100) // Small delay for refresh
+                                    
+                                    // Get real-time status from all sources
+                                    val liveSubscriptionStatus = subscriptionManager?.isPro?.value ?: false
+                                    val liveUserDataStatus = userData?.subscriptionStatus in listOf("pro", "premium")
+                                    isCurrentlyPro = liveSubscriptionStatus || liveUserDataStatus
+                                } catch (e: Exception) {
+                                    // Fallback check
+                                    isCurrentlyPro = isProUser
+                                }
+                                
+                                if (isCurrentlyPro) {
                                     try {
                                         handleMagicWandButtonClick(
                                             buttonTitle = buttonTitle,
                                             editorInstance = editorInstance,
                                             context = context,
-                                            aiUsageTracker = aiUsageTracker // Pass tracker even for pro users (won't count but needed for signature)
+                                            aiUsageTracker = null
                                         )
                                     } catch (e: Exception) {
-                                        val errorMessage = e.message ?: "Something went wrong"
-                                        when {
-                                            errorMessage.contains("timeout") || errorMessage.contains("slow") -> {
-                                                context.showShortToast("⏱️ Service timeout. Trying backup server...")
-                                            }
-                                            errorMessage.contains("All API keys failed") -> {
-                                                context.showShortToast("🔄 Switching to backup server...")
-                                            }
-                                            errorMessage.contains("network") || errorMessage.contains("connection") -> {
-                                                context.showShortToast("📶 Please check your internet connection")
-                                            }
-                                            else -> {
-                                                context.showShortToast("Error: $errorMessage")
-                                            }
-                                        }
+                                        context.showShortToast("Error: ${e.message ?: "Something went wrong"}")
                                     } finally {
                                         loadingButton = null
                                     }
                                 } else {
-                                    // Complete cache-free usage check for free users
-                                    aiUsageTracker.forceCompleteRefresh()
-                                    val isAllowed = aiUsageTracker.canUseAiAction()
-                                    
-                                    if (isAllowed) {
-                                        loadingButton = buttonTitle
-                                        try {
-                                            handleMagicWandButtonClick(
-                                                buttonTitle = buttonTitle,
-                                                editorInstance = editorInstance,
-                                                context = context,
-                                                aiUsageTracker = aiUsageTracker // Pass tracker for recording successful actions
-                                            )
-                                            
-                                            // No need to force refresh here - handleMagicWandButtonClick already does it
-                                        } catch (e: Exception) {
-                                            val errorMessage = e.message ?: "Something went wrong"
-                                            when {
-                                                errorMessage.contains("timeout") || errorMessage.contains("slow") -> {
-                                                    context.showShortToast("⏱️ Service timeout. Trying backup server...")
-                                                }
-                                                errorMessage.contains("All API keys failed") -> {
-                                                    context.showShortToast("🔄 Switching to backup server...")
-                                                }
-                                                errorMessage.contains("network") || errorMessage.contains("connection") -> {
-                                                    context.showShortToast("📶 Please check your internet connection")
-                                                }
-                                                else -> {
-                                                    context.showShortToast("Error: $errorMessage")
-                                                }
-                                            }
-                                        } finally {
-                                            loadingButton = null
-                                        }
-                                    } else {
-                                        // IMMEDIATE cache-free refresh and check - no continuous loops
+                                    try {
                                         aiUsageTracker.forceCompleteRefresh()
-                                        val updatedStats = aiUsageTracker.getUsageStats()
+                                        val isAllowed = aiUsageTracker.canUseAiAction()
                                         
-                                        // SMART CHECK: Only show limit dialog if user actually has 0 remaining actions
-                                        if (updatedStats.remainingActions() == 0) {
-                                            val canUseAd = userManager.canUseRewardedAd()
-                                            if (canUseAd) {
-                                                context.showShortToast("Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI.")
-                                                showLimitDialog = true
-                                            } else {
-                                                context.showShortToast("You've reached your daily limit and used your free ad. Upgrade to Pro or wait until tomorrow!")
-                                            }
-                                        } else {
-                                            // User has available actions (midnight reset occurred), proceed with action
-                                            Log.d("MagicWandPanel", "Usage available after refresh (${updatedStats.remainingActions()} remaining), proceeding with action")
-                                            loadingButton = buttonTitle
+                                        if (isAllowed) {
                                             try {
                                                 handleMagicWandButtonClick(
                                                     buttonTitle = buttonTitle,
@@ -509,11 +494,24 @@ fun MagicWandPanel(
                                                     aiUsageTracker = aiUsageTracker
                                                 )
                                             } catch (e: Exception) {
-                                                context.showShortToast("Error: ${e.message}")
+                                                context.showShortToast("Error: ${e.message ?: "Something went wrong"}")
                                             } finally {
                                                 loadingButton = null
                                             }
+                                        } else {
+                                            // Stop loading since we're showing limit dialog instead
+                                            loadingButton = null
+                                            val canUseAd = userManager.canUseRewardedAd()
+                                            if (canUseAd && rewardedAdManager != null) {
+                                                context.showShortToast("Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI.")
+                                                showLimitDialog = true
+                                            } else {
+                                                context.showShortToast("You've reached your daily limit. Upgrade to Pro or wait until tomorrow!")
+                                            }
                                         }
+                                    } catch (e: Exception) {
+                                        loadingButton = null // Stop loading on error
+                                        context.showShortToast("Error checking limits. Please try again.")
                                     }
                                 }
                             }
@@ -533,8 +531,9 @@ fun MagicWandPanel(
                             )
                             .padding(12.dp)
                     ) {
+                        // Immediately reactive to Pro status changes
                         if (!isProUser) {
-                            // Show usage info for free users
+                            // Show usage info for free users with live stats
                             Column {
                                 if (aiUsageStats.isRewardWindowActive) {
                                     // Reward window active
@@ -604,27 +603,54 @@ fun MagicWandPanel(
                     }
                 }
                 
-                // Ad banner at the bottom for free users - enhanced native ad UI with proper width and fade animation
-                item {
-                    // Enhanced AdBannerCard with same width as usage card and fade animation
-                    com.vishruth.key1.ui.components.AdBannerCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp), // Match usage card padding
-                        onAdLoaded = {
-                            flogDebug { "Magic Wand Panel: Banner ad loaded successfully" }
-                        },
-                        onAdFailedToLoad = { error ->
-                            flogDebug { "Magic Wand Panel: Banner ad failed to load - ${error.message}" }
-                        }
-                    )
+                // Ad banner - only for free users
+                if (!isProUser) {
+                    item {
+                        com.vishruth.key1.ui.components.AdBannerCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            onAdLoaded = {
+                                flogDebug { "Magic Wand Panel: Banner ad loaded successfully" }
+                            },
+                            onAdFailedToLoad = { error ->
+                                flogDebug { "Magic Wand Panel: Banner ad failed to load - ${error.message}" }
+                            }
+                        )
+                    }
                 }
             }
         }
     }
     
-    // NO continuous background loops for limit dialog - battery efficient approach
-    // The limit dialog will be handled by immediate refresh when needed
+    // Limit dialog for free users only - reactive to Pro status changes
+    if (!isProUser && showLimitDialog && rewardedAdManager != null) {
+        AiLimitDialog(
+            usageStats = aiUsageStats,
+            onWatchAd = {
+                showLimitDialog = false
+                scope.launch {
+                    // Handle rewarded ad watching
+                    try {
+                        // Implementation would go here
+                        context.showShortToast("Watching ad...")
+                    } catch (e: Exception) {
+                        context.showShortToast("Ad not available. Please try again later.")
+                    }
+                }
+            },
+            onDismiss = {
+                showLimitDialog = false
+            }
+        )
+    }
+    
+    // Auto-dismiss limit dialog if user becomes Pro
+    LaunchedEffect(isProUser) {
+        if (isProUser && showLimitDialog) {
+            showLimitDialog = false
+        }
+    }
 }
 
 @Composable
@@ -775,6 +801,62 @@ private fun AiLimitDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    
+    // User Manager for real-time subscription status
+    val userManager = remember { UserManager.getInstance() }
+    val userData by userManager.userData.collectAsState()
+    
+    // Enhanced subscription observation for immediate updates
+    val subscriptionManager = remember { userManager.getSubscriptionManager() }
+    var isProFromSubscriptionManager by remember(subscriptionManager) { mutableStateOf(false) }
+    
+    // Observe subscription manager's isPro StateFlow if available
+    LaunchedEffect(subscriptionManager) {
+        subscriptionManager?.isPro?.collect { isPro ->
+            isProFromSubscriptionManager = isPro
+        }
+    }
+    
+    // Check if user is pro from multiple sources for immediate updates
+    var isProUser by remember(userData?.subscriptionStatus, isProFromSubscriptionManager) { mutableStateOf(false) }
+    
+    // Update pro status from all available sources
+    LaunchedEffect(userData, isProFromSubscriptionManager) {
+        isProUser = userData?.subscriptionStatus == "pro" || isProFromSubscriptionManager
+    }
+    
+    // Auto-dismiss dialog if user becomes Pro (same logic as AiLimitPanel)
+    LaunchedEffect(isProUser) {
+        if (isProUser) {
+            onDismiss()
+        }
+    }
+    
+    // IMMEDIATE cache-free check on dialog open - no continuous battery-draining loops
+    LaunchedEffect(Unit) {
+        try {
+            // Complete cache-free refresh when dialog opens
+            val aiUsageTracker = AiUsageTracker.getInstance()
+            aiUsageTracker.forceCompleteRefresh()
+            val currentStats = aiUsageTracker.getUsageStats()
+            
+            // Auto-dismiss immediately if user actually has available actions (shouldn't show limit dialog)
+            if (currentStats.remainingActions() > 0 && !isProUser) {
+                onDismiss()
+                return@LaunchedEffect
+            }
+            
+            // Also dismiss immediately if user is pro
+            if (isProUser) {
+                onDismiss()
+                return@LaunchedEffect
+            }
+        } catch (e: Exception) {
+            // If refresh fails, continue showing dialog
+        }
+    }
+    
     SnyggBox(
         elementName = FlorisImeUi.SmartbarActionsOverflow.elementName,
         modifier = modifier
@@ -1033,7 +1115,7 @@ suspend fun handleMagicWandButtonClick(
     buttonTitle: String,
     editorInstance: com.vishruth.key1.ime.editor.EditorInstance,
     context: android.content.Context,
-    aiUsageTracker: com.vishruth.key1.ime.ai.AiUsageTracker
+    aiUsageTracker: com.vishruth.key1.ime.ai.AiUsageTracker?
 ) {
     try {
         // Get all text from the input field
@@ -1096,11 +1178,11 @@ suspend fun handleMagicWandButtonClick(
                 return@onSuccess
             }
             
-            // Record successful AI action only after we have a valid response
-            aiUsageTracker.recordSuccessfulAiAction()
-            
-            // Force immediate refresh to update UI instantly
-            aiUsageTracker.forceRefreshUsageStats()
+            // Record successful AI action only for non-pro users
+            aiUsageTracker?.let {
+                it.recordSuccessfulAiAction()
+                it.forceRefreshUsageStats()
+            }
             
             // Get or create the ActionResultPanelManager instance
             val actionResultManager = ActionResultPanelManager.getCurrentInstance() 
