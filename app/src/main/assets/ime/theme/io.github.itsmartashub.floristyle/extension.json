@@ -1,0 +1,178 @@
+{
+  "$": "ime.extension.theme",
+  "meta": {
+    "id": "io.github.itsmartashub.floristyle",
+    "version": "5.1.1",
+    "title": "FloriStyle themes",
+    "description": "Make your FlorisBoard keyboard look more like Gboard with the dynamic and amoled-friendly Material You themes. Choose from Light, Dark, and OLED modes with border and borderless options to suit your preferences.",
+    "keywords": [
+      "florisboard, florisboard themes, gboard, material you, material you design, keyboard, keyboard themes, themes, dynamic themes, custom themes, theme extension, extension, light, dark, amoled, amoled-friendly, addons, community addons, florisboard addons store, florisboard addons, gbooard, floristyle, gboardish"
+    ],
+    "homepage": "https://github.com/itsmartashub/floristyle",
+    "issueTracker": "https://github.com/itsmartashub/floristyle/issues",
+    "maintainers": [
+      "@itsmartashub"
+    ],
+    "license": "GPL-3.0"
+  },
+  "themes": [
+    {
+      "id": "gboardish_sunshine",
+      "label": "☀️ Sunshine",
+      "authors": [
+        "itsmarta"
+      ],
+      "isNight": false
+    },
+    {
+      "id": "gboardish_sunshine_borderless",
+      "label": "☀️ Sunshine BL",
+      "authors": [
+        "itsmarta"
+      ],
+      "isNight": false
+    },
+    {
+      "id": "gboardish_sunshine_2",
+      "label": "☀️ Sunshine 2.0",
+      "authors": [
+        "itsmarta"
+      ],
+      "isNight": false
+    },
+    {
+      "id": "gboardish_sunshine_2_borderless",
+      "label": "☀️ Sunshine 2.0 BL",
+      "authors": [
+        "itsmarta"
+      ],
+      "isNight": false
+    },
+    {
+      "id": "gboardish_evening",
+      "label": "🌔 Evening (Dark)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_evening_borderless",
+      "label": "🌔 Evening BL (Dark)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_evening_2",
+      "label": "🌔 Evening 2.0 (Dark)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_evening_2_borderless",
+      "label": "🌔 Evening 2.0 BL (Dark)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_nightfall",
+      "label": "🌓 Nightfall (Dim)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_nightfall_borderless",
+      "label": "🌓 Nightfall BL (Dim)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_midnight",
+      "label": "🌒 Midnight (OLED)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_midnight_borderless",
+      "label": "🌒 Midnight BL (OLED)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_midnight_2",
+      "label": "🌒 Midnight 2.0 (OLED)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_midnight_2_borderless",
+      "label": "🌒 Midnight 2.0 BL (OLED)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_abyss",
+      "label": "🌚 Abyss (OLED Dim)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_abyss_borderless",
+      "label": "🌚 Abyss BL (OLED Dim)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_abyss_2",
+      "label": "🌚 Abyss 2.0 (OLED Dim)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_abyss_2_borderless",
+      "label": "🌚 Abyss 2.0 BL (OLED Dim)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_void",
+      "label": "🌑 Void (OLED Extra)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_void_borderless",
+      "label": "🌑 Void BL (OLED Extra)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_blackout_borderless",
+      "label": "⚫ Blackout BL (OLED Extra Dim)",
+      "authors": [
+        "itsmarta"
+      ]
+    },
+    {
+      "id": "gboardish_blackout",
+      "label": "⚫ Blackout (OLED Extra Dim)",
+      "authors": [
+        "itsmarta"
+      ]
+    }
+  ]
+}

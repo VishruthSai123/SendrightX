@@ -316,6 +316,10 @@ fun MagicWandPanel(
         if (buttons.isEmpty()) {
             buttons.add("Humanise") // Default fallback
         }
+        
+        // Add "Create AI" button as the last button
+        buttons.add("Create AI")
+        
         buttons
     }
 
@@ -398,6 +402,21 @@ fun MagicWandPanel(
                             scope.launch {
                                 // Record section usage for dynamic ordering
                                 usageTracker.recordSectionUsage(section.title)
+                                
+                                // Special handling for "Create AI" button
+                                if (buttonTitle == "Create AI") {
+                                    // Navigate to AI Workspace management screen
+                                    try {
+                                        val intent = android.content.Intent(context, com.vishruth.key1.app.FlorisAppActivity::class.java).apply {
+                                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                            data = android.net.Uri.parse("ui://florisboard/settings/ai-workspace")
+                                        }
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        context.showShortToast("Unable to open AI Workspace settings")
+                                    }
+                                    return@launch
+                                }
                                 
                                 // Check if user is pro - use the reactive isProUser variable
                                 if (isProUser) {
@@ -499,23 +518,6 @@ fun MagicWandPanel(
                                 }
                             }
                         },
-
-                        onManageClick = if (section.title == "AI Workspace") {
-                            {
-                                // Navigate to AI Workspace management screen
-                                try {
-                                    val intent = android.content.Intent(context, com.vishruth.key1.app.FlorisAppActivity::class.java).apply {
-                                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                                        data = android.net.Uri.parse("ui://florisboard/settings/ai-workspace")
-                                    }
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    scope.launch {
-                                        context.showShortToast("Unable to open AI Workspace settings")
-                                    }
-                                }
-                            }
-                        } else null
                     )
                 }
                 
@@ -874,7 +876,6 @@ private fun MagicWandSectionItem(
     section: MagicWandSection,
     loadingButton: String?,
     onButtonClick: (String) -> Unit,
-    onManageClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -883,7 +884,7 @@ private fun MagicWandSectionItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp, horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             SnyggText(
@@ -891,17 +892,6 @@ private fun MagicWandSectionItem(
                 text = section.title,
                 modifier = Modifier.weight(1f)
             )
-            
-            // Add manage button for AI Workspace section only
-            if (onManageClick != null) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Manage ${section.title}",
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable { onManageClick() }
-                )
-            }
         }
         
         // Content - Always shown for all sections
