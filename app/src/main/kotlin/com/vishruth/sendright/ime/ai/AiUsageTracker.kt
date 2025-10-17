@@ -346,6 +346,14 @@ class AiUsageTracker private constructor() {
                 Log.d(TAG, "Resetting daily action count from $dailyActionCount to 0 (new day detected)")
                 prefs.dailyActionCount.set(0)
                 actuallyReset = true
+                
+                // Clear API service cache to avoid stale responses after daily reset
+                try {
+                    com.vishruth.key1.ime.smartbar.GeminiApiService.clearCacheForDailyReset()
+                    Log.d(TAG, "Cleared API cache for daily reset")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to clear API cache during daily reset", e)
+                }
             }
             
             // Calculate reward window end time

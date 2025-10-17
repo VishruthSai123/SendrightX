@@ -33,6 +33,10 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URL
+import java.security.MessageDigest
+import java.util.concurrent.CompletableFuture
+import kotlin.math.pow
+import kotlin.random.Random
 
 object GeminiApiService {
     // Free user API keys (existing system)
@@ -58,10 +62,20 @@ object GeminiApiService {
     private val premiumKeyLastRequestTime = mutableMapOf<Int, Long>() // Track per-key timing for premium
     private val freeKeyFailureCount = mutableMapOf<Int, Int>() // Track key health for free
     private val premiumKeyFailureCount = mutableMapOf<Int, Int>() // Track key health for premium
+    
+    // Response caching to avoid repeated API calls for same inputs
+    private val responseCache = mutableMapOf<String, Pair<String, Long>>() // Hash -> (Response, Timestamp)
+    private const val CACHE_DURATION_MS = 300_000L // 5 minutes cache
+    private const val MAX_CACHE_SIZE = 100 // Limit cache size to prevent memory issues
+    
+    // Request deduplication to prevent concurrent identical requests
+    private val activeRequests = mutableMapOf<String, kotlinx.coroutines.Deferred<Result<String>>>()
+    
+    // Using Gemini 2.0 Flash (NOT 2.0 Pro or 2.5 Pro) for optimal performance and cost efficiency
     private const val ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-    private const val MIN_REQUEST_INTERVAL = 1000L // 1 second between requests (saves quota)
-    private const val MAX_RETRY_ATTEMPTS = 1 // Only 1 retry per key (saves quota)
-    private const val FAST_RETRY_DELAY_MS = 1200L // 1.2 second delay (saves quota)
+    private const val MIN_REQUEST_INTERVAL = 1500L // Increased from 1s to 1.5s for more conservative rate limiting
+    private const val BASE_RETRY_DELAY_MS = 2000L // Base delay for exponential backoff (increased from 1.2s)
+    private const val MAX_RETRY_DELAY_MS = 16000L // Maximum delay cap (16 seconds)
     private const val MAX_FALLBACK_KEYS = 2 // Try maximum 2 fallback keys (saves quota)
     
     @Serializable
@@ -155,6 +169,51 @@ object GeminiApiService {
             }
         }
         
+        // Create cache key for request deduplication and caching
+        val cacheKey = generateCacheKey(inputText, instruction)
+        
+        // Check if there's already an active request for the same input
+        activeRequests[cacheKey]?.let { activeRequest ->
+            try {
+                return@withContext activeRequest.await()
+            } catch (e: Exception) {
+                // Remove failed request from active requests
+                activeRequests.remove(cacheKey)
+            }
+        }
+        
+        // Check cache first to avoid repeated API calls
+        getCachedResponse(cacheKey)?.let { cachedResponse ->
+            return@withContext Result.success(cachedResponse)
+        }
+        
+        // Create deferred for this request to prevent duplicates
+        val deferred = async {
+            performApiRequest(inputText, instruction, cacheKey)
+        }
+        
+        activeRequests[cacheKey] = deferred
+        
+        try {
+            val result = deferred.await()
+            
+            // Cache successful responses
+            result.onSuccess { response ->
+                cacheResponse(cacheKey, response)
+            }
+            
+            return@withContext result
+        } finally {
+            // Always remove from active requests when done
+            activeRequests.remove(cacheKey)
+        }
+    }
+    
+    /**
+     * Perform the actual API request with improved retry logic
+     */
+    private suspend fun performApiRequest(inputText: String, instruction: String, cacheKey: String): Result<String> = withContext(Dispatchers.IO) {
+        
         // Get appropriate API keys based on user subscription status
         val apiKeys = getApiKeysForUser()
         val userType = if (isProUser()) "Premium" else "Free"
@@ -164,9 +223,9 @@ object GeminiApiService {
             return@withContext Result.failure(Exception("🔑 $userType API key not configured. Please check settings."))
         }
         
-        // Strategy 1: Try primary key with fast timeout
+        // Strategy 1: Try primary key with exponential backoff
         val currentIndex = getCurrentApiKeyIndex()
-        val primaryResult = makeApiRequestWithFastTimeout(inputText, instruction, currentIndex, apiKeys)
+        val primaryResult = makeApiRequestWithExponentialBackoff(inputText, instruction, currentIndex, apiKeys, 0)
         primaryResult.fold(
             onSuccess = { 
                 markKeyAsHealthy(currentIndex)
@@ -184,9 +243,10 @@ object GeminiApiService {
                 )
                 
                 if (!shouldImmediatelyTryFallback) {
-                    // Strategy 2: Quick retry with primary key (only for temporary issues)
-                    delay(FAST_RETRY_DELAY_MS)
-                    val retryResult = makeApiRequestWithFastTimeout(inputText, instruction, currentIndex, apiKeys)
+                    // Strategy 2: Exponential backoff retry with primary key (only for temporary issues)
+                    val exponentialDelay = calculateExponentialBackoffDelay(1)
+                    delay(exponentialDelay)
+                    val retryResult = makeApiRequestWithExponentialBackoff(inputText, instruction, currentIndex, apiKeys, 1)
                     retryResult.fold(
                         onSuccess = { 
                             markKeyAsHealthy(currentIndex)
@@ -198,27 +258,44 @@ object GeminiApiService {
             }
         )
         
-        // Strategy 3: Smart sequential fallback (try up to 2 keys one by one - saves quota)
+        // Strategy 3: Smart sequential fallback with exponential backoff
         if (apiKeys.size > 1) {
-            return@withContext tryLimitedSequentialFallback(inputText, instruction, apiKeys)
+            return@withContext tryLimitedSequentialFallbackWithBackoff(inputText, instruction, apiKeys)
         }
         
         // No fallback keys available
         return@withContext Result.failure(Exception("❌ All services unavailable. Please try again later."))
     }
     
-    private suspend fun tryLimitedSequentialFallback(inputText: String, instruction: String, apiKeys: List<String>): Result<String> = withContext(Dispatchers.IO) {
+    /**
+     * Calculate exponential backoff delay with jitter to avoid thundering herd
+     */
+    private fun calculateExponentialBackoffDelay(attempt: Int): Long {
+        val exponentialDelay = (BASE_RETRY_DELAY_MS * 2.0.pow(attempt.toDouble())).toLong()
+        val cappedDelay = minOf(exponentialDelay, MAX_RETRY_DELAY_MS)
+        // Add jitter (±25% randomness) to prevent thundering herd problem
+        val jitter = (cappedDelay * 0.25 * (Random.nextDouble() - 0.5)).toLong()
+        return maxOf(cappedDelay + jitter, MIN_REQUEST_INTERVAL)
+    }
+    
+    private suspend fun tryLimitedSequentialFallbackWithBackoff(inputText: String, instruction: String, apiKeys: List<String>): Result<String> = withContext(Dispatchers.IO) {
         val currentIndex = getCurrentApiKeyIndex()
         val availableKeys = apiKeys.indices.filter { it != currentIndex }
         if (availableKeys.isEmpty()) {
             return@withContext Result.failure(Exception("❌ No fallback keys available"))
         }
         
-        // Try only the best 2 fallback keys sequentially (saves quota vs parallel)
+        // Try only the best 2 fallback keys sequentially with exponential backoff
         val bestKeys = availableKeys.sortedBy { getKeyFailureCount(it) }.take(MAX_FALLBACK_KEYS)
         
         for ((attemptIndex, keyIndex) in bestKeys.withIndex()) {
-            val result = makeApiRequestWithFastTimeout(inputText, instruction, keyIndex, apiKeys)
+            // Apply exponential backoff for fallback attempts
+            if (attemptIndex > 0) {
+                val backoffDelay = calculateExponentialBackoffDelay(attemptIndex)
+                delay(backoffDelay)
+            }
+            
+            val result = makeApiRequestWithExponentialBackoff(inputText, instruction, keyIndex, apiKeys, attemptIndex)
             
             result.fold(
                 onSuccess = { response ->
@@ -234,7 +311,7 @@ object GeminiApiService {
                     if (attemptIndex == bestKeys.size - 1) {
                         return@withContext Result.failure(Exception("❌ All ${bestKeys.size} backup services failed. Please try again later."))
                     }
-                    // Otherwise continue to next key (sequential, not parallel)
+                    // Otherwise continue to next key with exponential backoff
                 }
             )
         }
@@ -242,54 +319,19 @@ object GeminiApiService {
         return@withContext Result.failure(Exception("❌ Unexpected fallback error"))
     }
     
-    private suspend fun trySequentialFallback(inputText: String, instruction: String, apiKeys: List<String>): Result<String> {
-        // Try remaining keys with fast timeouts
-        val currentIndex = getCurrentApiKeyIndex()
-        val remainingKeys = apiKeys.indices.filter { it != currentIndex }
-            .sortedBy { getKeyFailureCount(it) } // Try healthiest keys first
-        
-        for (keyIndex in remainingKeys) {
-            val result = makeApiRequestWithFastTimeout(inputText, instruction, keyIndex, apiKeys)
-            result.fold(
-                onSuccess = { 
-                    markKeyAsHealthy(keyIndex)
-                    setCurrentApiKeyIndex(keyIndex) // Switch to working key
-                    return result
-                },
-                onFailure = { markKeyAsUnhealthy(keyIndex) }
-            )
-            
-            // Short delay between sequential attempts
-            delay(300L)
-        }
-        
-        return Result.failure(Exception("❌ All services unavailable. Please try again later."))
-    }
-    
-    private fun markKeyAsHealthy(keyIndex: Int) {
-        val (_, failureMap, _) = getKeyMaps()
-        failureMap[keyIndex] = 0
-    }
-    
-    private fun markKeyAsUnhealthy(keyIndex: Int) {
-        val (_, failureMap, _) = getKeyMaps()
-        failureMap[keyIndex] = (failureMap[keyIndex] ?: 0) + 1
-    }
-    
-    private fun getKeyFailureCount(keyIndex: Int): Int {
-        val (_, failureMap, _) = getKeyMaps()
-        return failureMap[keyIndex] ?: 0
-    }
-    
-    private suspend fun makeApiRequestWithFastTimeout(inputText: String, instruction: String, apiKeyIndex: Int, apiKeys: List<String>): Result<String> = withContext(Dispatchers.IO) {
+    private suspend fun makeApiRequestWithExponentialBackoff(inputText: String, instruction: String, apiKeyIndex: Int, apiKeys: List<String>, attemptNumber: Int): Result<String> = withContext(Dispatchers.IO) {
         try {
-            // Per-key rate limiting for better performance
+            // Enhanced rate limiting with jitter to prevent thundering herd
             val (requestTimeMap, _, _) = getKeyMaps()
             val currentTime = System.currentTimeMillis()
             val lastRequestTime = requestTimeMap[apiKeyIndex] ?: 0L
             val timeSinceLastRequest = currentTime - lastRequestTime
-            if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-                delay(MIN_REQUEST_INTERVAL - timeSinceLastRequest)
+            
+            // Add jitter to prevent synchronized requests
+            val jitteredInterval = MIN_REQUEST_INTERVAL + Random.nextLong(0, 500) // 0-500ms jitter
+            
+            if (timeSinceLastRequest < jitteredInterval) {
+                delay(jitteredInterval - timeSinceLastRequest)
             }
             requestTimeMap[apiKeyIndex] = System.currentTimeMillis()
             
@@ -309,8 +351,10 @@ object GeminiApiService {
                 requestMethod = "POST"
                 setRequestProperty("Content-Type", "application/json")
                 setRequestProperty("Connection", "close") // Prevent keep-alive for faster cleanup
-                connectTimeout = 8000 // Reduced from 30s to 8s for faster response
-                readTimeout = 12000 // Reduced from 30s to 12s for faster response
+                setRequestProperty("User-Agent", "SendRightX-AI-Client/1.0") // Identify our client
+                // Slightly increased timeouts for better reliability vs speed tradeoff
+                connectTimeout = 10000 // 10 seconds
+                readTimeout = 15000 // 15 seconds
                 doOutput = true
             }
             
@@ -336,7 +380,8 @@ object GeminiApiService {
                     Result.failure(Exception("🤔 No response received. Please try again."))
                 }
             } else if (responseCode == 429) {
-                Result.failure(IOException("⏳ Too many requests. Trying alternative service..."))
+                // Rate limited - apply exponential backoff for next attempt
+                Result.failure(IOException("⏳ Rate limited. Applying exponential backoff..."))
             } else if (responseCode == 503) {
                 Result.failure(IOException("🔧 Service temporarily unavailable. Trying alternative..."))
             } else if (responseCode == 500 || responseCode == 502 || responseCode == 504) {
@@ -344,7 +389,7 @@ object GeminiApiService {
             } else if (responseCode == 403 || responseCode == 401) {
                 Result.failure(IOException("🔐 Access denied. Switching to backup service..."))
             } else {
-                Result.failure(IOException("❌ Service error. Trying alternative..."))
+                Result.failure(IOException("❌ Service error (${responseCode}). Trying alternative..."))
             }
         } catch (e: SocketTimeoutException) {
             Result.failure(IOException("🕰️ Request timeout. Trying faster alternative..."))
@@ -353,23 +398,116 @@ object GeminiApiService {
         }
     }
     
-    private suspend fun makeApiRequest(inputText: String, instruction: String, apiKeyIndex: Int, apiKeys: List<String>): Result<String> = withContext(Dispatchers.IO) {
-        // Legacy method for backwards compatibility
-        return@withContext makeApiRequestWithFastTimeout(inputText, instruction, apiKeyIndex, apiKeys)
+    private fun markKeyAsHealthy(keyIndex: Int) {
+        val (_, failureMap, _) = getKeyMaps()
+        failureMap[keyIndex] = 0
+    }
+    
+    private fun markKeyAsUnhealthy(keyIndex: Int) {
+        val (_, failureMap, _) = getKeyMaps()
+        failureMap[keyIndex] = (failureMap[keyIndex] ?: 0) + 1
+    }
+    
+    private fun getKeyFailureCount(keyIndex: Int): Int {
+        val (_, failureMap, _) = getKeyMaps()
+        return failureMap[keyIndex] ?: 0
     }
     
     /**
-     * Get information about the current API key configuration
+     * Generate cache key for request deduplication and caching
+     * Includes date component to prevent cross-day cache conflicts
+     */
+    private fun generateCacheKey(inputText: String, instruction: String): String {
+        // Include current date to prevent cache pollution across midnight resets
+        val currentDay = System.currentTimeMillis() / (24 * 60 * 60 * 1000) // Days since epoch
+        val combined = "$inputText|$instruction|$currentDay"
+        return MessageDigest.getInstance("MD5")
+            .digest(combined.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+    }
+    
+    /**
+     * Get cached response if available and not expired
+     */
+    private fun getCachedResponse(cacheKey: String): String? {
+        val currentTime = System.currentTimeMillis()
+        val cached = responseCache[cacheKey]
+        
+        return if (cached != null && (currentTime - cached.second) < CACHE_DURATION_MS) {
+            cached.first // Return cached response
+        } else {
+            // Remove expired cache entry
+            responseCache.remove(cacheKey)
+            null
+        }
+    }
+    
+    /**
+     * Cache successful response with size management
+     */
+    private fun cacheResponse(cacheKey: String, response: String) {
+        val currentTime = System.currentTimeMillis()
+        
+        // Remove expired entries and manage cache size
+        if (responseCache.size >= MAX_CACHE_SIZE) {
+            val expiredKeys = responseCache.filter { (currentTime - it.value.second) > CACHE_DURATION_MS }.keys
+            expiredKeys.forEach { responseCache.remove(it) }
+            
+            // If still over limit, remove oldest entries
+            if (responseCache.size >= MAX_CACHE_SIZE) {
+                val oldestKeys = responseCache.entries
+                    .sortedBy { it.value.second }
+                    .take(responseCache.size - MAX_CACHE_SIZE + 1)
+                    .map { it.key }
+                oldestKeys.forEach { responseCache.remove(it) }
+            }
+        }
+        
+        responseCache[cacheKey] = Pair(response, currentTime)
+    }
+    
+    private suspend fun makeApiRequest(inputText: String, instruction: String, apiKeyIndex: Int, apiKeys: List<String>): Result<String> = withContext(Dispatchers.IO) {
+        // Updated to use the new exponential backoff method
+        return@withContext makeApiRequestWithExponentialBackoff(inputText, instruction, apiKeyIndex, apiKeys, 0)
+    }
+    
+    /**
+     * Get information about the current API key configuration and cache status
      */
     fun getApiKeyInfo(): String {
         val apiKeys = getApiKeysForUser()
         val userType = if (isProUser()) "Premium" else "Free"
         val healthyKeys = apiKeys.indices.count { getKeyFailureCount(it) == 0 }
+        val cacheInfo = "Cache: ${responseCache.size}/$MAX_CACHE_SIZE entries"
         return when {
             apiKeys.isEmpty() -> "No $userType API keys configured"
-            apiKeys.size == 1 -> "1 $userType API key configured (no fallbacks)"
-            else -> "${apiKeys.size} $userType API keys configured (1 primary + ${apiKeys.size - 1} fallbacks) - $healthyKeys healthy"
+            apiKeys.size == 1 -> "1 $userType API key configured (no fallbacks) | $cacheInfo"
+            else -> "${apiKeys.size} $userType API keys configured (1 primary + ${apiKeys.size - 1} fallbacks) - $healthyKeys healthy | $cacheInfo"
         }
+    }
+    
+    /**
+     * Clear response cache and active requests (called during daily reset to avoid stale data)
+     */
+    fun clearCacheForDailyReset() {
+        responseCache.clear()
+        activeRequests.clear()
+        // Reset key failure counts to give fresh start each day
+        freeKeyFailureCount.clear()
+        premiumKeyFailureCount.clear()
+        // Reset to primary keys for new day
+        currentFreeApiKeyIndex = 0
+        currentPremiumApiKeyIndex = 0
+    }
+    
+    /**
+     * Get cache statistics
+     */
+    fun getCacheStats(): String {
+        val currentTime = System.currentTimeMillis()
+        val validEntries = responseCache.count { (currentTime - it.value.second) < CACHE_DURATION_MS }
+        val expiredEntries = responseCache.size - validEntries
+        return "Cache: $validEntries valid, $expiredEntries expired, ${activeRequests.size} active requests"
     }
     
     /**
