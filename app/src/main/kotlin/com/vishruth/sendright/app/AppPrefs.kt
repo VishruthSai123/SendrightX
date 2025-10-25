@@ -667,6 +667,22 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
     }
 
+    val shortcuts = Shortcuts()
+    inner class Shortcuts {
+        val enabled = boolean(
+            key = "shortcuts__enabled",
+            default = true,
+        )
+        val useDefaultShortcuts = boolean(
+            key = "shortcuts__use_default_shortcuts",
+            default = true,
+        )
+        val customShortcuts = string(
+            key = "shortcuts__custom_shortcuts",
+            default = "{}",
+        )
+    }
+
     val physicalKeyboard = PhysicalKeyboard()
     inner class PhysicalKeyboard {
         val showOnScreenKeyboard = boolean(

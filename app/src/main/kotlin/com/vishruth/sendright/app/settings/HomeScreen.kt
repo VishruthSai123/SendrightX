@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.RateReview
+import androidx.compose.material.icons.filled.Shortcut
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Keyboard
@@ -154,6 +155,11 @@ fun HomeScreen() = FlorisScreen {
             icon = Icons.Outlined.Reorder,
             title = "Section Settings",
             onClick = { navController.navigate(Routes.Settings.MagicWandSectionSettings) },
+        )
+        Preference(
+            icon = Icons.Default.Shortcut,
+            title = stringRes(R.string.settings__shortcuts__title),
+            onClick = { navController.navigate(Routes.Settings.Shortcuts) },
         )
         Preference(
             icon = Icons.Filled.Language,

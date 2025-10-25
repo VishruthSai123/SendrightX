@@ -78,6 +78,7 @@ import com.vishruth.key1.app.settings.theme.ThemeManagerScreen
 import com.vishruth.key1.app.settings.theme.ThemeManagerScreenAction
 import com.vishruth.key1.app.settings.theme.ThemeScreen
 import com.vishruth.key1.app.settings.typing.TypingScreen
+import com.vishruth.key1.app.settings.shortcuts.ShortcutsScreen
 import com.vishruth.key1.app.onboarding.OnboardingScreen1
 import com.vishruth.key1.app.onboarding.PersonalizationIntroScreen
 import com.vishruth.key1.app.setup.SetupScreen
@@ -196,6 +197,10 @@ object Routes {
         @Serializable
         @Deeplink("settings/typing")
         object Typing
+
+        @Serializable
+        @Deeplink("settings/shortcuts")
+        object Shortcuts
 
         @Serializable
         @Deeplink("settings/dictionary")
@@ -389,6 +394,8 @@ object Routes {
             composableWithDeepLink(Settings.Smartbar::class) { SmartbarScreen() }
 
             composableWithDeepLink(Settings.Typing::class) { TypingScreen() }
+
+            composableWithDeepLink(Settings.Shortcuts::class) { ShortcutsScreen() }
 
             composableWithDeepLink(Settings.Dictionary::class) { DictionaryScreen() }
             composableWithDeepLink(Settings.UserDictionary::class) { navBackStack ->

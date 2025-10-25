@@ -495,6 +495,25 @@
     <string name="pref__correction__double_space_period__label" comment="Preference title">Double-space period</string>
     <string name="pref__correction__double_space_period__summary" comment="Preference summary">Tapping twice on spacebar inserts a period followed by a space</string>
     
+    <!-- Shortcuts strings -->
+    <string name="settings__shortcuts__title" comment="Title of Shortcuts screen">Short Cuts</string>
+    <string name="pref__shortcuts__enabled__label" comment="Preference title">Enable shortcuts</string>
+    <string name="pref__shortcuts__enabled__summary" comment="Preference summary">Enable text expansion shortcuts like "hru" → "How are you"</string>
+    <string name="pref__shortcuts__use_default_shortcuts__label" comment="Preference title">Use default shortcuts</string>
+    <string name="pref__shortcuts__use_default_shortcuts__summary" comment="Preference summary">Include built-in shortcuts like "hru", "dng", "omw", etc.</string>
+    <string name="shortcuts__info_text" comment="Info text for shortcuts screen">Text expansion shortcuts allow you to quickly type common phrases. Type a shortcut trigger followed by space to expand it into the full text. For example, typing "hru " expands to "How are you ".</string>
+    <string name="shortcuts__default_shortcuts" comment="Group title">Default shortcuts</string>
+    <string name="shortcuts__default_shortcuts_description" comment="Description text">These shortcuts are built-in and cannot be modified:</string>
+    <string name="shortcuts__custom_shortcuts" comment="Group title">Custom shortcuts</string>
+    <string name="shortcuts__custom_shortcuts_description" comment="Description text">Create your own shortcuts:</string>
+    <string name="shortcuts__add_custom" comment="Button text">Add custom</string>
+    <string name="shortcuts__no_custom_shortcuts" comment="Empty state text">No custom shortcuts yet. Tap "Add custom" to create your first shortcut.</string>
+    <string name="shortcuts__add_shortcut_title" comment="Dialog title">Add shortcut</string>
+    <string name="shortcuts__edit_shortcut_title" comment="Dialog title">Edit shortcut</string>
+    <string name="shortcuts__trigger_label" comment="Input field label">Trigger text</string>
+    <string name="shortcuts__expansion_label" comment="Input field label">Expansion text</string>
+    <string name="shortcuts__dialog_description" comment="Dialog description">Enter a short trigger (like "hru") that will expand to the full text when followed by space.</string>
+    
     <!-- Auto-correct aggressiveness enum entries -->
     <string name="enum__auto_correct_aggressiveness__conservative">Conservative</string>
     <string name="enum__auto_correct_aggressiveness__moderate">Moderate</string>

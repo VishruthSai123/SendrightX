@@ -48,6 +48,7 @@ import com.vishruth.key1.ime.input.InputShiftState
 import com.vishruth.key1.ime.nlp.ClipboardSuggestionCandidate
 import com.vishruth.key1.ime.nlp.PunctuationRule
 import com.vishruth.key1.ime.nlp.SuggestionCandidate
+import com.vishruth.sendright.ime.nlp.ShortcutManager
 import com.vishruth.key1.ime.onehanded.OneHandedMode
 import com.vishruth.key1.ime.popup.PopupMappingComponent
 import com.vishruth.key1.ime.text.composing.Composer
@@ -108,6 +109,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     val layoutManager = LayoutManager(context)
     private val keyboardCache = TextKeyboardCache()
+    private val shortcutManager = ShortcutManager(context)
 
     val resources = KeyboardManagerResources()
     val activeState = ObservableKeyboardState.new()
@@ -138,6 +140,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
 
     init {
         scope.launch(Dispatchers.Main.immediate) {
+            // Initialize shortcut manager
+            shortcutManager.initialize()
+            
             resources.anyChanged.observeForever {
                 updateActiveEvaluators {
                     keyboardCache.clear()
@@ -666,6 +671,30 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             commitCandidate(candidate)
         }
         
+        // Check for shortcut expansion before anything else
+        scope.launch {
+            val currentText = editorInstance.run { activeContent.getTextBeforeCursor(50) }
+            val words = currentText.split("\\s+".toRegex())
+            val lastWord = words.lastOrNull()?.trim()
+            
+            if (!lastWord.isNullOrEmpty() && shortcutManager.isEnabled()) {
+                val expansion = shortcutManager.getExpansion(lastWord)
+                if (expansion != null) {
+                    // Delete the trigger word and replace with expansion
+                    repeat(lastWord.length) {
+                        editorInstance.deleteBackwards(OperationUnit.CHARACTERS)
+                    }
+                    editorInstance.commitText("$expansion ")
+                    return@launch
+                }
+            }
+            
+            // If no shortcut expansion, continue with normal space handling
+            handleNormalSpace(data, candidate)
+        }
+    }
+    
+    private fun handleNormalSpace(data: KeyData, candidate: SuggestionCandidate?) {
         // Autosave the previous word when space is pressed (similar to Gboard)
         autosavePreviousWord()
         
