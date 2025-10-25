@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardCapslock
@@ -58,6 +59,7 @@ import com.vishruth.key1.ime.text.key.KeyCode
 import com.vishruth.key1.ime.text.key.KeyType
 import com.vishruth.key1.lib.FlorisLocale
 import com.vishruth.key1.lib.compose.vectorResource
+import com.vishruth.key1.app.FlorisPreferenceStore
 import org.florisboard.lib.compose.icons.ForwardDelete
 
 interface ComputingEvaluator {
@@ -286,7 +288,17 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
             }
         }
         KeyCode.TOGGLE_AUTOCORRECT -> {
-            Icons.Default.FontDownload
+            // Get preferences store and check if auto-correct is enabled
+            val prefs by FlorisPreferenceStore
+            val isAutoCorrectEnabled = prefs.correction.autoCorrectEnabled.get()
+            
+            if (isAutoCorrectEnabled) {
+                // Show checkmark when auto-correct is enabled
+                Icons.Default.Check
+            } else {
+                // Show normal font icon when auto-correct is disabled
+                Icons.Default.FontDownload
+            }
         }
         KeyCode.MAGIC_WAND -> {
             // Return null so QuickActionButton can handle PNG resources directly
