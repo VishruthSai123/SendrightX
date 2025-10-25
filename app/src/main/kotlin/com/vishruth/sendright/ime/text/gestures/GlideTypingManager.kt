@@ -131,7 +131,7 @@ class GlideTypingManager(context: Context) : GlideTypingGesture.Listener {
                         0,  // Start from index 0 for immediate suggestions
                         maxSuggestionsToShow.coerceAtMost(suggestions.size)
                     ).map { keyboardManager.fixCase(it) }.forEach {
-                        add(WordSuggestionCandidate(it, confidence = 1.0))
+                        add(WordSuggestionCandidate(it, confidence = 1.0, isFromUserDictionary = false))
                     }
                 }
                 // flogDebug { "Sending ${suggestionList.size} suggestions to NLP manager" }

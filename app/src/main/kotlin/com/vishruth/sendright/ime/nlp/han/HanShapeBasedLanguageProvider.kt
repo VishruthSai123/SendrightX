@@ -192,6 +192,7 @@ class HanShapeBasedLanguageProvider(val context: Context) : SpellingProvider, Su
                         isEligibleForAutoCommit = n == 0 && rowCount > 1, // Only auto-commit if there are multiple suggestions
                         // We set ourselves as the source provider so we can get notify events for our candidate
                         sourceProvider = this@HanShapeBasedLanguageProvider,
+                        isFromUserDictionary = false,
                     ))
                 }
             }

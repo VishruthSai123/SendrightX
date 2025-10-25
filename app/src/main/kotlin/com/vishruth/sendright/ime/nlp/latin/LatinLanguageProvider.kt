@@ -254,20 +254,16 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
             
             flogDebug { "UserDictionaryDao: $userDictionaryDao" }
             
-            // Check if auto-correct is enabled - if so, exclude user words to avoid incorrect auto-corrections
-            val isAutoCorrectEnabled = prefs.correction.autoCorrectEnabled.get()
-            flogDebug { "Auto-correct enabled: $isAutoCorrectEnabled" }
-            
-            if (userDictionaryDao != null && !isAutoCorrectEnabled) {
-                // Only include user words when auto-correct is disabled
+            if (userDictionaryDao != null) {
+                // Always include user words for suggestions and glide typing
                 val userData = userDictionaryDao.queryAll(subtype.primaryLocale).associate { 
                     it.word to kotlin.math.min(it.freq + 30, FREQUENCY_MAX)  // Increased boost for user words
                 }
-                flogDebug { "Retrieved ${userData.size} words from user dictionary (auto-correct disabled)" }
+                flogDebug { "Retrieved ${userData.size} words from user dictionary" }
                 flogDebug { "User dictionary words: ${userData.keys.take(20).toList()}" }  // Log first 20 user words for debugging
                 userData
             } else {
-                flogDebug { "User dictionary excluded (auto-correct enabled or DAO null)" }
+                flogDebug { "User dictionary DAO is null" }
                 emptyMap()
             }
         } catch (e: Exception) {
@@ -276,8 +272,8 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
             emptyMap()
         }
         
-        // When auto-correct is enabled, use only static dictionary words
-        // When auto-correct is disabled, combine both dictionaries with user words taking precedence
+        // Always combine both dictionaries - user words will be available for glide typing and manual selection
+        // Auto-commit filtering will be handled in NlpManager based on word source
         val combinedWordData = mutableMapOf<String, Int>()
         combinedWordData.putAll(staticWordData)
         if (userWordData.isNotEmpty()) {
@@ -301,11 +297,13 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                 .sortedByDescending { it.value }
                 .take(maxCandidateCount)
                 .map { (word, frequency) ->
+                    val isFromUserDict = userWordData.containsKey(word)
                     WordSuggestionCandidate(
                         text = word,
                         confidence = frequency / 255.0,
                         isEligibleForAutoCommit = false,
                         sourceProvider = this@LatinLanguageProvider,
+                        isFromUserDictionary = isFromUserDict,
                     )
                 }
             flogDebug { "Returning ${prefixCandidates.size} prefix candidates for single character '$composingText'" }
@@ -331,12 +329,14 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         wordLower.startsWith(composingTextLower) -> frequency / 255.0
                         else -> (frequency / 255.0) * 0.7  // Lower confidence for fuzzy matches
                     }
+                    val isFromUserDict = userWordData.containsKey(word)
                     
                     WordSuggestionCandidate(
                         text = word,
                         confidence = confidence,
                         isEligibleForAutoCommit = false,  // Don't auto-commit on short input
                         sourceProvider = this@LatinLanguageProvider,
+                        isFromUserDictionary = isFromUserDict,
                     )
                 }
             flogDebug { "Returning ${candidates.size} candidates for 2-character input '$composingText'" }
@@ -366,12 +366,14 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                     } else {
                         word
                     }
+                    val isFromUserDict = userWordData.containsKey(word)
                     
                     exactMatches.add(WordSuggestionCandidate(
                         text = finalWord,
                         confidence = 1.0, // Full confidence for exact matches
                         isEligibleForAutoCommit = true, // Always auto-commit exact matches
                         sourceProvider = this@LatinLanguageProvider,
+                        isFromUserDictionary = isFromUserDict,
                     ))
                 }
                 wordLower.startsWith(composingTextLower) -> {
@@ -400,12 +402,14 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         } else {
                             word
                         }
+                        val isFromUserDict = userWordData.containsKey(word)
                         
                         prefixMatches.add(WordSuggestionCandidate(
                             text = finalWord,
                             confidence = adjustedConfidence.coerceAtMost(1.0),
                             isEligibleForAutoCommit = composingTextLower.length >= 3 && adjustedConfidence > 0.8,
                             sourceProvider = this@LatinLanguageProvider,
+                            isFromUserDictionary = isFromUserDict,
                         ))
                     }
                 }
@@ -447,6 +451,7 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         } else {
                             word
                         }
+                        val isFromUserDict = userWordData.containsKey(word)
                         
                         fuzzyMatches.add(WordSuggestionCandidate(
                             text = finalWord,
@@ -455,6 +460,7 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                             isEligibleForAutoCommit = distance == 1 && adjustedConfidence > 0.7 && 
                                 composingTextLower.length >= 3,
                             sourceProvider = this@LatinLanguageProvider,
+                            isFromUserDictionary = isFromUserDict,
                         ))
                     }
                 }

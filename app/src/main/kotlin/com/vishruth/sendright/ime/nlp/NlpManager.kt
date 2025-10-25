@@ -317,7 +317,11 @@ class NlpManager(context: Context) {
         val composingText = editorInstance.activeContent.composingText.toString().trim()
         
         // First try to find a candidate that's explicitly eligible for auto-commit
-        val explicitCandidate = activeCandidates.firstOrNull { it.isEligibleForAutoCommit }
+        // but exclude user dictionary words when auto-correct is enabled
+        val explicitCandidate = activeCandidates.firstOrNull { candidate ->
+            candidate.isEligibleForAutoCommit && 
+            !(candidate is WordSuggestionCandidate && candidate.isFromUserDictionary)
+        }
         if (explicitCandidate != null) {
             // Filter out emojis from auto-commit
             if (containsEmoji(explicitCandidate.text.toString())) {
@@ -327,9 +331,10 @@ class NlpManager(context: Context) {
         }
         
         // Enhanced auto-commit logic with aggressiveness levels
-        // Since user words are already filtered out when auto-correct is enabled,
-        // we can use the normal candidate selection logic
-        val bestCandidate = activeCandidates.firstOrNull()
+        // Exclude user dictionary words from auto-commit when auto-correct is enabled
+        val bestCandidate = activeCandidates.firstOrNull { candidate ->
+            !(candidate is WordSuggestionCandidate && candidate.isFromUserDictionary)
+        }
         if (bestCandidate != null && composingText.isNotEmpty()) {
             // Filter out emojis from auto-commit
             if (containsEmoji(bestCandidate.text.toString())) {
@@ -382,8 +387,11 @@ class NlpManager(context: Context) {
             }
         }
         
-        // Final fallback: very high confidence candidates only
-        return activeCandidates.firstOrNull { it.confidence > 0.95 }
+        // Final fallback: very high confidence candidates only, excluding user words
+        return activeCandidates.firstOrNull { candidate ->
+            candidate.confidence > 0.95 && 
+            !(candidate is WordSuggestionCandidate && candidate.isFromUserDictionary)
+        }
     }
     
     /**
@@ -526,7 +534,8 @@ class NlpManager(context: Context) {
                 confidence = 0.2, // Low confidence so it doesn't interfere with real suggestions
                 isEligibleForAutoCommit = false,
                 isEligibleForUserRemoval = false,
-                sourceProvider = null
+                sourceProvider = null,
+                isFromUserDictionary = false
             ))
         }
     }

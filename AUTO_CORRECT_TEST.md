@@ -1,11 +1,23 @@
-# Auto-Correct Filtering Test Instructions
+# Auto-Correct Filtering Test Instructions - IMPROVED VERSION ✨
 
 ## What We Implemented
 
-The auto-correct system now uses a **simple filtering approach** instead of complex prioritization:
+The auto-correct system now uses **intelligent selective filtering** instead of complete exclusion:
 
-- **When auto-correct is ENABLED**: Only dictionary words are used for suggestions (user dictionary words are filtered out)
-- **When auto-correct is DISABLED**: All words (both dictionary and user words) are available for suggestions
+- **When auto-correct is ENABLED**: 
+  - ✅ User dictionary words are AVAILABLE for suggestions and glide typing
+  - ✅ User dictionary words are AVAILABLE for manual selection
+  - ❌ User dictionary words are EXCLUDED from auto-commit/auto-correction only
+  
+- **When auto-correct is DISABLED**: 
+  - ✅ All words (both dictionary and user words) are available for suggestions, glide typing, and auto-commit
+
+## 🎯 Key Improvements
+
+**✅ Fixed Glide Typing**: User-saved words now work perfectly with glide typing even when auto-correct is enabled  
+**✅ Fixed Suggestions**: User words appear in suggestion bar when auto-correct is enabled  
+**✅ Smart Auto-Commit**: Only auto-commit behavior excludes user words to prevent bad corrections  
+**✅ Manual Selection**: Users can always manually select their saved words
 
 ## Testing Steps
 
@@ -20,33 +32,41 @@ The auto-correct system now uses a **simple filtering approach** instead of comp
 3. **Expected**: You should see "updite" (your saved misspelled word) in suggestions
 4. Type "upda"
 5. **Expected**: You should see both "update" (dictionary) and "updite" (user word) in suggestions
+6. **Glide Typing**: Glide "updite" - should work perfectly
+7. **Auto-commit**: May auto-commit to "updite" if it's the best match
 
-### 3. Test with Auto-Correct ENABLED:
+### 3. Test with Auto-Correct ENABLED (improved behavior):
 1. Go to Settings → Typing → Auto-correct → Turn ON auto-correct toggle
 2. Type "updi"
-3. **Expected**: You should NOT see "updite" (filtered out), only proper dictionary words
+3. **Expected**: You should see "updite" in suggestions (NOT filtered out anymore!)
 4. Type "upda"
-5. **Expected**: You should see "update" (dictionary word) but NOT "updite" (filtered out)
-6. Type "updi" and press space
-7. **Expected**: It should auto-correct to "update" (not "updite")
+5. **Expected**: You should see both "update" and "updite" in suggestions
+6. **Glide Typing**: Glide "updite" - should work perfectly ✨
+7. **Manual Selection**: Tap "updite" - should work perfectly ✨
+8. **Auto-commit**: Type "updi" and press space - should auto-correct to "update" (NOT "updite")
 
-### 4. Verify Toggle Functionality:
-1. Toggle auto-correct ON/OFF from quick settings or main settings
-2. **Expected**: Suggestions should immediately change based on toggle state
-3. With toggle OFF: User words appear in suggestions
-4. With toggle ON: User words are filtered out, only dictionary words appear
+### 4. Verify Selective Filtering:
+1. With auto-correct ON:
+   - ✅ User words appear in suggestions
+   - ✅ User words work with glide typing
+   - ✅ User words can be manually selected
+   - ❌ User words are NOT auto-committed (preventing bad corrections)
+2. With auto-correct OFF:
+   - ✅ Everything works as before
 
-## Key Benefits
+## Key Benefits of New Implementation
 
-✅ **Simple Logic**: No complex prioritization algorithms
-✅ **Predictable Behavior**: Auto-correct only suggests proper dictionary words
-✅ **User Control**: Toggle allows switching between filtered/unfiltered suggestions
-✅ **Performance**: Efficient filtering without complex scoring calculations
+✅ **Best of Both Worlds**: User words available for suggestions/glide typing, but excluded from auto-commit  
+✅ **Glide Typing Fixed**: No more broken glide typing for user-saved words  
+✅ **Manual Control**: Users can always manually select their saved words  
+✅ **Smart Auto-Correct**: Only auto-commits proper dictionary words, preventing saved typos from interfering  
+✅ **Backward Compatible**: Auto-correct OFF behavior unchanged
 
 ## Technical Implementation
 
-- `LatinLanguageProvider.kt`: Added preference checking to conditionally exclude user dictionary words
-- `NlpManager.kt`: Simplified auto-commit logic that works with filtered suggestions
-- Auto-correct toggle integrates seamlessly with the filtering system
+- **WordSuggestionCandidate**: Added `isFromUserDictionary` property to track word source
+- **LatinLanguageProvider**: Always includes user words but marks them appropriately
+- **NlpManager**: Auto-commit logic excludes user dictionary words when auto-correct is enabled
+- **All Providers**: Updated to properly mark user vs dictionary words
 
-This approach ensures that when users enable auto-correct, they only get suggestions from proper dictionaries, preventing accidentally saved misspellings from interfering with corrections.
+This approach ensures users get the full functionality of their saved words while preventing accidentally saved misspellings from interfering with auto-corrections! 🚀

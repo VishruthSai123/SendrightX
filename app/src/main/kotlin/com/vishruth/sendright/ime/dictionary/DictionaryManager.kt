@@ -65,24 +65,24 @@ class DictionaryManager private constructor(context: Context) {
             if (prefs.dictionary.enableFlorisUserDictionary.get()) {
                 florisDao?.query(word, locale)?.let {
                     for (entry in it) {
-                        add(WordSuggestionCandidate(entry.word, confidence = entry.freq / 255.0))
+                        add(WordSuggestionCandidate(entry.word, confidence = entry.freq / 255.0, isFromUserDictionary = true))
                     }
                 }
                 florisDao?.queryShortcut(word, locale)?.let {
                     for (entry in it) {
-                        add(WordSuggestionCandidate(entry.word, confidence = entry.freq / 255.0))
+                        add(WordSuggestionCandidate(entry.word, confidence = entry.freq / 255.0, isFromUserDictionary = true))
                     }
                 }
             }
             if (prefs.dictionary.enableSystemUserDictionary.get()) {
                 systemDao?.query(word, locale)?.let {
                     for (entry in it) {
-                        add(WordSuggestionCandidate(entry.word, confidence = entry.freq / 255.0))
+                        add(WordSuggestionCandidate(entry.word, confidence = entry.freq / 255.0, isFromUserDictionary = true))
                     }
                 }
                 systemDao?.queryShortcut(word, locale)?.let {
                     for (entry in it) {
-                        add(WordSuggestionCandidate(entry.word, confidence = entry.freq / 255.0))
+                        add(WordSuggestionCandidate(entry.word, confidence = entry.freq / 255.0, isFromUserDictionary = true))
                     }
                 }
             }

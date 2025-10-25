@@ -111,6 +111,7 @@ data class WordSuggestionCandidate(
     override val isEligibleForAutoCommit: Boolean = false,
     override val isEligibleForUserRemoval: Boolean = true,
     override val sourceProvider: SuggestionProvider? = null,
+    val isFromUserDictionary: Boolean = false,
 ) : SuggestionCandidate {
     override val icon: ImageVector? = null
 }
