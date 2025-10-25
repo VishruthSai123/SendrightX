@@ -596,7 +596,8 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         val staticWords = wordData.withLock { it.keys.toList() }
         // flogDebug { "Static dictionary size: ${staticWords.size}" }
         
-        // Get words from the user dictionary
+        // Always include user dictionary words for suggestions and glide typing
+        // Auto-commit filtering is handled separately in NlpManager
         val userWords = try {
             val dictionaryManager = DictionaryManager.default()
             dictionaryManager.loadUserDictionariesIfNecessary()
@@ -607,7 +608,7 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
             if (userDictionaryDao != null) {
                 // Query all words from the user dictionary for this subtype
                 val userWordsList = userDictionaryDao.queryAll(subtype.primaryLocale).map { it.word }
-                // flogDebug { "Retrieved ${userWordsList.size} words from user dictionary for locale ${subtype.primaryLocale}" }
+                flogDebug { "Retrieved ${userWordsList.size} words from user dictionary for locale ${subtype.primaryLocale}" }
                 // flogDebug { "User dictionary words in getListOfWords: ${userWordsList.take(20).toList()}" }  // Log first 20 user words for debugging
                 userWordsList
             } else {
@@ -621,6 +622,7 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         }
         
         // Combine both lists, with user words first to take precedence
+        // This ensures both suggestions and glide typing have access to user words
         // flogDebug { "Returning combined word list: ${userWords.size} user words + ${staticWords.size} static words" }
         return userWords + staticWords
     }

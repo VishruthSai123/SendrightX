@@ -838,6 +838,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         val currentState = prefs.correction.autoCorrectEnabled.get()
         prefs.correction.autoCorrectEnabled.set(!currentState)
         
+        // Refresh suggestions to reflect the new auto-correct state immediately
+        nlpManager.suggest(subtypeManager.activeSubtype, editorInstance.activeContent)
+        
         val message = if (!currentState) {
             "Auto-correct enabled"
         } else {
