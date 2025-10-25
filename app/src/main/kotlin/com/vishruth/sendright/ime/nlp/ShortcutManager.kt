@@ -82,6 +82,7 @@ class ShortcutManager(private val context: Context) {
     suspend fun initialize() {
         mutex.withLock {
             loadShortcuts()
+            flogDebug { "ShortcutManager initialized - enabled: ${isEnabled()}, total shortcuts: ${shortcuts.size}" }
         }
     }
     
@@ -103,8 +104,11 @@ class ShortcutManager(private val context: Context) {
             return
         }
         
+        flogDebug { "Loading shortcuts - isEnabled: ${isEnabled()}, useDefaultShortcuts: ${prefs.shortcuts.useDefaultShortcuts.get()}" }
+        
         try {
             val shortcutsJson = prefs.shortcuts.customShortcuts.get()
+            flogDebug { "Custom shortcuts JSON: $shortcutsJson" }
             if (shortcutsJson.isNotEmpty()) {
                 val loadedShortcuts = Json.decodeFromString<List<Shortcut>>(shortcutsJson)
                 for (shortcut in loadedShortcuts) {
@@ -129,6 +133,7 @@ class ShortcutManager(private val context: Context) {
         }
         
         flogDebug { "Total shortcuts loaded: ${shortcuts.size}" }
+        flogDebug { "Available shortcuts: ${shortcuts.keys}" }
     }
     
     /**
@@ -137,10 +142,15 @@ class ShortcutManager(private val context: Context) {
      * @return The expansion if found, null otherwise
      */
     suspend fun getExpansion(text: String): String? {
-        if (!isEnabled()) return null
+        if (!isEnabled()) {
+            flogDebug { "Shortcuts disabled, returning null for '$text'" }
+            return null
+        }
         
         return mutex.withLock {
-            shortcuts[text.lowercase()]
+            val result = shortcuts[text.lowercase()]
+            flogDebug { "Looking up '$text' -> result: $result, available shortcuts: ${shortcuts.keys}" }
+            result
         }
     }
     

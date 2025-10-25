@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.vishruth.key1.R
 import com.vishruth.key1.app.FlorisPreferenceStore
 import com.vishruth.sendright.ime.nlp.ShortcutManager
+import com.vishruth.key1.shortcutManager
 import org.florisboard.lib.android.showShortToastSync
 import kotlinx.coroutines.launch
 
@@ -25,7 +26,7 @@ fun ShortcutsScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val prefs by FlorisPreferenceStore
-    val shortcutManager = remember { ShortcutManager(context) }
+    val shortcutManager = context.shortcutManager().value
     
     // Use actual preferences
     var shortcutsEnabled by remember { mutableStateOf(prefs.shortcuts.enabled.get()) }
@@ -92,12 +93,15 @@ fun ShortcutsScreen() {
                                     shortcutsEnabled = it
                                     scope.launch {
                                         prefs.shortcuts.enabled.set(it)
+                                        println("DEBUG: Set shortcuts.enabled to $it")
                                         // When disabled, also disable default shortcuts
                                         if (!it) {
                                             useDefaultShortcuts = false
                                             prefs.shortcuts.useDefaultShortcuts.set(false)
+                                            println("DEBUG: Disabled useDefaultShortcuts")
                                         }
                                         shortcutManager.refresh()
+                                        println("DEBUG: Called shortcutManager.refresh()")
                                     }
                                 }
                             )
@@ -138,7 +142,9 @@ fun ShortcutsScreen() {
                                     useDefaultShortcuts = it
                                     scope.launch {
                                         prefs.shortcuts.useDefaultShortcuts.set(it)
+                                        println("DEBUG: Set useDefaultShortcuts to $it")
                                         shortcutManager.refresh()
+                                        println("DEBUG: Called shortcutManager.refresh() for useDefaultShortcuts")
                                     }
                                 }
                             )
@@ -358,9 +364,11 @@ fun ShortcutsScreen() {
                                 }
                                 
                                 val success = shortcutManager.addShortcut(triggerText.trim(), expansionText.trim())
+                                println("DEBUG: Added shortcut '${triggerText.trim()}' -> '${expansionText.trim()}', success: $success")
                                 if (success) {
                                     val (_, updatedCustom) = shortcutManager.getAllShortcuts()
                                     customShortcuts = updatedCustom.associate { it.trigger to it.expansion }
+                                    println("DEBUG: Updated custom shortcuts: $customShortcuts")
                                     showDialog = false
                                     context.showShortToastSync(
                                         if (editingShortcut == null) "Shortcut added" else "Shortcut updated"

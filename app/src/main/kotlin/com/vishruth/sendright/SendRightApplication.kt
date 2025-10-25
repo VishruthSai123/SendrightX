@@ -34,6 +34,7 @@ import com.vishruth.key1.ime.editor.EditorInstance
 import com.vishruth.key1.ime.keyboard.KeyboardManager
 import com.vishruth.key1.ime.media.emoji.FlorisEmojiCompat
 import com.vishruth.key1.ime.nlp.NlpManager
+import com.vishruth.sendright.ime.nlp.ShortcutManager
 import com.vishruth.key1.ime.text.gestures.GlideTypingManager
 import com.vishruth.key1.ime.theme.ThemeManager
 import com.vishruth.key1.lib.ads.AdManager
@@ -90,6 +91,7 @@ class SendRightApplication : Application() {
     val glideTypingManager = lazy { GlideTypingManager(this) }
     val keyboardManager = lazy { KeyboardManager(this) }
     val nlpManager = lazy { NlpManager(this) }
+    val shortcutManager = lazy { ShortcutManager(this) }
     val subtypeManager: Lazy<SubtypeManager> = lazy { SubtypeManager(this) }
     val themeManager = lazy { ThemeManager(this) }
 
@@ -201,6 +203,8 @@ fun Context.glideTypingManager() = this.sendRightApplication().glideTypingManage
 fun Context.keyboardManager() = this.sendRightApplication().keyboardManager
 
 fun Context.nlpManager() = this.sendRightApplication().nlpManager
+
+fun Context.shortcutManager() = this.sendRightApplication().shortcutManager
 
 fun Context.subtypeManager() = this.sendRightApplication().subtypeManager
 

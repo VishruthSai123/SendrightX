@@ -32,6 +32,7 @@ import com.vishruth.key1.clipboardManager
 import com.vishruth.key1.editorInstance
 import com.vishruth.key1.extensionManager
 import com.vishruth.key1.glideTypingManager
+import com.vishruth.key1.shortcutManager
 import com.vishruth.key1.ime.ImeUiMode
 import com.vishruth.key1.ime.core.DisplayLanguageNamesIn
 import com.vishruth.key1.ime.core.Subtype
@@ -109,7 +110,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     val layoutManager = LayoutManager(context)
     private val keyboardCache = TextKeyboardCache()
-    private val shortcutManager = ShortcutManager(context)
+    private val shortcutManager by context.shortcutManager()
 
     val resources = KeyboardManagerResources()
     val activeState = ObservableKeyboardState.new()
@@ -677,9 +678,13 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             val words = currentText.split("\\s+".toRegex())
             val lastWord = words.lastOrNull()?.trim()
             
+            flogDebug { "Space pressed - currentText: '$currentText', lastWord: '$lastWord', shortcutsEnabled: ${shortcutManager.isEnabled()}" }
+            
             if (!lastWord.isNullOrEmpty() && shortcutManager.isEnabled()) {
                 val expansion = shortcutManager.getExpansion(lastWord)
+                flogDebug { "Checking expansion for '$lastWord': $expansion" }
                 if (expansion != null) {
+                    flogDebug { "Expanding '$lastWord' to '$expansion'" }
                     // Delete the trigger word and replace with expansion
                     repeat(lastWord.length) {
                         editorInstance.deleteBackwards(OperationUnit.CHARACTERS)
