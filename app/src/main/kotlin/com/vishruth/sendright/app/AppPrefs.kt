@@ -38,6 +38,7 @@ import com.vishruth.key1.ime.media.emoji.EmojiHairStyle
 import com.vishruth.key1.ime.media.emoji.EmojiHistory
 import com.vishruth.key1.ime.media.emoji.EmojiSkinTone
 import com.vishruth.key1.ime.media.emoji.EmojiSuggestionType
+import com.vishruth.key1.ime.nlp.AutoCorrectAggressiveness
 import com.vishruth.key1.ime.nlp.SpellingLanguageMode
 import com.vishruth.key1.ime.onehanded.OneHandedMode
 import com.vishruth.key1.ime.smartbar.CandidatesDisplayMode
@@ -160,7 +161,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val autoCorrectEnabled = boolean(
             key = "correction__auto_correct_enabled",
-            default = true,
+            default = false,
+        )
+        val autoCorrectAggressiveness = enum(
+            key = "correction__auto_correct_aggressiveness",
+            default = AutoCorrectAggressiveness.MODERATE,
         )
         val autoSpacePunctuation = boolean(
             key = "correction__auto_space_punctuation",
@@ -881,6 +886,16 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
                     newArrangement = newArrangement.copy(
                         dynamicActions = newArrangement.dynamicActions.plus(QuickAction.InsertKey(TextKeyData.FORWARD_DELETE))
                     )
+                }
+                if (QuickAction.InsertKey(TextKeyData.TOGGLE_AUTOCORRECT) !in newArrangement) {
+                    // Add auto-correct toggle after clipboard action if present, otherwise at a reasonable position
+                    val clipboardIndex = newArrangement.dynamicActions.indexOfFirst { 
+                        it is QuickAction.InsertKey && it.data.code == KeyCode.IME_UI_MODE_CLIPBOARD 
+                    }
+                    val insertIndex = if (clipboardIndex >= 0) clipboardIndex + 1 else minOf(5, newArrangement.dynamicActions.size)
+                    val updatedActions = newArrangement.dynamicActions.toMutableList()
+                    updatedActions.add(insertIndex, QuickAction.InsertKey(TextKeyData.TOGGLE_AUTOCORRECT))
+                    newArrangement = newArrangement.copy(dynamicActions = updatedActions)
                 }
                 val json = QuickActionJsonConfig.encodeToString(newArrangement.distinct())
                 entry.transform(rawValue = json)

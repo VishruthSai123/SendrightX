@@ -73,17 +73,18 @@ data class QuickActionArrangement(
                 QuickAction.InsertKey(TextKeyData.VOICE_INPUT),             // 3. Voice Input (moved from sticky)
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),   // 4. Emoji
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD), // 5. Clipboard
-                QuickAction.InsertKey(TextKeyData.SETTINGS),            // 6. Settings
-                QuickAction.InsertKey(TextKeyData.UNDO),                // 6. Undo
-                QuickAction.InsertKey(TextKeyData.REDO),                // 7. Redo
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_CUT),       // 8. Cut
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL), // 9. Select All
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),      // 10. Copy
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),     // 11. Paste
-                QuickAction.InsertKey(TextKeyData.TOGGLE_INCOGNITO_MODE), // 12. Incognito
-                QuickAction.InsertKey(TextKeyData.LANGUAGE_SWITCH),     // 13. Switch Language
-                QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT), // 14. One Handed
-                QuickAction.InsertKey(TextKeyData.FORWARD_DELETE),      // 15. Forward Delete
+                QuickAction.InsertKey(TextKeyData.TOGGLE_AUTOCORRECT), // 6. Auto-Correct Toggle
+                QuickAction.InsertKey(TextKeyData.SETTINGS),            // 7. Settings
+                QuickAction.InsertKey(TextKeyData.UNDO),                // 8. Undo
+                QuickAction.InsertKey(TextKeyData.REDO),                // 9. Redo
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_CUT),       // 10. Cut
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL), // 11. Select All
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),      // 12. Copy
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),     // 13. Paste
+                QuickAction.InsertKey(TextKeyData.TOGGLE_INCOGNITO_MODE), // 14. Incognito
+                QuickAction.InsertKey(TextKeyData.LANGUAGE_SWITCH),     // 15. Switch Language
+                QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT), // 16. One Handed
+                QuickAction.InsertKey(TextKeyData.FORWARD_DELETE),      // 17. Forward Delete
             ),
             hiddenActions = listOf(),
         )

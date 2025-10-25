@@ -17,6 +17,7 @@
 package com.vishruth.key1.ime.nlp.latin
 
 import android.content.Context
+import com.vishruth.key1.app.FlorisPreferenceStore
 import com.vishruth.key1.appContext
 import com.vishruth.key1.ime.core.Subtype
 import com.vishruth.key1.ime.dictionary.DictionaryManager
@@ -43,10 +44,11 @@ import org.florisboard.lib.kotlin.guardedByLock
 
 class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProvider {
     companion object {
-        const val ProviderId = "com.vishruth.key1.nlp.providers.latin"
+        const val ProviderId = "org.florisboard.nlp.providers.latin"
     }
 
     private val appContext by context.appContext()
+    private val prefs by FlorisPreferenceStore
     private val wordData = guardedByLock { mutableMapOf<String, Int>() }
     private val wordDataSerializer = MapSerializer(String.serializer(), Int.serializer())
 
@@ -252,17 +254,20 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
             
             flogDebug { "UserDictionaryDao: $userDictionaryDao" }
             
-            if (userDictionaryDao != null) {
-                // Query all words from the user dictionary for this subtype
-                // Give user words a significantly higher frequency to prioritize them
+            // Check if auto-correct is enabled - if so, exclude user words to avoid incorrect auto-corrections
+            val isAutoCorrectEnabled = prefs.correction.autoCorrectEnabled.get()
+            flogDebug { "Auto-correct enabled: $isAutoCorrectEnabled" }
+            
+            if (userDictionaryDao != null && !isAutoCorrectEnabled) {
+                // Only include user words when auto-correct is disabled
                 val userData = userDictionaryDao.queryAll(subtype.primaryLocale).associate { 
                     it.word to kotlin.math.min(it.freq + 30, FREQUENCY_MAX)  // Increased boost for user words
                 }
-                flogDebug { "Retrieved ${userData.size} words from user dictionary" }
+                flogDebug { "Retrieved ${userData.size} words from user dictionary (auto-correct disabled)" }
                 flogDebug { "User dictionary words: ${userData.keys.take(20).toList()}" }  // Log first 20 user words for debugging
                 userData
             } else {
-                flogDebug { "User dictionary DAO is null" }
+                flogDebug { "User dictionary excluded (auto-correct enabled or DAO null)" }
                 emptyMap()
             }
         } catch (e: Exception) {
@@ -271,11 +276,13 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
             emptyMap()
         }
         
-        // Combine both dictionaries, with user words taking precedence
-        // Create a new map with static words first, then overwrite with user words
+        // When auto-correct is enabled, use only static dictionary words
+        // When auto-correct is disabled, combine both dictionaries with user words taking precedence
         val combinedWordData = mutableMapOf<String, Int>()
         combinedWordData.putAll(staticWordData)
-        combinedWordData.putAll(userWordData)  // User words will overwrite static words with the same key
+        if (userWordData.isNotEmpty()) {
+            combinedWordData.putAll(userWordData)  // User words will overwrite static words with the same key
+        }
         flogDebug { "Combined word data size: ${combinedWordData.size}" }
         flogDebug { "User word data keys: ${userWordData.keys.take(10)}" }  // Log first 10 user words for debugging
         
@@ -363,7 +370,7 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                     exactMatches.add(WordSuggestionCandidate(
                         text = finalWord,
                         confidence = 1.0, // Full confidence for exact matches
-                        isEligibleForAutoCommit = true,
+                        isEligibleForAutoCommit = true, // Always auto-commit exact matches
                         sourceProvider = this@LatinLanguageProvider,
                     ))
                 }
@@ -444,7 +451,9 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
                         fuzzyMatches.add(WordSuggestionCandidate(
                             text = finalWord,
                             confidence = adjustedConfidence,
-                            isEligibleForAutoCommit = distance == 1 && adjustedConfidence > 0.75,
+                            // More lenient auto-commit for typo corrections
+                            isEligibleForAutoCommit = distance == 1 && adjustedConfidence > 0.7 && 
+                                composingTextLower.length >= 3,
                             sourceProvider = this@LatinLanguageProvider,
                         ))
                     }
@@ -609,38 +618,70 @@ class LatinLanguageProvider(context: Context) : SpellingProvider, SuggestionProv
         // flogDebug { "Returning combined word list: ${userWords.size} user words + ${staticWords.size} static words" }
         return userWords + staticWords
     }
+    
+    /**
+     * Get only static dictionary words (excluding user dictionary).
+     * Used by auto-correct to prioritize proper dictionary words over user-saved words.
+     */
+    suspend fun getStaticWords(subtype: Subtype): List<String> {
+        return wordData.withLock { it.keys.toList() }
+    }
 
     override suspend fun getFrequencyForWord(subtype: Subtype, word: String): Double {
         flogDebug { "getFrequencyForWord called with word: '$word'" }
         
-        // First check if it's in the user dictionary (higher priority)
-        try {
-            val dictionaryManager = DictionaryManager.default()
-            dictionaryManager.loadUserDictionariesIfNecessary()
-            val userDictionaryDao = dictionaryManager.florisUserDictionaryDao()
-            
-            flogDebug { "UserDictionaryDao in getFrequencyForWord: $userDictionaryDao" }
-            
-            if (userDictionaryDao != null) {
-                val entries = userDictionaryDao.queryExact(word, subtype.primaryLocale)
-                flogDebug { "Found ${entries.size} entries for word '$word' in user dictionary" }
-                if (entries.isNotEmpty()) {
-                    // Give user words a slight boost in frequency
-                    val boostedFreq = kotlin.math.min(entries.first().freq + 10, FREQUENCY_MAX)
-                    val frequency = boostedFreq / 255.0
-                    flogDebug { "Found word '$word' in user dictionary with boosted frequency $frequency" }
-                    return frequency
+        // Check if auto-correct is enabled - if so, only use static dictionary
+        val isAutoCorrectEnabled = prefs.correction.autoCorrectEnabled.get()
+        
+        if (!isAutoCorrectEnabled) {
+            // Auto-correct disabled: check user dictionary first (higher priority)
+            try {
+                val dictionaryManager = DictionaryManager.default()
+                dictionaryManager.loadUserDictionariesIfNecessary()
+                val userDictionaryDao = dictionaryManager.florisUserDictionaryDao()
+                
+                flogDebug { "UserDictionaryDao in getFrequencyForWord: $userDictionaryDao" }
+                
+                if (userDictionaryDao != null) {
+                    val entries = userDictionaryDao.queryExact(word, subtype.primaryLocale)
+                    flogDebug { "Found ${entries.size} entries for word '$word' in user dictionary" }
+                    if (entries.isNotEmpty()) {
+                        // Give user words a slight boost in frequency
+                        val boostedFreq = kotlin.math.min(entries.first().freq + 10, FREQUENCY_MAX)
+                        val frequency = boostedFreq / 255.0
+                        flogDebug { "Found word '$word' in user dictionary with boosted frequency $frequency" }
+                        return frequency
+                    }
                 }
+            } catch (e: Exception) {
+                flogDebug { "Failed to get frequency for word '$word' from user dictionary: ${e.message}" }
+                e.printStackTrace()
             }
-        } catch (e: Exception) {
-            flogDebug { "Failed to get frequency for word '$word' from user dictionary: ${e.message}" }
-            e.printStackTrace()
+        } else {
+            flogDebug { "Auto-correct enabled: skipping user dictionary for frequency check" }
         }
         
-        // If not in user dictionary, check static dictionary
+        // If not in user dictionary (or auto-correct enabled), check static dictionary
         val staticFrequency = wordData.withLock { it.getOrDefault(word, 0) / 255.0 }
         flogDebug { "Word '$word' frequency from static dictionary: $staticFrequency" }
         return staticFrequency
+    }
+    
+    /**
+     * Get frequency for auto-correct purposes, prioritizing dictionary words over user words
+     * when the user word might be a misspelling.
+     */
+    suspend fun getFrequencyForAutoCorrect(subtype: Subtype, word: String, composingText: String): Double {
+        // Check static dictionary first for auto-correct purposes
+        val staticFreq = wordData.withLock { it.getOrDefault(word, 0) }
+        
+        // If word exists in static dictionary, prefer it for auto-correct
+        if (staticFreq > 0) {
+            return staticFreq / 255.0
+        }
+        
+        // Fallback to regular frequency (includes user dictionary)
+        return getFrequencyForWord(subtype, word)
     }
 
     override suspend fun destroy() {

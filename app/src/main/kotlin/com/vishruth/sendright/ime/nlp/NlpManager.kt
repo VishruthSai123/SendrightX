@@ -313,16 +313,108 @@ class NlpManager(context: Context) {
             return null
         }
         
+        // Get current composing text for context analysis
+        val composingText = editorInstance.activeContent.composingText.toString().trim()
+        
         // First try to find a candidate that's explicitly eligible for auto-commit
         val explicitCandidate = activeCandidates.firstOrNull { it.isEligibleForAutoCommit }
         if (explicitCandidate != null) {
+            // Filter out emojis from auto-commit
+            if (containsEmoji(explicitCandidate.text.toString())) {
+                return null
+            }
             return explicitCandidate
         }
         
-        // If no explicit candidate, check if we have any high-confidence candidates
-        // This helps with cases where the exact matching isn't working properly
-        // Lower the threshold to make auto-correction more responsive but still selective
-        return activeCandidates.firstOrNull { it.confidence > 0.8 }
+        // Enhanced auto-commit logic with aggressiveness levels
+        // Since user words are already filtered out when auto-correct is enabled,
+        // we can use the normal candidate selection logic
+        val bestCandidate = activeCandidates.firstOrNull()
+        if (bestCandidate != null && composingText.isNotEmpty()) {
+            // Filter out emojis from auto-commit
+            if (containsEmoji(bestCandidate.text.toString())) {
+                return null
+            }
+            
+            val candidateText = bestCandidate.text.toString().lowercase()
+            val composingLower = composingText.lowercase()
+            
+            // Calculate edit distance for typo detection
+            val editDistance = calculateLevenshteinDistance(composingLower, candidateText)
+            val lengthDiff = kotlin.math.abs(composingText.length - candidateText.length)
+            
+            // Get aggressiveness level from preferences
+            val aggressiveness = prefs.correction.autoCorrectAggressiveness.get()
+            
+            // Determine auto-commit thresholds based on aggressiveness level
+            val (minConfidence, maxEditDistance, minWordLength) = when (aggressiveness) {
+                AutoCorrectAggressiveness.CONSERVATIVE -> Triple(0.95, 1, 4)
+                AutoCorrectAggressiveness.MODERATE -> Triple(0.75, 2, 3)
+                AutoCorrectAggressiveness.AGGRESSIVE -> Triple(0.6, 2, 2)
+            }
+            
+            // Improved auto-commit criteria based on aggressiveness
+            val shouldAutoCommit = when {
+                // High confidence exact or very close matches
+                bestCandidate.confidence > minConfidence && editDistance <= 1 -> true
+                
+                // Common typo patterns (single character mistakes)
+                bestCandidate.confidence > (minConfidence - 0.1) && editDistance <= maxEditDistance && 
+                lengthDiff <= 1 && composingText.length >= minWordLength -> true
+                
+                // Prefix completions with good confidence and meaningful length
+                bestCandidate.confidence > (minConfidence - 0.15) && candidateText.startsWith(composingLower) && 
+                composingLower.length >= minWordLength && candidateText.length <= composingLower.length + 4 -> true
+                
+                // Conservative mode: only very high confidence exact matches
+                aggressiveness == AutoCorrectAggressiveness.CONSERVATIVE && 
+                bestCandidate.confidence > 0.95 && editDistance == 0 -> true
+                
+                // Aggressive mode: allow more corrections
+                aggressiveness == AutoCorrectAggressiveness.AGGRESSIVE && 
+                bestCandidate.confidence > 0.6 && editDistance <= 2 && composingText.length >= 2 -> true
+                
+                else -> false
+            }
+            
+            if (shouldAutoCommit) {
+                return bestCandidate
+            }
+        }
+        
+        // Final fallback: very high confidence candidates only
+        return activeCandidates.firstOrNull { it.confidence > 0.95 }
+    }
+    
+    /**
+     * Calculate Levenshtein distance between two strings for typo detection
+     */
+    private fun calculateLevenshteinDistance(s1: String, s2: String): Int {
+        val len1 = s1.length
+        val len2 = s2.length
+        
+        if (len1 == 0) return len2
+        if (len2 == 0) return len1
+        
+        val matrix = Array(len1 + 1) { IntArray(len2 + 1) }
+        
+        for (i in 0..len1) matrix[i][0] = i
+        for (j in 0..len2) matrix[0][j] = j
+        
+        for (i in 1..len1) {
+            for (j in 1..len2) {
+                val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
+                matrix[i][j] = kotlin.math.min(
+                    matrix[i - 1][j] + 1,
+                    kotlin.math.min(
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j - 1] + cost
+                    )
+                )
+            }
+        }
+        
+        return matrix[len1][len2]
     }
 
     fun removeSuggestion(subtype: Subtype, candidate: SuggestionCandidate): Boolean {
@@ -560,5 +652,30 @@ class NlpManager(context: Context) {
                     && !currentItem.text.isNullOrBlank()
                     && !blankStrRegex.matches(currentItem.text)
             }
+    }
+    
+    /**
+     * Checks if the given text contains any emoji characters.
+     * This prevents emojis from being auto-corrected/auto-committed.
+     */
+    private fun containsEmoji(text: String): Boolean {
+        return text.any { char ->
+            val type = Character.getType(char)
+            // Check for emoji unicode ranges
+            when {
+                // Basic emoji blocks
+                char.code in 0x1F600..0x1F64F || // Emoticons
+                char.code in 0x1F300..0x1F5FF || // Misc Symbols and Pictographs
+                char.code in 0x1F680..0x1F6FF || // Transport and Map
+                char.code in 0x1F1E6..0x1F1FF || // Regional indicators (flags)
+                char.code in 0x2600..0x26FF ||   // Misc symbols
+                char.code in 0x2700..0x27BF ||   // Dingbats
+                char.code in 0xFE00..0xFE0F ||   // Variation selectors
+                char.code in 0x1F900..0x1F9FF || // Supplemental Symbols
+                char.code in 0x1F018..0x1F270 || // Various symbols
+                type == Character.SURROGATE.toInt() -> true
+                else -> false
+            }
+        }
     }
 }

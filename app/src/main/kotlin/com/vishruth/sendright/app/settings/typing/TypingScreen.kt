@@ -38,6 +38,7 @@ import com.vishruth.key1.app.LocalNavController
 import com.vishruth.key1.app.Routes
 import com.vishruth.key1.app.enumDisplayEntriesOf
 import com.vishruth.key1.ime.keyboard.IncognitoMode
+import com.vishruth.key1.ime.nlp.AutoCorrectAggressiveness
 import com.vishruth.key1.ime.nlp.SpellingLanguageMode
 import com.vishruth.key1.lib.compose.FlorisHyperlinkText
 import com.vishruth.key1.lib.compose.FlorisScreen
@@ -107,6 +108,12 @@ fun TypingScreen() = FlorisScreen {
                 title = stringRes(R.string.pref__correction__auto_correct_enabled__label),
                 summary = stringRes(R.string.pref__correction__auto_correct_enabled__summary),
                 enabledIf = { prefs.suggestion.enabled isEqualTo true },
+            )
+            ListPreference(
+                prefs.correction.autoCorrectAggressiveness,
+                title = stringRes(R.string.pref__correction__auto_correct_aggressiveness__label),
+                entries = enumDisplayEntriesOf(AutoCorrectAggressiveness::class),
+                enabledIf = { prefs.correction.autoCorrectEnabled isEqualTo true },
             )
             val isAutoSpacePunctuationEnabled by prefs.correction.autoSpacePunctuation.observeAsState()
             SwitchPreference(

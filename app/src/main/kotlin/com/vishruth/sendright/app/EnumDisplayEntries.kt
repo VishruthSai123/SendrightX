@@ -32,6 +32,7 @@ import com.vishruth.key1.ime.landscapeinput.LandscapeInputUiMode
 import com.vishruth.key1.ime.media.emoji.EmojiHistory
 import com.vishruth.key1.ime.media.emoji.EmojiSkinTone
 import com.vishruth.key1.ime.media.emoji.EmojiSuggestionType
+import com.vishruth.key1.ime.nlp.AutoCorrectAggressiveness
 import com.vishruth.key1.ime.nlp.SpellingLanguageMode
 import com.vishruth.key1.ime.onehanded.OneHandedMode
 import com.vishruth.key1.ime.smartbar.CandidatesDisplayMode
@@ -73,6 +74,22 @@ private val ENUM_DISPLAY_ENTRIES = mapOf<Pair<KClass<*>, String>, @Composable ()
             entry(
                 key = AppTheme.AMOLED_DARK,
                 label = stringRes(R.string.pref__other__settings_theme__amoled_dark),
+            )
+        }
+    },
+    AutoCorrectAggressiveness::class to DEFAULT to {
+        listPrefEntries {
+            entry(
+                key = AutoCorrectAggressiveness.CONSERVATIVE,
+                label = stringRes(R.string.enum__auto_correct_aggressiveness__conservative),
+            )
+            entry(
+                key = AutoCorrectAggressiveness.MODERATE,
+                label = stringRes(R.string.enum__auto_correct_aggressiveness__moderate),
+            )
+            entry(
+                key = AutoCorrectAggressiveness.AGGRESSIVE,
+                label = stringRes(R.string.enum__auto_correct_aggressiveness__aggressive),
             )
         }
     },

@@ -237,14 +237,19 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     fun resetSuggestions(content: EditorContent) {
-        // Suggestions should only show if:
+        // Check if we need candidates for auto-correct even if suggestions are disabled
+        val needsAutoCorrectCandidates = prefs.correction.autoCorrectEnabled.get() && activeState.isComposingEnabled
+        
+        // Suggestions should show if:
         // 1. Composing is enabled (safe for this input field type) AND
         // 2. Suggestions are enabled in preferences
-        if (!activeState.isComposingEnabled || !nlpManager.isSuggestionOn()) {
+        // BUT we still need to generate candidates for auto-correct even if suggestions display is disabled
+        if (!activeState.isComposingEnabled || (!nlpManager.isSuggestionOn() && !needsAutoCorrectCandidates)) {
             nlpManager.clearSuggestions()
             return
         }
-        // Always trigger suggestion update, even if composing might be disabled temporarily
+        
+        // Always trigger suggestion/candidate update for auto-correct or suggestions
         nlpManager.suggest(subtypeManager.activeSubtype, content)
     }
 
@@ -637,10 +642,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      */
     fun handleHardwareKeyboardSpace() {
         val candidate = nlpManager.getAutoCommitCandidate()
-        // Auto-commit if we have a candidate that's explicitly eligible for auto-commit
-        // Only auto-commit for high-confidence candidates to prevent unwanted changes
-        // This prevents issues where "the" gets inserted when space is pressed
-        if (candidate != null && candidate.isEligibleForAutoCommit && candidate.confidence > 0.9) {
+        // Auto-commit using improved candidate selection
+        if (candidate != null) {
             commitCandidate(candidate)
         }
         // Skip handling changing to characters keyboard and double space periods
@@ -658,10 +661,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private fun handleSpace(data: KeyData) {
         val candidate = nlpManager.getAutoCommitCandidate()
         
-        // Auto-commit if we have a candidate that's explicitly eligible for auto-commit
-        // Only auto-commit for high-confidence candidates to prevent unwanted changes
-        // This prevents issues where "the" gets inserted when space is pressed
-        if (candidate != null && candidate.isEligibleForAutoCommit && candidate.confidence > 0.9) {
+        // Auto-commit using improved candidate selection logic
+        if (candidate != null) {
             commitCandidate(candidate)
         }
         
@@ -1281,7 +1282,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                         return@batchEdit
                     } else {
                         val candidate = nlpManager.getAutoCommitCandidate()
-                        if (candidate != null && candidate.confidence > 0.8) {
+                        // Use improved auto-commit logic
+                        if (candidate != null) {
                             commitCandidate(candidate)
                         }
                         editorInstance.commitText(data.asString(isForDisplay = false))
@@ -1324,10 +1326,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                                 if (!UCharacter.isUAlphabetic(UCharacter.codePointAt(text, 0)) && 
                                     (text == " " || text in ",.!?;:")) {
                                     val candidate = nlpManager.getAutoCommitCandidate()
-                                    // Be more careful about auto-commit to prevent drastic word changes
-                                    // Only auto-commit for high-confidence candidates that are explicitly eligible
-                                    // This prevents unwanted changes like inserting "the" when space is pressed
-                                    if (candidate != null && candidate.isEligibleForAutoCommit && candidate.confidence > 0.9) {
+                                    // Use improved auto-commit logic with better context awareness
+                                    if (candidate != null) {
                                         commitCandidate(candidate)
                                     }
                                 }
