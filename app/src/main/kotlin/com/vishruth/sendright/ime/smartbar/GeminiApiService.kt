@@ -27,6 +27,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.selects.select
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.IOException
@@ -192,7 +193,11 @@ object GeminiApiService {
         
         // Create deferred for this request to prevent duplicates (unless bypassing cache)
         val deferred = async {
-            performApiRequest(inputText, instruction, cacheKey)
+            if (context != null) {
+                performApiRequestWithNetworkMonitoring(inputText, instruction, cacheKey, context)
+            } else {
+                performApiRequest(inputText, instruction, cacheKey)
+            }
         }
         
         if (!bypassCache) {
@@ -276,6 +281,48 @@ object GeminiApiService {
         return@withContext Result.failure(Exception("❌ All services unavailable. Please try again later."))
     }
     
+    /**
+     * Enhanced API request with network monitoring during execution
+     */
+    private suspend fun performApiRequestWithNetworkMonitoring(inputText: String, instruction: String, cacheKey: String, context: Context): Result<String> = coroutineScope {
+        
+        // Start network monitoring in parallel
+        val networkMonitoringJob = async {
+            NetworkUtils.monitorNetworkDuringApiCall(context)
+        }
+        
+        // Start API request in parallel
+        val apiRequestJob = async {
+            performApiRequest(inputText, instruction, cacheKey)
+        }
+        
+        // Wait for either the API request to complete or network monitoring to timeout
+        return@coroutineScope try {
+            // Race between API request and network timeout
+            select<Result<String>> {
+                apiRequestJob.onAwait { result ->
+                    networkMonitoringJob.cancel() // Cancel network monitoring as API completed
+                    result
+                }
+                
+                networkMonitoringJob.onAwait { networkResult ->
+                    if (!networkResult) {
+                        apiRequestJob.cancel() // Cancel API request due to network timeout
+                        NetworkUtils.checkNetworkAndShowToast(context)
+                        Result.failure(Exception("❌ Network timeout. Please check your connection."))
+                    } else {
+                        // Network is fine, wait for API result
+                        apiRequestJob.await()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            networkMonitoringJob.cancel()
+            apiRequestJob.cancel()
+            Result.failure(e)
+        }
+    }
+
     /**
      * Calculate exponential backoff delay with jitter to avoid thundering herd
      */
