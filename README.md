@@ -1,5 +1,5 @@
 <img align="left" width="80" height="80"
-src=".github/send_logo" alt="App icon">
+src=".github/send_logo.jpg" alt="App icon">
 
 # SendRight - AI-Enhanced Keyboard
 
@@ -12,6 +12,8 @@ src=".github/send_logo" alt="App icon">
 ## Download SendRight
 
 <div align="center">
+
+<img src=".github/send_logo.jpg" width="150" height="150" alt="SendRight Logo">
 
 ### 🚀 Get SendRight on Google Play
 
