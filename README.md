@@ -1,5 +1,5 @@
 <img align="left" width="80" height="80"
-src=".github/repo_icon.png" alt="App icon">
+src=".github/send_logo" alt="App icon">
 
 # SendRight - AI-Enhanced Keyboard
 
@@ -9,68 +9,27 @@ src=".github/repo_icon.png" alt="App icon">
 
 **SendRight 4.1** combines FlorisBoard's solid foundation with cutting-edge AI features. Experience intelligent typing with Magic Wand text processing, custom AI assistants, intelligent workspaces, seamless Gemini API integration, and advanced personalization.
 
+## Download SendRight
+
+<div align="center">
+
+### 🚀 Get SendRight on Google Play
+
+<a href="https://play.google.com/store/apps/details?id=com.vishruth.key1">
+<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80" alt="Get it on Google Play">
+</a>
+
+**[Download SendRight from Google Play Store](https://play.google.com/store/apps/details?id=com.vishruth.key1)**
+
+Experience AI-enhanced typing with intelligent features, custom assistants, and advanced personalization.
+
+</div>
+
+---
+
 ## Attribution
 
-This project is based on [FlorisBoard](https://github.com/florisboard/florisboard) by Patrick Zedler and The FlorisBoard Contributors, licensed under the Apache License 2.0.
-
-<table>
-<tr>
-<th align="center" width="50%">
-<h3>Stable <a href="https://github.com/florisboard/florisboard/releases/latest"><img alt="Latest stable release" src="https://img.shields.io/github/v/release/florisboard/florisboard?sort=semver&display_name=tag&color=28a745"></a></h3>
-</th>
-<th align="center" width="50%">
-<h3>Preview <a href="https://github.com/florisboard/florisboard/releases"><img alt="Latest preview release" src="https://img.shields.io/github/v/release/florisboard/florisboard?include_prereleases&sort=semver&display_name=tag&color=fd7e14"></a></h3>
-</th>
-</tr>
-<tr>
-<td valign="top">
-<p><i>Major versions only</i><br><br>Updates are more polished, new features are matured and tested through to ensure a stable experience.</p>
-</td>
-<td valign="top">
-<p><i>Major + Alpha/Beta/Rc versions</i><br><br>Updates contain new features that may not be fully matured yet and bugs are more likely to occur. Allows you to give early feedback.</p>
-</td>
-</tr>
-<tr>
-<td valign="top">
-<p><a href="https://f-droid.org/packages/dev.patrickgold.florisboard"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="64" alt="F-Droid badge"></a></p>
-<p>
-
-**Google Play**: Join the [FlorisBoard Test Group](https://groups.google.com/g/florisboard-closed-beta-test), then visit the [testing page](https://play.google.com/apps/testing/dev.patrickgold.florisboard). Once joined and installed, updates will be delivered like for any other app. ([Store entry](https://play.google.com/store/apps/details?id=dev.patrickgold.florisboard))
-
-</p>
-<p>
-
-**Obtainium**: [Auto-import stable config][obtainium_stable]
-
-</p>
-<p>
-
-**Manual**: Download and install the APK from the release page.
-
-</p>
-</td>
-<td valign="top">
-<p><a href="https://apt.izzysoft.de/fdroid/index/apk/dev.patrickgold.florisboard.beta"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="64" alt="IzzySoft repo badge"></a></p>
-<p>
-
-**Google Play**: Join the [FlorisBoard Test Group](https://groups.google.com/g/florisboard-closed-beta-test), then visit the [preview testing page](https://play.google.com/apps/testing/dev.patrickgold.florisboard.beta). Once joined and installed, updates will be delivered like for any other app. ([Store entry](https://play.google.com/store/apps/details?id=dev.patrickgold.florisboard.beta))
-
-</p>
-<p>
-
-**Obtainium**: [Auto-import preview config][obtainium_preview]
-
-</p>
-<p>
-
-**Manual**: Download and install the APK from the release page.
-
-</p>
-</td>
-</tr>
-</table>
-
-Beginning with v0.7 FlorisBoard will enter the public beta on Google Play.
+This project is based on [FlorisBoard](https://github.com/florisboard/florisboard) by Patrick Goldinger and The FlorisBoard Contributors, licensed under the Apache License 2.0.
 
 ## Highlighted Features
 
