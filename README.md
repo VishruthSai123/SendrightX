@@ -1,7 +1,7 @@
 <img align="left" width="80" height="80"
 src=".github/rounded-image.png" alt="App icon">
 
-# SendRight - AI-Enhanced Keyboard
+# SendRight - The AI Enhanced Keyboard
 
 <br clear="left"/>
 
