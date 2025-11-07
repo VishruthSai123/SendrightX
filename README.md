@@ -1,9 +1,9 @@
 <img align="left" width="80" height="80"
-src=".github/send_logo.jpg" alt="App icon">
+src=".github/rounded-image.png" alt="App icon">
 
 # SendRight - AI-Enhanced Keyboard
 
-> **Note**: This repository contains SendRight, an AI-enhanced Android keyboard based on the original FlorisBoard project by Patrick Goldinger and The FlorisBoard Contributors. The original FlorisBoard project can be found at: https://github.com/florisboard/florisboard
+> >**Note**: This repository contains SendRight, an AI-enhanced Android keyboard based on the original FlorisBoard project by Patrick Goldinger and The FlorisBoard Contributors. The original FlorisBoard project can be found at: https://github.com/florisboard/florisboard
 
 [![Crowdin](https://badges.crowdin.net/florisboard/localized.svg)](https://crowdin.florisboard.org) [![Matrix badge](https://img.shields.io/badge/chat-%23florisboard%3amatrix.org-blue)](https://matrix.to/#/#florisboard:matrix.org) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
@@ -13,7 +13,7 @@ src=".github/send_logo.jpg" alt="App icon">
 
 <div align="center">
 
-<img src=".github/send_logo.jpg" width="150" height="150" alt="SendRight Logo">
+<img src=".github/rounded-image.png" width="150" height="150" alt="SendRight Logo">
 
 ### 🚀 Get SendRight on Google Play
 
