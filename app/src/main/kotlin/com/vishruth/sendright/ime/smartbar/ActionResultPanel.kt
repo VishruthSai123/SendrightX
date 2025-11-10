@@ -446,15 +446,19 @@ class ActionResultPanelManager(
             // Save current state to undo stack
             saveToUndoStack(_state.originalText)
             
-            // Replace all text with transformed text
+            // Get CURRENT text length (in case user typed more after action was triggered)
             val activeContent = editorInstance.activeContent
-            val totalTextLength = activeContent.textBeforeSelection.length + 
-                                 activeContent.selectedText.length + 
-                                 activeContent.textAfterSelection.length
+            val currentTotalTextLength = activeContent.textBeforeSelection.length + 
+                                        activeContent.selectedText.length + 
+                                        activeContent.textAfterSelection.length
             
-            // Select all text and replace
-            editorInstance.setSelection(0, totalTextLength)
+            // Select ALL current text (not just the original captured text)
+            editorInstance.setSelection(0, currentTotalTextLength)
+            
+            // Delete all selected text
             editorInstance.deleteSelectedText()
+            
+            // Insert the transformed text
             editorInstance.commitText(_state.transformedText)
             
             context.showShortToast("Applied")

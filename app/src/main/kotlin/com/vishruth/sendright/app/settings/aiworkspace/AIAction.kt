@@ -54,7 +54,7 @@ object PopularAIActions {
             id = "humanise",
             title = "Humanise",
             description = "Speak like a human",
-            prompt = "Rewrite the following text to sound more natural, human-like, and conversational while maintaining the original meaning and key information:",
+            prompt = "Rewrite the following text to sound more natural, human-like, and conversational while maintaining the original meaning and key information. Return the COMPLETE rewritten text without any prefixes or explanations:",
             iconName = "person",
             isPopular = true
         ),
@@ -62,7 +62,7 @@ object PopularAIActions {
             id = "reply",
             title = "Reply",
             description = "One Single Response to a message",
-            prompt = "Generate a single, appropriate response to the following message. Keep it concise and contextually relevant:",
+            prompt = "Generate a single, appropriate response to the following message. Keep it concise and contextually relevant. Only provide the response without any prefixes or explanations:",
             iconName = "chat_bubble",
             isPopular = true
         ),
@@ -70,7 +70,7 @@ object PopularAIActions {
             id = "genz_translate",
             title = "GenZ",
             description = "Translate to Gen Z slang and style",
-            prompt = "rewrite this text in a way that sounds more natural and relatable, Use some casual Gen Z expressions and vibes, but keep it readable and not too over-the-top. Just make it sound like how someone our age would actually say it",
+            prompt = "Rewrite the following text in a way that sounds more natural and relatable. Use some casual Gen Z expressions and vibes, but keep it readable and not too over-the-top. Just make it sound like how someone our age would actually say it. Return the COMPLETE rewritten text:",
             iconName = "trending_up",
             isPopular = true
         ),
@@ -78,7 +78,7 @@ object PopularAIActions {
             id = "continue_writing",
             title = "Continue Writing",
             description = "Provide the starting of a sentence to autocomplete",
-            prompt = "Continue writing from where this text left off, maintaining the same tone, style, and context:",
+            prompt = "Continue the following text by adding more content that flows naturally. Return the COMPLETE text including both the original text and the new continuation. Maintain the same tone, style, and context. Do not add any prefixes or explanations, just provide the full text:",
             iconName = "edit",
             isPopular = true
         ),
@@ -86,7 +86,7 @@ object PopularAIActions {
             id = "instagram_caption",
             title = "Instagram Caption",
             description = "Create an Instagram Caption",
-            prompt = "Create an engaging Instagram caption with relevant hashtags based on the following content:",
+            prompt = "Create an engaging Instagram caption with relevant hashtags based on the following content. Only provide the caption without any prefixes or explanations:",
             iconName = "camera_alt",
             isPopular = true
         ),
@@ -94,7 +94,7 @@ object PopularAIActions {
             id = "phrase_to_emoji",
             title = "Phrase to Emoji",
             description = "Convert text phrases to emojis",
-            prompt = "Convert the following text into appropriate emojis that represent the meaning and emotion:",
+            prompt = "Convert the following text into appropriate emojis that represent the meaning and emotion. Only provide the emojis without any prefixes or explanations:",
             iconName = "emoji_emotions",
             isPopular = true
         ),
@@ -102,7 +102,7 @@ object PopularAIActions {
             id = "youtube_description",
             title = "Youtube Description",
             description = "Create a description for Youtube video",
-            prompt = "Create a compelling YouTube video description based on the following content. Include relevant keywords and call-to-action:",
+            prompt = "Create a compelling YouTube video description based on the following content. Include relevant keywords and call-to-action. Only provide the description without any prefixes or explanations:",
             iconName = "play_circle",
             isPopular = true
         ),
@@ -110,7 +110,7 @@ object PopularAIActions {
             id = "facebook_post",
             title = "Facebook Post",
             description = "Create a Caption for your Facebook post",
-            prompt = "Create an engaging Facebook post caption based on the following content. Make it social media friendly",
+            prompt = "Create an engaging Facebook post caption based on the following content. Make it social media friendly. Only provide the caption without any prefixes or explanations:",
             iconName = "facebook",
             isPopular = true
         )
