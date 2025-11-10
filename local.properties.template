@@ -4,6 +4,11 @@
 # Android SDK location
 sdk.dir=YOUR_ANDROID_SDK_PATH
 
+# Supabase Configuration (Required)
+# Get these from: https://app.supabase.com/project/_/settings/api
+SUPABASE_URL=your_supabase_project_url_here
+SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
 # Gemini API Configuration
 # Get your API key from: https://makersuite.google.com/app/apikey
 

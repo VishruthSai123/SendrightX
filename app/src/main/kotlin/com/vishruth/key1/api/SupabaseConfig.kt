@@ -7,6 +7,7 @@ package com.vishruth.key1.api
 
 import android.content.Context
 import android.util.Log
+import com.vishruth.key1.BuildConfig
 import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -16,17 +17,30 @@ import java.net.URL
 /**
  * Supabase configuration for dynamic API key management
  * 
+ * SECURITY: Credentials are loaded from BuildConfig (injected from local.properties)
+ * and are NOT hardcoded in source code or committed to Git.
+ * 
  * This allows you to update API keys in Supabase without releasing app updates.
  * Keys are fetched on app launch and cached locally with periodic refresh.
  */
 object SupabaseConfig {
     private const val TAG = "SupabaseConfig"
     
-    // Supabase project URL
-    private const val SUPABASE_URL = "https://qkfcopradlyuxpkkxbmj.supabase.co"
+    // SECURITY FIX: Credentials loaded from BuildConfig (local.properties)
+    // These are injected at build time and never committed to Git
+    private val SUPABASE_URL: String
+        get() = BuildConfig.SUPABASE_URL.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException(
+                "SUPABASE_URL not configured! Please add it to local.properties:\n" +
+                "SUPABASE_URL=your_project_url_here"
+            )
     
-    // Supabase ANON key (safe for client-side)
-    private const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmNvcHJhZGx5dXhwa2t4Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDY5OTMsImV4cCI6MjA3ODMyMjk5M30.-6VYVnBDLeysVCgkCr2-tJ1UOWuEuXY600yEaLAFqwA"
+    private val SUPABASE_ANON_KEY: String
+        get() = BuildConfig.SUPABASE_ANON_KEY.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException(
+                "SUPABASE_ANON_KEY not configured! Please add it to local.properties:\n" +
+                "SUPABASE_ANON_KEY=your_anon_key_here"
+            )
     
     // Table structure in Supabase:
     // Table name: api_keys
