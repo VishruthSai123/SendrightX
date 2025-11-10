@@ -22,8 +22,11 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.vishruth.key1.billing.BillingManager
 import com.vishruth.key1.billing.SubscriptionManager
+import com.vishruth.key1.billing.SecurePreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +37,8 @@ import kotlinx.coroutines.withContext
  * UserManager class to handle user profile management and subscription state
  */
 class UserManager private constructor() {
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    // MEMORY LEAK FIX: Use SupervisorJob for proper cancellation
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     
     // Context for SharedPreferences
     private var appContext: Context? = null
@@ -55,6 +59,8 @@ class UserManager private constructor() {
     // Initialization state
     private var isInitialized = false
     private var isInitializing = false
+    // MEMORY LEAK FIX: Track if destroyed
+    private var isDestroyed = false
 
     init {
         // Set initial local user data (will be updated after context is available)
@@ -96,7 +102,12 @@ class UserManager private constructor() {
         
         isInitializing = true
         appContext = context.applicationContext
-        sharedPrefs = appContext!!.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        // SECURITY FIX: Use encrypted SharedPreferences for sensitive user data
+        sharedPrefs = SecurePreferences.getEncryptedPreferences(appContext!!, PREFS_NAME)
+        
+        // SECURITY FIX: Migrate old plain preferences to encrypted storage
+        SecurePreferences.migrateToEncrypted(appContext!!, PREFS_NAME, PREFS_NAME)
+        
         Log.d(TAG, "Initializing UserManager asynchronously")
         
         // Load persisted user data
@@ -105,6 +116,12 @@ class UserManager private constructor() {
         // Start async initialization to avoid blocking main thread
         coroutineScope.launch {
             try {
+                // MEMORY LEAK FIX: Check if destroyed before proceeding
+                if (isDestroyed) {
+                    Log.d(TAG, "UserManager destroyed during initialization, aborting")
+                    return@launch
+                }
+                
                 // Initialize billing managers
                 initializeBillingManagers(context)
                 
@@ -119,6 +136,44 @@ class UserManager private constructor() {
                     _authState.value = AuthState.Error(e)
                 }
             }
+        }
+    }
+    
+    /**
+     * MEMORY LEAK FIX: Proper cleanup method
+     * 
+     * CRITICAL: Call this when UserManager is no longer needed
+     * (e.g., in Application.onTerminate() or during app shutdown)
+     */
+    fun destroy() {
+        if (isDestroyed) {
+            Log.w(TAG, "UserManager already destroyed, skipping")
+            return
+        }
+        
+        try {
+            Log.d(TAG, "Destroying UserManager and cleaning up resources...")
+            
+            // Destroy child managers
+            billingManager?.destroy()
+            subscriptionManager?.destroy()
+            
+            // Cancel all coroutines
+            coroutineScope.cancel()
+            
+            // Clear references
+            billingManager = null
+            subscriptionManager = null
+            appContext = null
+            sharedPrefs = null
+            
+            isDestroyed = true
+            isInitialized = false
+            
+            Log.d(TAG, "✅ UserManager destroyed successfully")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during UserManager cleanup", e)
         }
     }
     

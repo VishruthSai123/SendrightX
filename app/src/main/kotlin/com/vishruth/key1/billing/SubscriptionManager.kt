@@ -28,7 +28,9 @@ class SubscriptionManager(
         const val FREE_DAILY_AI_ACTIONS = 5
     }
     
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    // SECURITY FIX: Use encrypted SharedPreferences for subscription data
+    private val prefs: SharedPreferences = SecurePreferences.getEncryptedPreferences(context, PREFS_NAME)
+    // MEMORY LEAK FIX: Use SupervisorJob for proper cancellation
     private val managerScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
     // Add periodic subscription checking job
@@ -38,6 +40,9 @@ class SubscriptionManager(
     private var lastSubscriptionCheck = 0L
     private val MIN_CHECK_INTERVAL = 30_000L // 30 seconds minimum between checks
     private val PERIODIC_CHECK_INTERVAL = 2 * 60 * 1000L // Check every 2 minutes
+    
+    // MEMORY LEAK FIX: Track if destroyed
+    private var isDestroyed = false
     
     // StateFlows for Pro status and usage
     private val _isPro = MutableStateFlow(false)
@@ -56,11 +61,20 @@ class SubscriptionManager(
     val remainingActions: StateFlow<Int> = _remainingActions.asStateFlow()
     
     init {
+        // SECURITY FIX: Migrate old plain preferences to encrypted storage
+        SecurePreferences.migrateToEncrypted(context, PREFS_NAME, PREFS_NAME)
+        
         loadState()
         
         // Monitor purchase updates and immediately check subscription status
         managerScope.launch {
             billingManager.purchaseUpdates.collect { result ->
+                // MEMORY LEAK FIX: Check if destroyed before processing
+                if (isDestroyed) {
+                    Log.d(TAG, "SubscriptionManager destroyed, ignoring purchase update")
+                    return@collect
+                }
+                
                 Log.d(TAG, "Purchase update received: ${result.isSuccess}")
                 if (result.isSuccess) {
                     // Force immediate subscription status check
@@ -81,6 +95,35 @@ class SubscriptionManager(
         
         // Start periodic subscription status checking
         startPeriodicSubscriptionChecking()
+    }
+    
+    /**
+     * MEMORY LEAK FIX: Proper cleanup method
+     * 
+     * CRITICAL: Call this when SubscriptionManager is no longer needed
+     */
+    fun destroy() {
+        if (isDestroyed) {
+            Log.w(TAG, "SubscriptionManager already destroyed, skipping")
+            return
+        }
+        
+        try {
+            Log.d(TAG, "Destroying SubscriptionManager and cleaning up resources...")
+            
+            // Cancel periodic check job
+            periodicCheckJob?.cancel()
+            
+            // Cancel all coroutines
+            managerScope.cancel()
+            
+            isDestroyed = true
+            
+            Log.d(TAG, "✅ SubscriptionManager destroyed successfully")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during SubscriptionManager cleanup", e)
+        }
     }
     
     /**

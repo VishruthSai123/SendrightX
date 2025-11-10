@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vishruth.key1.utils.SecurePreferences
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -40,7 +41,12 @@ class EntitlementDatabase {
     private val entitlementCache = ConcurrentHashMap<String, List<UserEntitlement>>()
     
     fun initialize(context: Context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        // SECURITY FIX: Use encrypted preferences for entitlement storage
+        prefs = SecurePreferences.getEncryptedPreferences(context, PREFS_NAME)
+        
+        // SECURITY FIX: Migrate old plain preferences to encrypted storage
+        SecurePreferences.migrateToEncrypted(context, PREFS_NAME, PREFS_NAME)
+        
         loadEntitlementsFromPrefs()
     }
     

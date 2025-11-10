@@ -185,15 +185,9 @@ class PurchaseVerificationService {
                     .createScoped(listOf("https://www.googleapis.com/auth/androidpublisher"))
             }
             
-            // Option 3: From hardcoded credentials (DEVELOPMENT ONLY - NOT FOR PRODUCTION)
-            // This should be replaced with secure credential storage
-            val developmentCredentials = getDevelopmentCredentials()
-            if (developmentCredentials != null) {
-                Log.w(TAG, "⚠️ Using development credentials - NOT for production!")
-                val stream = ByteArrayInputStream(developmentCredentials.toByteArray())
-                return ServiceAccountCredentials.fromStream(stream)
-                    .createScoped(listOf("https://www.googleapis.com/auth/androidpublisher"))
-            }
+            // SECURITY FIX: Option 3 (hardcoded credentials) has been REMOVED
+            // Production apps should ONLY use environment variables or secure file paths
+            // Never hardcode service account credentials in source code
             
             Log.e(TAG, "No service account credentials found")
             null
@@ -205,37 +199,16 @@ class PurchaseVerificationService {
     }
     
     /**
-     * Get development credentials (replace with your actual service account JSON)
+     * SECURITY FIX: getDevelopmentCredentials() method has been REMOVED
      * 
-     * To generate this:
-     * 1. Go to Google Cloud Console
-     * 2. Select your project
-     * 3. Go to IAM & Admin > Service Accounts
-     * 4. Create or select a service account
-     * 5. Create a key (JSON format)
-     * 6. Replace the placeholder below with your actual JSON
+     * Development credentials should NEVER be hardcoded in source code.
+     * Always use:
+     * 1. GOOGLE_SERVICE_ACCOUNT_JSON environment variable
+     * 2. GOOGLE_SERVICE_ACCOUNT_PATH pointing to secure JSON file
+     * 
+     * Original method returned placeholder JSON with service account structure.
+     * This has been removed to prevent accidental credential exposure.
      */
-    private fun getDevelopmentCredentials(): String? {
-        // TODO: Replace with your actual service account JSON
-        // This is just a placeholder structure
-        return """
-        {
-          "type": "service_account",
-          "project_id": "your-project-id",
-          "private_key_id": "your-private-key-id",
-          "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n",
-          "client_email": "your-service-account@your-project-id.iam.gserviceaccount.com",
-          "client_id": "your-client-id",
-          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-          "token_uri": "https://oauth2.googleapis.com/token",
-          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-service-account%40your-project-id.iam.gserviceaccount.com"
-        }
-        """.trimIndent()
-        
-        // Return null for now to force proper credential setup
-        // return null
-    }
     
     /**
      * Make authenticated API call to Google Play Developer API

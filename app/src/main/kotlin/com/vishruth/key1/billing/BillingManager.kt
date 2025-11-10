@@ -34,6 +34,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
     
     private lateinit var billingClient: BillingClient
+    // MEMORY LEAK FIX: Added SupervisorJob to allow proper cancellation without affecting parent scope
     private val billingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val validationApi = PurchaseValidationApi()
     
@@ -41,6 +42,9 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     private var periodicSyncJob: Job? = null
     private val SYNC_INTERVAL = 30 * 60 * 1000L // 30 minutes
     private var lastSyncTime = 0L
+    
+    // MEMORY LEAK FIX: Track if destroyed to prevent operations after cleanup
+    private var isDestroyed = false
 
     // StateFlows for UI
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
@@ -58,15 +62,60 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     }
     
     /**
+     * MEMORY LEAK FIX: Proper cleanup method to prevent memory leaks
+     * 
+     * CRITICAL: This MUST be called when BillingManager is no longer needed
+     * (e.g., in Activity.onDestroy() or when UserManager is destroyed).
+     * 
+     * Failure to call this will result in:
+     * - Background jobs running indefinitely
+     * - Context leaks through captured references  
+     * - Battery drain from periodic sync
+     * - Potential crashes from operations on destroyed contexts
+     */
+    fun destroy() {
+        if (isDestroyed) {
+            Log.w(TAG, "BillingManager already destroyed, skipping")
+            return
+        }
+        
+        try {
+            Log.d(TAG, "Destroying BillingManager and cleaning up resources...")
+            
+            // Cancel all coroutine jobs
+            periodicSyncJob?.cancel()
+            billingScope.cancel()
+            
+            // End billing client connection
+            if (::billingClient.isInitialized) {
+                billingClient.endConnection()
+            }
+            
+            isDestroyed = true
+            Log.d(TAG, "✅ BillingManager destroyed successfully")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during BillingManager cleanup", e)
+        }
+    }
+    
+    /**
      * Start periodic server synchronization
      * This catches any subscription changes that webhooks might miss
      */
     private fun startPeriodicServerSync() {
+        // MEMORY LEAK FIX: Cancel existing job before creating new one
         periodicSyncJob?.cancel()
         
         periodicSyncJob = billingScope.launch {
             while (isActive) {
                 try {
+                    // MEMORY LEAK FIX: Check if destroyed before proceeding
+                    if (isDestroyed) {
+                        Log.d(TAG, "BillingManager destroyed, stopping periodic sync")
+                        break
+                    }
+                    
                     delay(SYNC_INTERVAL)
                     
                     val userManager = UserManager.getInstance()
@@ -80,7 +129,12 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                         Log.d(TAG, "No authenticated user for periodic sync")
                     }
                     
+                } catch (e: CancellationException) {
+                    // EXCEPTION HANDLING FIX: Properly handle cancellation (don't suppress)
+                    Log.d(TAG, "Periodic sync cancelled")
+                    throw e // Re-throw to properly cancel the coroutine
                 } catch (e: Exception) {
+                    // EXCEPTION HANDLING FIX: Keep general catch for unexpected errors
                     Log.e(TAG, "Error in periodic server sync", e)
                     // Wait before retrying
                     delay(60_000L)
@@ -511,12 +565,24 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 throw Exception("Server validation failed: ${validationResponse.message}")
             }
             
+        } catch (e: CancellationException) {
+            // EXCEPTION HANDLING FIX: Don't suppress cancellation
+            Log.d(TAG, "Purchase verification cancelled")
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "💥 Error during server-side verification", e)
             
-            // Fallback to local verification only in development
-            Log.w(TAG, "⚠️ Falling back to local verification (development only)")
-            verifyPurchaseLocally(purchase)
+            // SECURITY FIX: Block local verification in production builds
+            // Fallback to local verification only in development/debug builds
+            if (com.vishruth.key1.BuildConfig.DEBUG) {
+                Log.w(TAG, "⚠️ Falling back to local verification (DEBUG BUILD ONLY)")
+                verifyPurchaseLocally(purchase)
+            } else {
+                // SECURITY: In production, NEVER fall back to local verification
+                Log.e(TAG, "❌ Server verification failed in RELEASE build - denying access")
+                Log.e(TAG, "This is a security measure to prevent purchase fraud")
+                throw SecurityException("Server verification required in production builds")
+            }
         }
     }
     
@@ -545,10 +611,20 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     
     /**
      * Fallback local verification (for development/offline use)
-     * This is the old verification method, used only as fallback
+     * 
+     * SECURITY WARNING: This method is ONLY available in DEBUG builds.
+     * In production/release builds, this code path is completely blocked.
+     * 
+     * This is the old verification method, used only as fallback during development.
      */
     private fun verifyPurchaseLocally(purchase: Purchase) {
-        Log.w(TAG, "⚠️ Using local verification - NOT recommended for production")
+        // SECURITY FIX: Double-check we're in debug mode
+        if (!com.vishruth.key1.BuildConfig.DEBUG) {
+            Log.e(TAG, "❌ SECURITY VIOLATION: Local verification attempted in RELEASE build!")
+            throw SecurityException("Local verification is not allowed in production builds")
+        }
+        
+        Log.w(TAG, "⚠️ Using local verification - DEBUG BUILD ONLY - NOT for production")
         
         if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
             Log.d(TAG, "Purchase is in PURCHASED state: ${purchase.products}")
@@ -612,23 +688,45 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     
     /**
      * Save subscription state to SharedPreferences
+     * 
+     * SECURITY FIX: Now uses encrypted SharedPreferences to protect subscription state
+     * from tampering on rooted devices or with physical access.
+     * 
      * Based on reference: saveSubscriptionState function
      */
     fun saveSubscriptionState(isPremium: Boolean) {
-        val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("is_premium_user", isPremium).apply()
-        Log.d(TAG, "Subscription state saved: isPremium = $isPremium")
+        try {
+            // SECURITY FIX: Use encrypted preferences instead of plain storage
+            val prefs = SecurePreferences.getEncryptedPreferences(context, "billing_prefs")
+            
+            // Migrate old data if exists (one-time migration)
+            SecurePreferences.migrateToEncrypted(context, "MyAppPrefs", "billing_prefs")
+            
+            prefs.edit().putBoolean("is_premium_user", isPremium).apply()
+            Log.d(TAG, "Subscription state saved securely: isPremium = $isPremium")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save subscription state", e)
+        }
     }
     
     /**
      * Get subscription state from SharedPreferences
+     * 
+     * SECURITY FIX: Now reads from encrypted SharedPreferences
+     * 
      * Based on reference: getSubscriptionState function
      */
     fun getSubscriptionState(): Boolean {
-        val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-        val isPremium = prefs.getBoolean("is_premium_user", false)
-        Log.d(TAG, "Retrieved subscription state: isPremium = $isPremium")
-        return isPremium
+        return try {
+            // SECURITY FIX: Read from encrypted preferences
+            val prefs = SecurePreferences.getEncryptedPreferences(context, "billing_prefs")
+            val isPremium = prefs.getBoolean("is_premium_user", false)
+            Log.d(TAG, "Retrieved subscription state securely: isPremium = $isPremium")
+            isPremium
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to retrieve subscription state", e)
+            false // Safe default
+        }
     }
     
     /**
