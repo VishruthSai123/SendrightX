@@ -47,6 +47,7 @@ import com.vishruth.key1.lib.ext.ExtensionManager
 import com.vishruth.key1.user.UserManager
 import com.vishruth.key1.ime.dictionary.DictionaryManager
 import com.vishruth.key1.ime.core.SubtypeManager
+import com.vishruth.key1.ime.smartbar.GeminiApiService
 
 import dev.patrickgold.jetpref.datastore.runtime.initAndroid
 import kotlinx.coroutines.CoroutineScope
@@ -131,6 +132,18 @@ class SendRightApplication : Application() {
                 delay(3000) // Wait 3 seconds before initializing UserManager
                 UserManager.getInstance().initialize(this@SendRightApplication)
             }
+            
+            // SECURITY FIX: Initialize API keys from Supabase on app launch
+            // This allows dynamic key rotation without app updates
+            scope.launch {
+                delay(1000) // Small delay to not block critical app startup
+                try {
+                    GeminiApiService.initializeApiKeys(this@SendRightApplication)
+                    Log.d("SendRightApplication", "✅ API keys initialized from Supabase")
+                } catch (e: Exception) {
+                    Log.e("SendRightApplication", "❌ Failed to initialize API keys", e)
+                }
+            }
 
             if (!UserManagerCompat.isUserUnlocked(this)) {
                 cacheDir?.deleteContentsRecursively()
@@ -160,6 +173,24 @@ class SendRightApplication : Application() {
         extensionManager.value.init()
         clipboardManager.value.initializeForContext(this)
         DictionaryManager.init(this)
+    }
+    
+    /**
+     * MEMORY LEAK FIX: Clean up resources when application terminates
+     * This is called when the app process is being shut down
+     */
+    override fun onTerminate() {
+        super.onTerminate()
+        try {
+            Log.d("SendRightApplication", "Application terminating, cleaning up resources...")
+            
+            // Destroy UserManager and its child managers (BillingManager, SubscriptionManager)
+            UserManager.getInstance().destroy()
+            
+            Log.d("SendRightApplication", "✅ Resource cleanup completed")
+        } catch (e: Exception) {
+            Log.e("SendRightApplication", "Error during cleanup", e)
+        }
     }
 
     private inner class BootComplete : BroadcastReceiver() {

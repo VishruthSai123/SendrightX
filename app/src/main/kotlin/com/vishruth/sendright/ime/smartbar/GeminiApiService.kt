@@ -17,7 +17,7 @@
 package com.vishruth.key1.ime.smartbar
 
 import android.content.Context
-import com.vishruth.key1.BuildConfig
+import com.vishruth.key1.api.SupabaseConfig
 import com.vishruth.sendright.lib.network.NetworkUtils
 import com.vishruth.key1.ime.smartbar.MagicWandInstructions
 import com.vishruth.key1.user.UserManager
@@ -38,23 +38,18 @@ import java.security.MessageDigest
 import java.util.concurrent.CompletableFuture
 import kotlin.math.pow
 import kotlin.random.Random
+import android.util.Log
 
 object GeminiApiService {
-    // Free user API keys (existing system)
-    private val FREE_API_KEYS = listOf(
-        BuildConfig.GEMINI_API_KEY,
-        BuildConfig.GEMINI_API_KEY_FALLBACK_1,
-        BuildConfig.GEMINI_API_KEY_FALLBACK_2,
-        BuildConfig.GEMINI_API_KEY_FALLBACK_3
-    ).filter { it.isNotBlank() } // Only use non-empty API keys
+    private const val TAG = "GeminiApiService"
     
-    // Premium API keys for pro users - Same level of fallback safety as free users
-    private val PREMIUM_API_KEYS = listOf(
-        BuildConfig.GEMINI_API_KEY_PREMIUM,
-        BuildConfig.GEMINI_API_KEY_PREMIUM_FALLBACK_1,
-        BuildConfig.GEMINI_API_KEY_PREMIUM_FALLBACK_2,
-        BuildConfig.GEMINI_API_KEY_PREMIUM_FALLBACK_3
-    ).filter { it.isNotBlank() } // Only use non-empty API keys
+    // SECURITY FIX: API keys now fetched dynamically from Supabase
+    // This allows key rotation without app updates!
+    private var FREE_API_KEYS = listOf<String>()
+    private var PREMIUM_API_KEYS = listOf<String>()
+    
+    // Track if keys have been initialized
+    private var keysInitialized = false
     
     // Separate tracking for free and premium keys
     private var currentFreeApiKeyIndex = 0
@@ -105,6 +100,70 @@ object GeminiApiService {
     )
     
     private val json = Json { ignoreUnknownKeys = true }
+    
+    /**
+     * Initialize API keys from Supabase
+     * Call this on app startup to fetch the latest keys
+     */
+    suspend fun initializeApiKeys(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Initializing API keys from Supabase...")
+            
+            val result = SupabaseConfig.fetchApiKeys(context)
+            result.fold(
+                onSuccess = { cache ->
+                    FREE_API_KEYS = cache.freeKeys
+                    PREMIUM_API_KEYS = cache.premiumKeys
+                    keysInitialized = true
+                    
+                    Log.d(TAG, "✅ API keys initialized: ${FREE_API_KEYS.size} free, ${PREMIUM_API_KEYS.size} premium")
+                    Result.success(Unit)
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "❌ Failed to initialize API keys from Supabase", error)
+                    Result.failure(error)
+                }
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during API key initialization", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Refresh API keys from Supabase (force bypass cache)
+     * Call this when you want to immediately pick up new keys
+     */
+    suspend fun refreshApiKeys(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Refreshing API keys from Supabase...")
+            
+            val result = SupabaseConfig.refreshKeys(context)
+            result.fold(
+                onSuccess = { cache ->
+                    FREE_API_KEYS = cache.freeKeys
+                    PREMIUM_API_KEYS = cache.premiumKeys
+                    keysInitialized = true
+                    
+                    // Reset key indices to start with fresh keys
+                    currentFreeApiKeyIndex = 0
+                    currentPremiumApiKeyIndex = 0
+                    freeKeyFailureCount.clear()
+                    premiumKeyFailureCount.clear()
+                    
+                    Log.d(TAG, "✅ API keys refreshed: ${FREE_API_KEYS.size} free, ${PREMIUM_API_KEYS.size} premium")
+                    Result.success(Unit)
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "❌ Failed to refresh API keys", error)
+                    Result.failure(error)
+                }
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during API key refresh", e)
+            Result.failure(e)
+        }
+    }
     
     /**
      * Check if the user is a pro user from multiple sources

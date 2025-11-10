@@ -99,6 +99,7 @@ import com.vishruth.key1.ime.sheet.isBottomSheetShowing
 import com.vishruth.key1.ime.smartbar.ExtendedActionsPlacement
 import com.vishruth.key1.ime.smartbar.SmartbarLayout
 import com.vishruth.key1.ime.smartbar.quickaction.QuickActionsEditorPanel
+import com.vishruth.key1.user.UserManager
 import com.vishruth.key1.ime.smartbar.ActionResultPanelManager
 import com.vishruth.key1.ime.smartbar.ActionResultInputLayout
 import com.vishruth.key1.ime.text.TextInputLayout
@@ -349,6 +350,16 @@ class FlorisImeService : LifecycleInputMethodService() {
         unregisterReceiver(wallpaperChangeReceiver)
         FlorisImeServiceReference = WeakReference(null)
         inputWindowView = null
+        
+        // MEMORY LEAK FIX: Clean up UserManager when service is destroyed
+        // Note: UserManager uses singleton pattern, so this cleanup happens
+        // when the entire IME service is destroyed, not just hidden
+        try {
+            android.util.Log.d("FlorisImeService", "Service destroyed, cleaning up managers...")
+            UserManager.getInstance().destroy()
+        } catch (e: Exception) {
+            android.util.Log.e("FlorisImeService", "Error during manager cleanup", e)
+        }
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {

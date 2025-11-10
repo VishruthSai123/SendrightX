@@ -123,17 +123,9 @@ android {
             isDebuggable = true
             isJniDebuggable = true  // Enable JNI debugging for debug symbols
 
-            // Add Gemini API key to BuildConfig
-            buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
-            
-            // Add Premium API keys for Pro users (secure from local.properties) - Same fallback safety as free users
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_1", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_2", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_3", "")}\"")
+            // SECURITY FIX: API keys removed from BuildConfig
+            // Keys are now fetched dynamically from Supabase backend
+            // This allows key rotation without app updates and prevents key extraction from APK
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
@@ -154,17 +146,8 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
 
-            // Add Gemini API key to BuildConfig
-            buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
-            
-            // Add Premium API keys for Pro users (secure from local.properties) - Same fallback safety as free users
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_1", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_2", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_3", "")}\"")
+            // SECURITY FIX: API keys removed from BuildConfig
+            // Keys are now fetched dynamically from Supabase backend
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
@@ -181,17 +164,8 @@ android {
             isShrinkResources = false  // Skip resource shrinking for speed
             isDebuggable = false  // Still production-like for Play Store testing
 
-            // Add Gemini API key to BuildConfig
-            buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
-            
-            // Add Premium API keys for Pro users (secure from local.properties) - Same fallback safety as free users
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_1", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_2", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_3", "")}\"")
+            // SECURITY FIX: API keys removed from BuildConfig
+            // Keys are now fetched dynamically from Supabase backend
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
@@ -207,17 +181,10 @@ android {
             isShrinkResources = true
             isJniDebuggable = true  // Enable debug symbols for release builds
 
-            // Add Gemini API key to BuildConfig
-            buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_1", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_2", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_FALLBACK_3", "")}\"")
-            
-            // Add Premium API keys for Pro users (secure from local.properties) - Same fallback safety as free users
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_1", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_1", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_2", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_2", "")}\"")
-            buildConfigField("String", "GEMINI_API_KEY_PREMIUM_FALLBACK_3", "\"${localProperties.getProperty("GEMINI_API_KEY_PREMIUM_FALLBACK_3", "")}\"")
+            // SECURITY FIX: API keys removed from BuildConfig
+            // Keys are now fetched dynamically from Supabase backend
+            // SECURITY FIX: API keys removed from BuildConfig
+            // Keys are now fetched dynamically from Supabase backend
 
             resValue("mipmap", "sendright_app_icon", "@mipmap/ic_launcher")
             resValue("mipmap", "sendright_app_icon_round", "@mipmap/ic_launcher_round")
