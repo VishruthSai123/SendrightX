@@ -1106,15 +1106,4 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             Log.e(TAG, "Error during subscription sync", e)
         }
     }
-    
-    /**
-     * Clean up resources
-     */
-    fun destroy() {
-        periodicSyncJob?.cancel()
-        billingScope.cancel()
-        if (::billingClient.isInitialized) {
-            billingClient.endConnection()
-        }
-    }
 }

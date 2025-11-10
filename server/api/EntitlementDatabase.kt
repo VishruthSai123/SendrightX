@@ -26,11 +26,13 @@ class EntitlementDatabase {
         
         fun getInstance(context: Context? = null): EntitlementDatabase {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: EntitlementDatabase().also {
-                    INSTANCE = it
+                INSTANCE ?: EntitlementDatabase().also { instance ->
+                    // RACE CONDITION FIX: Initialize before assigning to INSTANCE
+                    // This prevents other threads from getting uninitialized instance
                     if (context != null) {
-                        it.initialize(context)
+                        instance.initialize(context)
                     }
+                    INSTANCE = instance
                 }
             }
         }

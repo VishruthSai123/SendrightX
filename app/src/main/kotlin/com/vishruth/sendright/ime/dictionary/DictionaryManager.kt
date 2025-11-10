@@ -149,11 +149,14 @@ class DictionaryManager private constructor(context: Context) {
         val context = applicationContext.get() ?: return
 
         if (florisUserDictionaryDatabase == null && prefs.dictionary.enableFlorisUserDictionary.get()) {
+            // PERFORMANCE FIX: Removed .allowMainThreadQueries() to prevent UI blocking
+            // All database operations must now be performed on background threads
+            // Queries will throw IllegalStateException if called on main thread
             florisUserDictionaryDatabase = Room.databaseBuilder(
                 context,
                 FlorisUserDictionaryDatabase::class.java,
                 FlorisUserDictionaryDatabase.DB_FILE_NAME
-            ).allowMainThreadQueries().build()
+            ).build()
         }
         if (systemUserDictionaryDatabase == null && prefs.dictionary.enableSystemUserDictionary.get()) {
             systemUserDictionaryDatabase = SystemUserDictionaryDatabase(context)

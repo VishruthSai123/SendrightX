@@ -84,7 +84,10 @@ class UserManager private constructor() {
             if (instance == null) {
                 instance = UserManager()
             }
-            return instance!!
+            // NULL SAFETY FIX: Use requireNotNull instead of force unwrap for better error messages
+            return requireNotNull(instance) {
+                "UserManager instance is null after initialization - this should never happen"
+            }
         }
     }
     
@@ -103,10 +106,14 @@ class UserManager private constructor() {
         isInitializing = true
         appContext = context.applicationContext
         // SECURITY FIX: Use encrypted SharedPreferences for sensitive user data
-        sharedPrefs = SecurePreferences.getEncryptedPreferences(appContext!!, PREFS_NAME)
+        // NULL SAFETY FIX: Check appContext is set before using requireNotNull for clearer error
+        val appCtx = requireNotNull(appContext) {
+            "Application context is null after assignment - this should never happen"
+        }
+        sharedPrefs = SecurePreferences.getEncryptedPreferences(appCtx, PREFS_NAME)
         
         // SECURITY FIX: Migrate old plain preferences to encrypted storage
-        SecurePreferences.migrateToEncrypted(appContext!!, PREFS_NAME, PREFS_NAME)
+        SecurePreferences.migrateToEncrypted(appCtx, PREFS_NAME, PREFS_NAME)
         
         Log.d(TAG, "Initializing UserManager asynchronously")
         
@@ -185,8 +192,13 @@ class UserManager private constructor() {
             // Initialize BillingManager
             billingManager = BillingManager(context)
             
-            // Initialize SubscriptionManager
-            subscriptionManager = SubscriptionManager(context, billingManager!!)
+            // NULL SAFETY FIX: Check billingManager before using requireNotNull
+            val billing = requireNotNull(billingManager) {
+                "BillingManager is null after initialization - initialization may have failed"
+            }
+            
+            // Initialize SubscriptionManager with validated billing manager
+            subscriptionManager = SubscriptionManager(context, billing)
             
             Log.d(TAG, "Billing managers initialized")
         }

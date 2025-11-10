@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -54,6 +55,9 @@ import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import dev.patrickgold.jetpref.material.ui.JetPrefTextField
 import java.io.File
 import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.florisboard.lib.android.query
 import org.florisboard.lib.android.readToFile
 import org.florisboard.lib.android.showLongToast
@@ -147,6 +151,9 @@ fun ExtensionEditFilesScreen(workspace: CacheManager.ExtEditorWorkspace<*>) = Fl
         @Composable
         fun FileList(title: String, icon: ImageVector, files: List<File>, onAdd: () -> Unit) {
             var dialogFile by remember { mutableStateOf<File?>(null) }
+            // PERFORMANCE FIX: Get coroutine scope for async file operations
+            val scope = rememberCoroutineScope()
+            
             ListItem(
                 headlineContent = {
                     Text(
@@ -187,32 +194,55 @@ fun ExtensionEditFilesScreen(workspace: CacheManager.ExtEditorWorkspace<*>) = Fl
                     neutralLabel = stringRes(R.string.action__delete),
                     allowOutsideDismissal = true,
                     onNeutral = {
-                        if (file.delete()) {
-                            context.showShortToastSync("Successfully deleted")
-                        } else {
-                            context.showShortToastSync("Failed to delete")
+                        // PERFORMANCE FIX: Move file deletion to background thread to prevent UI blocking
+                        scope.launch(Dispatchers.IO) {
+                            val success = try {
+                                file.delete()
+                            } catch (e: Exception) {
+                                false
+                            }
+                            withContext(Dispatchers.Main) {
+                                if (success) {
+                                    context.showShortToastSync("Successfully deleted")
+                                } else {
+                                    context.showShortToastSync("Failed to delete")
+                                }
+                                dialogFile = null
+                                version++
+                            }
                         }
-                        dialogFile = null
-                        version++
                     },
                     onConfirm = {
-                        val newFile = file.parentFile!!.subFile(fileNameInput).canonicalFile
-                        if (newFile.parentFile != file.canonicalFile.parentFile) {
-                            context.showLongToastSync("Invalid file name!")
-                            return@JetPrefAlertDialog
+                        // PERFORMANCE FIX: Move file rename to background thread to prevent UI blocking
+                        scope.launch(Dispatchers.IO) {
+                            val newFile = file.parentFile!!.subFile(fileNameInput).canonicalFile
+                            val success = try {
+                                if (newFile.parentFile != file.canonicalFile.parentFile) {
+                                    withContext(Dispatchers.Main) {
+                                        context.showLongToastSync("Invalid file name!")
+                                    }
+                                    return@launch
+                                }
+                                if (newFile.exists()) {
+                                    withContext(Dispatchers.Main) {
+                                        context.showShortToastSync("Filename already exists.")
+                                    }
+                                    return@launch
+                                }
+                                file.renameTo(newFile)
+                            } catch (e: Exception) {
+                                false
+                            }
+                            withContext(Dispatchers.Main) {
+                                if (success) {
+                                    context.showShortToastSync("Successfully renamed")
+                                } else {
+                                    context.showShortToastSync("Failed to rename the file.")
+                                }
+                                dialogFile = null
+                                version++
+                            }
                         }
-                        if (newFile.exists()) {
-                            context.showShortToastSync("Filename already exists.")
-                            return@JetPrefAlertDialog
-                        }
-                        val success = file.renameTo(newFile)
-                        if (success) {
-                            context.showShortToastSync("Successfully renamed")
-                        } else {
-                            context.showShortToastSync("Failed to rename the file.")
-                        }
-                        dialogFile = null
-                        version++
                     },
                     onDismiss = {
                         dialogFile = null

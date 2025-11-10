@@ -177,8 +177,11 @@ class ContextManager private constructor(private val context: Context) {
         )
         
         withContext(Dispatchers.Main) {
-            _customVariables.add(variable)
-            triggerRefresh()
+            // CONCURRENT MODIFICATION FIX: Use synchronized block for list modification
+            synchronized(_customVariables) {
+                _customVariables.add(variable)
+                triggerRefresh()
+            }
         }
         saveConfiguration()
         android.util.Log.d("ContextManager", "Custom variable added: $contextName")
@@ -190,16 +193,19 @@ class ContextManager private constructor(private val context: Context) {
      */
     suspend fun updateCustomVariable(variableId: String, contextName: String, description: String) {
         withContext(Dispatchers.Main) {
-            val index = _customVariables.indexOfFirst { it.id == variableId }
-            if (index != -1) {
-                val updatedVariable = _customVariables[index].copy(
-                    contextName = contextName,
-                    description = description
-                )
-                _customVariables.removeAt(index)
-                _customVariables.add(index, updatedVariable)
-                triggerRefresh()
-                android.util.Log.d("ContextManager", "Custom variable updated: $contextName")
+            // CONCURRENT MODIFICATION FIX: Use synchronized block to prevent race conditions
+            // SnapshotStateList is not thread-safe for structural modifications
+            synchronized(_customVariables) {
+                val index = _customVariables.indexOfFirst { it.id == variableId }
+                if (index != -1) {
+                    val updatedVariable = _customVariables[index].copy(
+                        contextName = contextName,
+                        description = description
+                    )
+                    _customVariables[index] = updatedVariable
+                    triggerRefresh()
+                    android.util.Log.d("ContextManager", "Custom variable updated: $contextName")
+                }
             }
         }
         saveConfiguration()
@@ -210,10 +216,13 @@ class ContextManager private constructor(private val context: Context) {
      */
     suspend fun deleteCustomVariable(variableId: String) {
         withContext(Dispatchers.Main) {
-            val variable = _customVariables.find { it.id == variableId }
-            if (_customVariables.removeIf { it.id == variableId }) {
-                triggerRefresh()
-                android.util.Log.d("ContextManager", "Custom variable deleted: ${variable?.contextName}")
+            // CONCURRENT MODIFICATION FIX: Use synchronized block to prevent race conditions
+            synchronized(_customVariables) {
+                val variable = _customVariables.find { it.id == variableId }
+                if (_customVariables.removeIf { it.id == variableId }) {
+                    triggerRefresh()
+                    android.util.Log.d("ContextManager", "Custom variable deleted: ${variable?.contextName}")
+                }
             }
         }
         saveConfiguration()

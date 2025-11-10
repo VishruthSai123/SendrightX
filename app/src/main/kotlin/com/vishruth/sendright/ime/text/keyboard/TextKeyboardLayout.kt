@@ -82,6 +82,7 @@ import com.vishruth.key1.lib.Pointer
 import com.vishruth.key1.lib.PointerMap
 import com.vishruth.key1.lib.devtools.LogTopic
 import com.vishruth.key1.lib.devtools.flogDebug
+import com.vishruth.key1.lib.devtools.flogWarning
 import com.vishruth.key1.lib.observeAsTransformingState
 import com.vishruth.key1.lib.toIntOffset
 import dev.patrickgold.jetpref.datastore.model.observeAsState
@@ -416,6 +417,13 @@ private class TextKeyboardLayoutController(
     fun onTouchEventInternal(event: MotionEvent) {
         flogDebug { "event=$event" }
         swipeGestureDetector.onTouchEvent(event)
+        
+        // LATEINIT SAFETY FIX: Check keyboard is initialized before accessing
+        if (!::keyboard.isInitialized) {
+            flogWarning { "keyboard not initialized yet, ignoring touch event" }
+            return
+        }
+        
         if (isGlideEnabled && keyboard.mode == KeyboardMode.CHARACTERS) {
             val glidePointer = pointerMap.findById(0)
             val isNotBlocked = glidePointer?.hasTriggeredLongPress != true

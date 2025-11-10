@@ -396,11 +396,5 @@ class SubscriptionManager(
         }
     }
     
-    /**
-     * Cleanup resources
-     */
-    fun destroy() {
-        periodicCheckJob?.cancel()
-        managerScope.cancel()
-    }
 }
+

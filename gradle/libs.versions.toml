@@ -12,6 +12,7 @@ androidx-exifinterface = "1.4.1"
 androidx-navigation = "2.9.0"
 androidx-profileinstaller = "1.4.1"
 androidx-room = "2.7.2"
+androidx-security = "1.1.0-alpha06"
 cache4k = "0.7.0"
 coil = "3.2.0"
 kotlin = "2.2.0"
@@ -57,6 +58,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "androidx-profileinstaller" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "androidx-security" }
 cache4k = { module = "io.github.reactivecircus.cache4k:cache4k", version.ref = "cache4k" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
