@@ -94,7 +94,7 @@ findstr /s "AIzaSy" *
 -- Deactivate old key
 UPDATE api_keys 
 SET is_active = false 
-WHERE api_key = 'AIzaSyDFHCLr-qLTLknradWcOVZXUQtPOVrNiTo';
+WHERE api_key = 'YOUR_OLD_API_KEY_HERE';
 
 -- Add new key
 INSERT INTO api_keys (key_type, api_key, is_active, priority) 
