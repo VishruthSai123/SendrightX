@@ -453,11 +453,12 @@ class ActionResultPanelManager(
                 return
             }
             
-            // Get fresh editor content to calculate text length
-            val freshContent = editorInstance.activeContent
-            val currentTotalTextLength = freshContent.textBeforeSelection.length + 
-                                         freshContent.selectedText.length + 
-                                         freshContent.textAfterSelection.length
+            // Get ACTUAL complete text length using InputConnection directly
+            // This ensures we select ALL text, not just the truncated activeContent
+            val textBefore = ic.getTextBeforeCursor(100000, 0) ?: ""
+            val selectedText = ic.getSelectedText(0) ?: ""
+            val textAfter = ic.getTextAfterCursor(100000, 0) ?: ""
+            val currentTotalTextLength = textBefore.length + selectedText.length + textAfter.length
             
             // Perform ALL operations in a single batch edit to ensure atomicity
             ic.beginBatchEdit()
@@ -565,10 +566,11 @@ class ActionResultPanelManager(
                 try {
                     val ic = com.vishruth.key1.FlorisImeService.currentInputConnection()
                     if (ic != null) {
-                        val freshContent = editorInstance.activeContent
-                        val totalTextLength = freshContent.textBeforeSelection.length + 
-                                             freshContent.selectedText.length + 
-                                             freshContent.textAfterSelection.length
+                        // Get ACTUAL complete text length using InputConnection directly
+                        val textBefore = ic.getTextBeforeCursor(100000, 0) ?: ""
+                        val selectedText = ic.getSelectedText(0) ?: ""
+                        val textAfter = ic.getTextAfterCursor(100000, 0) ?: ""
+                        val totalTextLength = textBefore.length + selectedText.length + textAfter.length
                         
                         ic.beginBatchEdit()
                         try {
@@ -605,10 +607,11 @@ class ActionResultPanelManager(
                 try {
                     val ic = com.vishruth.key1.FlorisImeService.currentInputConnection()
                     if (ic != null) {
-                        val freshContent = editorInstance.activeContent
-                        val totalTextLength = freshContent.textBeforeSelection.length + 
-                                             freshContent.selectedText.length + 
-                                             freshContent.textAfterSelection.length
+                        // Get ACTUAL complete text length using InputConnection directly
+                        val textBefore = ic.getTextBeforeCursor(100000, 0) ?: ""
+                        val selectedText = ic.getSelectedText(0) ?: ""
+                        val textAfter = ic.getTextAfterCursor(100000, 0) ?: ""
+                        val totalTextLength = textBefore.length + selectedText.length + textAfter.length
                         
                         ic.beginBatchEdit()
                         try {

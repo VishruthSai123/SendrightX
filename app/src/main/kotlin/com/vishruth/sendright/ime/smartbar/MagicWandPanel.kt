@@ -828,12 +828,29 @@ suspend fun handleMagicWandButtonClick(
     aiUsageTracker: com.vishruth.key1.ime.ai.AiUsageTracker?
 ) {
     try {
-        // Get all text from the input field
-        val activeContent = editorInstance.activeContent
-        val allText = buildString {
-            append(activeContent.textBeforeSelection)
-            append(activeContent.selectedText)
-            append(activeContent.textAfterSelection)
+        // Get ALL text from the input field using InputConnection directly
+        // This ensures we get complete text regardless of cursor position
+        val ic = com.vishruth.key1.FlorisImeService.currentInputConnection()
+        val allText = if (ic != null) {
+            buildString {
+                // Request a large amount of text to ensure we get everything
+                // Using 100000 chars (about 100KB) should cover most real-world use cases
+                val textBefore = ic.getTextBeforeCursor(100000, 0) ?: ""
+                val selectedText = ic.getSelectedText(0) ?: ""
+                val textAfter = ic.getTextAfterCursor(100000, 0) ?: ""
+                
+                append(textBefore)
+                append(selectedText)
+                append(textAfter)
+            }
+        } else {
+            // Fallback to activeContent if InputConnection is unavailable
+            val activeContent = editorInstance.activeContent
+            buildString {
+                append(activeContent.textBeforeSelection)
+                append(activeContent.selectedText)
+                append(activeContent.textAfterSelection)
+            }
         }
         
         flogDebug { "$buttonTitle - All text: '$allText'" }

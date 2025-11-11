@@ -932,12 +932,27 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             activeState.isAiChatLoading = true
             
             try {
-                // Get all text from the input field (same as MagicWand chat)
-                val activeContent = editorInstance.activeContent
-                val allText = buildString {
-                    append(activeContent.textBeforeSelection)
-                    append(activeContent.selectedText)
-                    append(activeContent.textAfterSelection)
+                // Get ALL text from the input field using InputConnection directly
+                // This ensures we get complete text regardless of cursor position
+                val ic = com.vishruth.key1.FlorisImeService.currentInputConnection()
+                val allText = if (ic != null) {
+                    buildString {
+                        val textBefore = ic.getTextBeforeCursor(100000, 0) ?: ""
+                        val selectedText = ic.getSelectedText(0) ?: ""
+                        val textAfter = ic.getTextAfterCursor(100000, 0) ?: ""
+                        
+                        append(textBefore)
+                        append(selectedText)
+                        append(textAfter)
+                    }
+                } else {
+                    // Fallback to activeContent if InputConnection is unavailable
+                    val activeContent = editorInstance.activeContent
+                    buildString {
+                        append(activeContent.textBeforeSelection)
+                        append(activeContent.selectedText)
+                        append(activeContent.textAfterSelection)
+                    }
                 }
                 
                 if (allText.isBlank()) {
