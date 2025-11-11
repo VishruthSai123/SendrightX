@@ -485,9 +485,10 @@ object GeminiApiService {
                 
                 val transformedText = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 if (transformedText != null) {
-                    val trimmedText = transformedText.trim()
-                    if (trimmedText.isNotBlank()) {
-                        Result.success(trimmedText)
+                    // Trim whitespace and remove surrounding quotes if present
+                    val cleanedText = transformedText.trim().removeSurrounding("\"")
+                    if (cleanedText.isNotBlank()) {
+                        Result.success(cleanedText)
                     } else {
                         Result.failure(Exception("🤔 Empty response received. Please try again."))
                     }

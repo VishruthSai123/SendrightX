@@ -446,20 +446,33 @@ class ActionResultPanelManager(
             // Save current state to undo stack
             saveToUndoStack(_state.originalText)
             
-            // Get CURRENT text length (in case user typed more after action was triggered)
-            val activeContent = editorInstance.activeContent
-            val currentTotalTextLength = activeContent.textBeforeSelection.length + 
-                                        activeContent.selectedText.length + 
-                                        activeContent.textAfterSelection.length
+            // Get the InputConnection directly for atomic batch operation
+            val ic = com.vishruth.key1.FlorisImeService.currentInputConnection()
+            if (ic == null) {
+                context.showShortToast("Error: Input connection unavailable")
+                return
+            }
             
-            // Select ALL current text (not just the original captured text)
-            editorInstance.setSelection(0, currentTotalTextLength)
+            // Get fresh editor content to calculate text length
+            val freshContent = editorInstance.activeContent
+            val currentTotalTextLength = freshContent.textBeforeSelection.length + 
+                                         freshContent.selectedText.length + 
+                                         freshContent.textAfterSelection.length
             
-            // Delete all selected text
-            editorInstance.deleteSelectedText()
-            
-            // Insert the transformed text
-            editorInstance.commitText(_state.transformedText)
+            // Perform ALL operations in a single batch edit to ensure atomicity
+            ic.beginBatchEdit()
+            try {
+                // Finish any composing text first
+                ic.finishComposingText()
+                
+                // Select ALL text from position 0 to end
+                ic.setSelection(0, currentTotalTextLength)
+                
+                // Replace selected text (all text) with the transformed text
+                ic.commitText(_state.transformedText, 1)
+            } finally {
+                ic.endBatchEdit()
+            }
             
             context.showShortToast("Applied")
             
@@ -548,20 +561,27 @@ class ActionResultPanelManager(
                 val previousText = undoStack.removeAt(undoStack.size - 1)
                 redoStack.add(_state.originalText)
                 
-                // Apply the previous text
+                // Apply the previous text using atomic batch operation
                 try {
-                    val activeContent = editorInstance.activeContent
-                    val totalTextLength = activeContent.textBeforeSelection.length + 
-                                         activeContent.selectedText.length + 
-                                         activeContent.textAfterSelection.length
-                    
-                    editorInstance.setSelection(0, totalTextLength)
-                    editorInstance.deleteSelectedText()
-                    editorInstance.commitText(previousText)
-                    
-                    updateState(_state.copy(originalText = previousText))
-                    updateUndoRedoState()
-                    
+                    val ic = com.vishruth.key1.FlorisImeService.currentInputConnection()
+                    if (ic != null) {
+                        val freshContent = editorInstance.activeContent
+                        val totalTextLength = freshContent.textBeforeSelection.length + 
+                                             freshContent.selectedText.length + 
+                                             freshContent.textAfterSelection.length
+                        
+                        ic.beginBatchEdit()
+                        try {
+                            ic.finishComposingText()
+                            ic.setSelection(0, totalTextLength)
+                            ic.commitText(previousText, 1)
+                        } finally {
+                            ic.endBatchEdit()
+                        }
+                        
+                        updateState(_state.copy(originalText = previousText))
+                        updateUndoRedoState()
+                    }
                 } catch (e: Exception) {
                     // Undo failed - no toast needed
                 }
@@ -581,20 +601,27 @@ class ActionResultPanelManager(
                 val nextText = redoStack.removeAt(redoStack.size - 1)
                 undoStack.add(_state.originalText)
                 
-                // Apply the next text
+                // Apply the next text using atomic batch operation
                 try {
-                    val activeContent = editorInstance.activeContent
-                    val totalTextLength = activeContent.textBeforeSelection.length + 
-                                         activeContent.selectedText.length + 
-                                         activeContent.textAfterSelection.length
-                    
-                    editorInstance.setSelection(0, totalTextLength)
-                    editorInstance.deleteSelectedText()
-                    editorInstance.commitText(nextText)
-                    
-                    updateState(_state.copy(originalText = nextText))
-                    updateUndoRedoState()
-                    
+                    val ic = com.vishruth.key1.FlorisImeService.currentInputConnection()
+                    if (ic != null) {
+                        val freshContent = editorInstance.activeContent
+                        val totalTextLength = freshContent.textBeforeSelection.length + 
+                                             freshContent.selectedText.length + 
+                                             freshContent.textAfterSelection.length
+                        
+                        ic.beginBatchEdit()
+                        try {
+                            ic.finishComposingText()
+                            ic.setSelection(0, totalTextLength)
+                            ic.commitText(nextText, 1)
+                        } finally {
+                            ic.endBatchEdit()
+                        }
+                        
+                        updateState(_state.copy(originalText = nextText))
+                        updateUndoRedoState()
+                    }
                 } catch (e: Exception) {
                     // Redo failed - no toast needed
                 }
