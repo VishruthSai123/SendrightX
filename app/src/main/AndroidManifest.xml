@@ -118,14 +118,14 @@
             android:name="com.vishruth.key1.app.AdTestActivity"
             android:label="Ad Test"
             android:theme="@style/SendRightAppTheme"
-            android:exported="true">
+            android:exported="false">
         </activity>
 
         <!-- Rewarded Ad Activity -->
         <activity
             android:name="com.vishruth.key1.app.RewardedAdActivity"
             android:theme="@style/SendRightAppTheme"
-            android:exported="true">
+            android:exported="false">
         </activity>
 
         <!-- In-App Review Activity (transparent activity for hosting review flow) -->

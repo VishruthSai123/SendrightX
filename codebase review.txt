@@ -1,0 +1,166 @@
+
+
+
+Repository Name
+
+SendrightX
+Branch
+
+main
+Analysis Date
+
+2025-11-08 03:40:55
+
+Docstring Absent
+
+
+524
+Antipatterns/Bugs
+
+
+299
+Complex Functions
+
+
+29
+Secrets Detected
+
+
+1
+Application Security Issues
+
+
+2
+SCA Vulnerabilities
+
+
+1Static Application Security Testing
+
+Application Security IssueNumber of occurencesSeverityCategoryImplement permissions on this exported component.
+2
+MEDIUM
+CWE-25Antipatterns
+
+AntipatternsNumber of occurencesSeverityDefine a constant instead of duplicating this literal "sendrightai@gmail.com" 4 times.
+1
+CriticalDefine a constant instead of duplicating this literal "not implemented" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Jane Doe" 3 times.
+1
+CriticalAdd a nested comment explaining why this function is empty or complete the implementation.
+10
+CriticalDefine a constant instead of duplicating this literal "AI Workspace" 4 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Tone Changer" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Something went wrong" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Watch Ad" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Something went wrong" 7 times.
+1
+CriticalDefine a constant instead of duplicating this literal "?? Service timeout. Trying backup server..." 7 times.
+1
+CriticalDefine a constant instead of duplicating this literal "All API keys failed" 7 times.
+1
+CriticalDefine a constant instead of duplicating this literal "? Switching to backup server..." 7 times.
+1
+CriticalDefine a constant instead of duplicating this literal "? Please check your internet connection" 7 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Daily limit reached! Watch an ad to unlock 60 minutes of unlimited AI." 3 times.
+1
+Critical
+Define a constant instead of duplicating this literal "You've reached your daily limit and used your free ad. Upgrade to Pro or wait until tomorrow!" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Watch Ad" 4 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--primary" 5 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--background" 4 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--surface" 13 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--on-primary" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--on-background" 8 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--on-background-disabled" 4 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--on-surface" 17 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--shape" 6 times.
+1
+CriticalDefine a constant instead of duplicating this literal "--shape-variant" 4 times.
+1
+CriticalDefine a constant instead of duplicating this literal "% used, " 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Failed to retrieve memory usage: " 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Cannot zip standalone file." 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "(null)" 5 times.1CriticalDefine a constant instead of duplicating this literal "0x%08x" 7 times.
+1
+CriticalDefine a constant instead of duplicating this literal "(none)" 3 times.1CriticalDefine a constant instead of duplicating this literal "No working dir specified" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "Subscribe for
+?89/month" 3 times.
+1
+CriticalReplace this expression; used as a condition it will always be constant.
+1
+CriticalDefine a constant instead of duplicating this literal "preview-list-item" 6 times.
+1
+CriticalDefine a constant instead of duplicating this literal "preview-icon" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "preview-text" 3 times.
+2
+CriticalDefine a constant instead of duplicating this literal "preview-text" 6 times.
+1
+CriticalDefine a constant instead of duplicating this literal "preview-text" 4 times.
+1
+CriticalDefine a constant instead of duplicating this literal "id cannot be blank" 4 times.
+1
+CriticalDefine a constant instead of duplicating this literal "\$schema" 3 times.
+1
+CriticalDefine a constant instead of duplicating this literal "https://www.googleapis.com/auth/androidpublisher" 3 times.
+1
+CriticalMerge this "if" statement with the nested one.7MajorRemove this commented out code.74MajorThis function has 14 parameters, which is greater than the 7 authorized.
+2
+MajorThis function has 9 parameters, which is greater than the 7 authorized.
+3
+Major
+Either remove or fill this block of code.8MajorThis branch's code block is the same as the block for the branch on line 154.
+1
+MajorRemove this useless "if" statement.1MajorMerge chained "if" statements into a single "when" statement.7MajorRemove this conditional structure or edit its code blocks so that they're not all the same.
+3
+MajorMove "return" statements from all branches before "if" statement.4MajorReduce the number of when branches from 53 to at most 30.1MajorTake the required action to fix the issue indicated by this "FIXME" comment.
+9
+MajorReduce the number of when branches from 35 to at most 30.1MajorReduce the number of when branches from 59 to at most 30.1MajorMove "return" statements from all branches before "when" statement.
+2
+MajorMake this interface functional or replace it with a function type.3MajorThis branch's code block is the same as the block for the branch on line 58.
+1
+MajorUnnecessary "else" after "raise", remove the "else" and de-indent the code inside it
+1
+MajorConsider using [] instead of list()1MajorReplace this generic exception class with a more specific one.1MajorConsider using '{}' instead of a call to 'dict'.2MajorConsider using "elif" instead of "else" then "if" to remove one indentation level
+1
+MajorConsider using '{"id": table['FlorisLocale'], "hanShapeBasedKeyCode": table['KeyCode'], ... }' instead of a call to 'dict'.
+1
+MajorConsider using an in-place tuple instead of list1MajorAdd replacement fields or use a normal string instead of an f-string.4MajorConsider using 'sys.exit' instead1MajorThis function has 10 parameters, which is greater than the 7 authorized.
+3
+MajorThis function has 11 parameters, which is greater than the 7 authorized.
+1
+MajorThis function has 8 parameters, which is greater than the 7 authorized.
+9
+MajorReduce the number of when branches from 36 to at most 30.1MajorRemove the unnecessary Boolean literal.2MinorRename class "MIGRATE_3_TO_4" to match the regular expression
+^[A-Z][a-zA-Z0-9]*$
+1
+Minor'subprocess.run' used without explicitly defining the value for 'check'.
+3
+MinorRaising too general exception: Exception1MinorRedefining name 'database' from outer scope (line 203)1MinorRedefining name 'schema' from outer scope (line 157)1MinorRedefining name 'table' from outer scope (line 177)3MinorRedefining name 'con' from outer scope (line 212)1MinorRedefining name 'cur' from outer scope (line 213)1MinorRedefining name 'f' from outer scope (line 201)1MinorRedefining name 'idx' from outer scope (line 168)2MinorRedefining name 'x' from outer scope (line 155)2MinorRedefining name 'field' from outer scope (line 187)1Minor
+Using an f-string that does not have any interpolated variables4MinorUnused variable 'idx'1MinorRedefining name 'keycode_real' from outer scope (line 193)1MinorDo not use `len(SEQUENCE)` without comparison to determine if a sequence is empty
+1
+MinorUsing a conditional statement with a constant value1MinorMore than one statement on a single line1MinorUse concise character class syntax '\w' instead of '[a-zA-Z0-9_]'.1MinorUse the opposite operator ("not in") instead.1MinorComplete the task associated to this TODO comment.49Info
+Infrastructure as Code Issues
+
+IaC issueNumber of occurencesSeverityEnsure that HEALTHCHECK instructions have been added to container images
+1
+LOW

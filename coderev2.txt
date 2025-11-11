@@ -1,0 +1,70 @@
+
+
+
+Repository Name
+
+SendrightX
+Branch
+
+main
+Analysis Date
+
+2025-11-11 07:35:35
+
+Docstring Absent
+
+
+526
+Antipatterns/Bugs
+
+
+288
+Complex Functions
+
+
+29
+Secrets Detected
+
+
+0
+Application Security Issues
+
+
+3
+SCA Vulnerabilities
+
+
+1Static Application Security Testing
+
+Application Security IssueFileSeverityCategoryDetected SHA1 hash algorithm which is considered insecure. SHA1 is not collision resistant and is therefore not suitable as a cryptographic signature. Use SHA256 or SHA3 instead.
+VishruthSai123/SendrightX/0fa6ac7e7 c908dec6b477dba61cef19799940c36/app
+/src/main/kotlin/com/vishruth/key1/ billing/Security.kt : 92
+
+
+MEDIUM
+
+
+['CWE-25', 'OWASP-10']
+Implement permissions on this exported component.VishruthSai123/SendrightX/0fa6ac7e7 c908dec6b477dba61cef19799940c36/app
+/src/main/AndroidManifest.xml : 117
+MEDIUM
+['CWE-25']
+Implement permissions on this exported component.VishruthSai123/SendrightX/0fa6ac7e7 c908dec6b477dba61cef19799940c36/app
+/src/main/AndroidManifest.xml : 125
+MEDIUM
+['CWE-25']Software Composition Analysis
+
+PackageDescriptionSeverityprotobufjs@7.2.4protobufjs Prototype Pollution vulnerabilitycriticalInfrastructure as Code Issues
+
+IaC IssueFileCheck IDSeverityEnsure that HEALTHCHECK instructions have been added to container images
+/utils/repr_build/Dockerfile : 1
+CKV_DOCKER_2
+LOWEnsure top-level permissions are not set to write-all/.github/workflows/crowdin-upload.y ml : 0
+CKV2_GHA_1
+lowEnsure top-level permissions are not set to write-all/.github/workflows/validate-strings
+-no-translations.yml : 10
+CKV2_GHA_1
+lowEnsure top-level permissions are not set to write-all
+/.github/workflows/android.yml : 0
+CKV2_GHA_1
+low

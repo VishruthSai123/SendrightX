@@ -26,7 +26,7 @@ object Security {
     
     private const val TAG = "Security"
     private const val KEY_FACTORY_ALGORITHM = "RSA"
-    private const val SIGNATURE_ALGORITHM = "SHA1withRSA"
+    private const val SIGNATURE_ALGORITHM = "SHA256withRSA"
     
     /**
      * Verify purchase signature from Google Play
