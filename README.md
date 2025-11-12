@@ -92,20 +92,17 @@ The official [FlorisBoard Addons Store](https://beta.addons.florisboard.org) rem
 ## List of Permissions SendRight Requests
 Please refer to this [page](https://github.com/florisboard/florisboard/wiki/List-of-permissions-FlorisBoard-requests) for detailed information about permissions. SendRight includes additional AI-related permissions for enhanced functionality including internet access for Gemini API integration.
 
-## APK signing certificate hashes
+## APK Verification
 
-The package names and SHA-256 hashes of the signature certificate are listed below, so you can verify both FlorisBoard variants with apksigner by using `apksigner verify --print-certs florisboard-<version>-<track>.apk` when you download the APK.
-If you have [AppVerifier](https://github.com/soupslurpr/AppVerifier) installed, you can alternatively copy both the package name and the hash of the corresponding track and share them to AppVerifier.
+You can verify the SendRight APK signature using apksigner:
 
-##### Stable track:
+```bash
+apksigner verify --print-certs sendright-<version>.apk
+```
 
-dev.patrickgold.florisboard<br>
-0B:80:71:64:50:8E:AF:EB:1F:BB:81:5B:E7:A2:3C:77:FE:68:9D:94:B1:43:75:C9:9B:DA:A9:B6:57:7F:D6:D6
+**SendRight Package Name:** `com.vishruth.key1`
 
-##### Preview track:
-
-dev.patrickgold.florisboard.beta<br>
-0B:80:71:64:50:8E:AF:EB:1F:BB:81:5B:E7:A2:3C:77:FE:68:9D:94:B1:43:75:C9:9B:DA:A9:B6:57:7F:D6:D6
+The SHA-256 certificate hash will be displayed when you run the command above on a downloaded APK from Google Play Store.
 
 
 ## Used Libraries and Components

@@ -73,11 +73,11 @@ Download and install the APK file on your Android device, then:
 
 SendRight is licensed under the Apache License 2.0.
 
-**This project is based on FlorisBoard** by Patrick Zedler and The FlorisBoard Contributors, which is also licensed under the Apache License 2.0.
+**This project is based on FlorisBoard** by Patrick Goldinger and The FlorisBoard Contributors, which is also licensed under the Apache License 2.0.
 
 ### Original FlorisBoard
 - **Project**: https://github.com/florisboard/florisboard
-- **Author**: Patrick Zedler (patrick@florisboard.org)
+- **Author**: Patrick Goldinger (patrick@florisboard.org)
 - **Contributors**: The FlorisBoard Contributors
 - **License**: Apache License 2.0
 
@@ -93,7 +93,7 @@ SendRight includes the following enhancements over the original FlorisBoard:
 
 Copyright 2025 VishruthSai123  
 Original FlorisBoard Copyright 2021-2025 The FlorisBoard Contributors  
-Original Author: Patrick Zedler
+Original Author: Patrick Goldinger
 
 ## Development
 

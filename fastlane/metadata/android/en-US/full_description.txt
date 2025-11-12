@@ -1,19 +1,45 @@
-<p><i>FlorisBoard</i> is an open-source keyboard aimed at providing you with an easy way to type while respecting your privacy.</p>
-<p><b>Note:</b> This project is currently in early-beta stage. If you want to see a feature being implemented or want to report a bug, please visit this project's repository (linked in the end of the description) on GitHub and file an issue. This helps making FlorisBoard even better! Thank you!</p>
-<p><b>Currently implemented and fully working features:</b></p>
+<p><b>SendRight</b> is an AI-enhanced Android keyboard built upon the open-source FlorisBoard foundation. Experience intelligent typing with Magic Wand text processing, custom AI assistants, intelligent workspaces, seamless Gemini API integration, and advanced personalization.</p>
+
+<p><b>🪄 AI-Powered Features:</b></p>
 <ul>
-    <li>Huge variety of Latin keyboard layouts</li>
-    <li>Limited support for non-Latin keyboard layouts (Arabic, Persian and Hebrew currently, more are planned)</li>
-    <li>Easy switching between languages/layouts by defining subtypes in the settings</li>
-    <li>Full theme customization + theme presets for day/night themes</li>
-    <li>Automatic day/night theme switching</li>
-    <li>Keyboard layouts for typing in a (phone) number</li>
-    <li>Special characters input</li>
-    <li>Emoji/Emoticon keyboard</li>
-    <li>One-handed/compact mode for easier typing on large devices</li>
-    <li>Customization of key press sound/vibration</li>
-    <li>Customizable actions for gestures: swipe up/down/left/right, space bar left/right, delete key swipe)</li>
-    <li>Integrated special symbols into character layouts</li>
-    <li>Clipboard/Cursor toolbar</li>
-    <li>Clipboard manager/history</li>
+    <li><b>Magic Wand</b>: AI text processing with Explain, Rewrite, Summarize, Formalize, and Tone Control</li>
+    <li><b>Custom AI Assistants</b>: Create personalized AI commands with custom prompts</li>
+    <li><b>AI Workspace</b>: Context-aware AI suggestions that adapt to your usage</li>
+    <li><b>Translation Hub</b>: Multi-language support (30+ languages) with intelligent context awareness</li>
+    <li><b>AI Chat</b>: Direct conversational AI for real-time assistance</li>
 </ul>
+
+<p><b>⌨️ Core Keyboard Features:</b></p>
+<ul>
+    <li>50+ languages with full Unicode support</li>
+    <li>Huge variety of Latin and non-Latin keyboard layouts (Arabic, Persian, Hebrew, and more)</li>
+    <li>Glide typing with precision gesture recognition</li>
+    <li>Full theme customization with Material You integration</li>
+    <li>Automatic day/night theme switching</li>
+    <li>Smart clipboard with intelligent history management</li>
+    <li>Voice input integration</li>
+    <li>Emoji/Emoticon keyboard with smart suggestions</li>
+    <li>One-handed mode for easier typing on large devices</li>
+    <li>Customizable gestures (swipe actions, space bar navigation)</li>
+    <li>Special characters and symbols</li>
+</ul>
+
+<p><b>🔒 Privacy First:</b></p>
+<ul>
+    <li>Local processing priority</li>
+    <li>Encrypted AI communications</li>
+    <li>Transparent permissions</li>
+    <li>No unnecessary data collection</li>
+</ul>
+
+<p><b>💎 Pro Features:</b></p>
+<ul>
+    <li>Advanced AI capabilities</li>
+    <li>Custom AI workspace actions</li>
+    <li>Extended AI usage limits</li>
+    <li>Priority support</li>
+</ul>
+
+<p><i><b>Built on FlorisBoard Foundation:</b> SendRight is based on FlorisBoard (https://github.com/florisboard/florisboard) by Patrick Goldinger and The FlorisBoard Contributors, licensed under Apache License 2.0. SendRight is an independent derivative work that extends the excellent FlorisBoard keyboard with revolutionary AI capabilities.</i></p>
+
+<p>Experience where intelligence meets artistry - SendRight combines the stability of FlorisBoard with cutting-edge AI innovation.</p>

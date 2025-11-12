@@ -624,7 +624,7 @@
     <string name="about__third_party_licenses__title" comment="Preference title">Third-party licenses</string>
     <string name="about__third_party_licenses__summary" comment="Preference summary">Licenses of the third-party libraries included in this app</string>
     <string name="about__built_upon_florisboard__title" comment="Preference title">Built upon FlorisBoard</string>
-    <string name="about__built_upon_florisboard__summary" comment="Preference summary">SendRight is built upon the excellent FlorisBoard keyboard by Patrick Zedler and The FlorisBoard Contributors, licensed under Apache 2.0.</string>
+    <string name="about__built_upon_florisboard__summary" comment="Preference summary">SendRight is built upon FlorisBoard (Copyright 2020-2025 The FlorisBoard Contributors) created by Patrick Goldinger. Original: github.com/florisboard/florisboard. Licensed under Apache License 2.0.</string>
 
     <!-- Report & Feedback UI strings -->
     <string name="report_feedback__title" comment="Title of Report and Feedback screen">Report &amp; Feedback</string>
