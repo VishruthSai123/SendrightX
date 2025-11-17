@@ -72,3 +72,4 @@ debug/
 target/
 **/*.rs.bk
 *.pdb
+fix_supabase_keys.sql
