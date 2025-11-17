@@ -27,6 +27,12 @@ local.properties
 # But allow the template
 !local.properties.template
 
+# SQL files (may contain sensitive data like API keys)
+*.sql
+# But allow templates and migration files
+!**/migrations/*.sql
+!**/schema/*.sql
+
 # Supabase SQL file with API keys (SENSITIVE - DO NOT COMMIT)
 supabase_insert_keys.sql
 
