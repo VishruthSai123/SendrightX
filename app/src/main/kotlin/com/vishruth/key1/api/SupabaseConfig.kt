@@ -54,8 +54,9 @@ object SupabaseConfig {
     
     private val json = Json { ignoreUnknownKeys = true }
     private var cachedKeys: ApiKeysCache? = null
+    private var cachedModels: AiModelsCache? = null
     private var lastFetchTime = 0L
-    private const val CACHE_DURATION_MS = 3600_000L // 1 hour cache
+    private const val CACHE_DURATION_MS = 600_000L // 10 minutes cache (reduced from 1 hour for faster updates)
     
     @Serializable
     data class ApiKeyEntry(
@@ -66,9 +67,24 @@ object SupabaseConfig {
         val priority: Int = 0
     )
     
+    @Serializable
+    data class AiModelEntry(
+        val id: String? = null,
+        val model_key: String,
+        val model_name: String,
+        val endpoint_suffix: String,
+        val is_active: Boolean = true,
+        val user_type: String = "free"
+    )
+    
     data class ApiKeysCache(
         val freeKeys: List<String>,
         val premiumKeys: List<String>,
+        val timestamp: Long
+    )
+    
+    data class AiModelsCache(
+        val models: Map<String, String>, // model_key -> model_name
         val timestamp: Long
     )
     
@@ -239,5 +255,145 @@ object SupabaseConfig {
     suspend fun refreshKeys(context: Context): Result<ApiKeysCache> {
         cachedKeys = null // Clear cache
         return fetchApiKeys(context)
+    }
+    
+    /**
+     * Fetch AI model configurations from Supabase
+     * Allows updating model names (like gemini-2.0-flash-exp) without app updates
+     */
+    suspend fun fetchAiModels(context: Context): Result<AiModelsCache> = withContext(Dispatchers.IO) {
+        try {
+            // Check if cache is still valid
+            cachedModels?.let { cache ->
+                if (System.currentTimeMillis() - cache.timestamp < CACHE_DURATION_MS) {
+                    Log.d(TAG, "Using cached AI models")
+                    return@withContext Result.success(cache)
+                }
+            }
+            
+            Log.d(TAG, "Fetching AI models from Supabase...")
+            
+            val url = URL("$SUPABASE_URL/rest/v1/ai_models_config?is_active=eq.true")
+            
+            val connection = url.openConnection() as HttpURLConnection
+            connection.apply {
+                requestMethod = "GET"
+                setRequestProperty("apikey", SUPABASE_ANON_KEY)
+                setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                setRequestProperty("Content-Type", "application/json")
+                connectTimeout = 10000
+                readTimeout = 10000
+            }
+            
+            val responseCode = connection.responseCode
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                Log.e(TAG, "Failed to fetch AI models: $responseCode")
+                // Return default models as fallback
+                return@withContext Result.success(getDefaultModelsCache())
+            }
+            
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
+            connection.disconnect()
+            
+            val entries = json.decodeFromString<List<AiModelEntry>>(response)
+            
+            // Convert to map: model_key -> model_name
+            val modelsMap = entries.associate { it.model_key to it.model_name }
+            
+            val cache = AiModelsCache(
+                models = modelsMap,
+                timestamp = System.currentTimeMillis()
+            )
+            
+            cachedModels = cache
+            saveModelsToLocalCache(context, cache)
+            
+            Log.d(TAG, "✅ Successfully fetched ${modelsMap.size} AI model configurations")
+            
+            Result.success(cache)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to fetch AI models from Supabase", e)
+            
+            // Fallback to local cache
+            loadModelsFromLocalCache(context)?.let {
+                Log.w(TAG, "Using backup local models cache")
+                return@withContext Result.success(it)
+            }
+            
+            // Final fallback to defaults
+            Result.success(getDefaultModelsCache())
+        }
+    }
+    
+    /**
+     * Get model name by key (e.g., 'gemini_flash_free' -> 'gemini-2.0-flash-exp')
+     */
+    suspend fun getModelName(context: Context, modelKey: String): String {
+        cachedModels?.let { cache ->
+            if (System.currentTimeMillis() - cache.timestamp < CACHE_DURATION_MS) {
+                return cache.models[modelKey] ?: getDefaultModelName(modelKey)
+            }
+        }
+        
+        // Fetch fresh models if cache expired
+        fetchAiModels(context).fold(
+            onSuccess = { cache ->
+                return cache.models[modelKey] ?: getDefaultModelName(modelKey)
+            },
+            onFailure = {
+                return getDefaultModelName(modelKey)
+            }
+        )
+    }
+    
+    private fun getDefaultModelsCache(): AiModelsCache {
+        return AiModelsCache(
+            models = mapOf(
+                "gemini_default" to "gemini-2.5-flash-lite"
+            ),
+            timestamp = System.currentTimeMillis()
+        )
+    }
+    
+    private fun getDefaultModelName(modelKey: String): String {
+        // Always use single endpoint to avoid rate limit issues
+        return "gemini-2.5-flash-lite"
+    }
+    
+    private fun saveModelsToLocalCache(context: Context, cache: AiModelsCache) {
+        try {
+            val prefs = context.getSharedPreferences("ai_models_cache", Context.MODE_PRIVATE)
+            prefs.edit().apply {
+                putString("models_json", cache.models.entries.joinToString(";") { "${it.key}:${it.value}" })
+                putLong("timestamp", cache.timestamp)
+                apply()
+            }
+            Log.d(TAG, "Saved AI models to local cache")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save models cache", e)
+        }
+    }
+    
+    private fun loadModelsFromLocalCache(context: Context): AiModelsCache? {
+        return try {
+            val prefs = context.getSharedPreferences("ai_models_cache", Context.MODE_PRIVATE)
+            val modelsJson = prefs.getString("models_json", "") ?: ""
+            val timestamp = prefs.getLong("timestamp", 0)
+            
+            if (modelsJson.isEmpty()) return null
+            
+            val modelsMap = modelsJson.split(";")
+                .filter { it.contains(":") }
+                .associate {
+                    val parts = it.split(":")
+                    parts[0] to parts[1]
+                }
+            
+            AiModelsCache(models = modelsMap, timestamp = timestamp)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load models cache", e)
+            null
+        }
     }
 }

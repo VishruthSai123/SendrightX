@@ -19,6 +19,7 @@ package com.vishruth.key1.ime.smartbar
 import android.content.Context
 import com.vishruth.key1.api.SupabaseConfig
 import com.vishruth.sendright.lib.network.NetworkUtils
+import kotlinx.coroutines.runBlocking
 import com.vishruth.key1.ime.smartbar.MagicWandInstructions
 import com.vishruth.key1.user.UserManager
 import com.vishruth.key1.ime.ai.AiUsageTracker
@@ -67,8 +68,10 @@ object GeminiApiService {
     // Request deduplication to prevent concurrent identical requests
     private val activeRequests = mutableMapOf<String, kotlinx.coroutines.Deferred<Result<String>>>()
     
-    // Using Gemini 2.0 Flash (NOT 2.0 Pro or 2.5 Pro) for optimal performance and cost efficiency
-    private const val ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    // Model configuration - now fetched from Supabase for dynamic updates
+    private const val BASE_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models"
+    private const val DEFAULT_MODEL = "gemini-2.5-flash-lite" // Fallback if Supabase unavailable
+    
     private const val MIN_REQUEST_INTERVAL = 1500L // Increased from 1s to 1.5s for more conservative rate limiting
     private const val BASE_RETRY_DELAY_MS = 2000L // Base delay for exponential backoff (increased from 1.2s)
     private const val MAX_RETRY_DELAY_MS = 16000L // Maximum delay cap (16 seconds)
@@ -117,6 +120,10 @@ object GeminiApiService {
                     keysInitialized = true
                     
                     Log.d(TAG, "✅ API keys initialized: ${FREE_API_KEYS.size} free, ${PREMIUM_API_KEYS.size} premium")
+                    
+                    // Also initialize AI models configuration
+                    SupabaseConfig.fetchAiModels(context)
+                    
                     Result.success(Unit)
                 },
                 onFailure = { error ->
@@ -459,7 +466,25 @@ object GeminiApiService {
                 )
             )
             
-            val url = URL("$ENDPOINT?key=${apiKeys[apiKeyIndex]}")
+            // Get dynamic model name from Supabase (or use default fallback)
+            // Using single endpoint for all users to avoid rate limit issues
+            val context = try {
+                // Try to get context from the first available place
+                val app = Class.forName("android.app.ActivityThread")
+                    .getMethod("currentApplication")
+                    .invoke(null) as? android.content.Context
+                app
+            } catch (e: Exception) {
+                null
+            }
+            
+            val modelName = context?.let { 
+                runBlocking { SupabaseConfig.getModelName(it, "gemini_default") }
+            } ?: DEFAULT_MODEL
+            
+            val endpoint = "$BASE_ENDPOINT/$modelName:generateContent"
+            
+            val url = URL("$endpoint?key=${apiKeys[apiKeyIndex]}")
             val connection = url.openConnection() as HttpURLConnection
             
             connection.apply {
