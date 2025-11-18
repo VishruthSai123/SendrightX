@@ -55,6 +55,7 @@ object SupabaseConfig {
     private val json = Json { ignoreUnknownKeys = true }
     private var cachedKeys: ApiKeysCache? = null
     private var cachedModels: AiModelsCache? = null
+    private var cachedConfigVersion: Int = -1 // Track config version for cache invalidation
     private var lastFetchTime = 0L
     private const val CACHE_DURATION_MS = 600_000L // 10 minutes cache (reduced from 1 hour for faster updates)
     
@@ -77,6 +78,13 @@ object SupabaseConfig {
         val user_type: String = "free"
     )
     
+    @Serializable
+    data class ConfigMetadata(
+        val id: String? = null,
+        val config_version: Int,
+        val last_updated: String? = null
+    )
+    
     data class ApiKeysCache(
         val freeKeys: List<String>,
         val premiumKeys: List<String>,
@@ -89,15 +97,61 @@ object SupabaseConfig {
     )
     
     /**
+     * Fetch current config version from Supabase
+     * Used to detect when keys have been rotated
+     */
+    private suspend fun fetchConfigVersion(): Int = withContext(Dispatchers.IO) {
+        try {
+            val url = URL("$SUPABASE_URL/rest/v1/config_metadata?select=config_version&limit=1")
+            
+            val connection = url.openConnection() as HttpURLConnection
+            connection.apply {
+                requestMethod = "GET"
+                setRequestProperty("apikey", SUPABASE_ANON_KEY)
+                setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                setRequestProperty("Content-Type", "application/json")
+                connectTimeout = 5000
+                readTimeout = 5000
+            }
+            
+            val responseCode = connection.responseCode
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                Log.e(TAG, "Failed to fetch config version: $responseCode")
+                return@withContext cachedConfigVersion // Return cached version on error
+            }
+            
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
+            connection.disconnect()
+            
+            val entries = json.decodeFromString<List<ConfigMetadata>>(response)
+            entries.firstOrNull()?.config_version ?: cachedConfigVersion
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching config version", e)
+            cachedConfigVersion // Return cached version on error
+        }
+    }
+    
+    /**
      * Fetch API keys from Supabase
      * This is called on app launch and periodically refreshed
+     * Now includes version-based cache invalidation for instant updates
      */
     suspend fun fetchApiKeys(context: Context): Result<ApiKeysCache> = withContext(Dispatchers.IO) {
         try {
-            // Check if cache is still valid
+            // Check current version from Supabase
+            val currentVersion = fetchConfigVersion()
+            
+            // If version changed, invalidate cache immediately
+            if (currentVersion != cachedConfigVersion && cachedConfigVersion != -1) {
+                Log.d(TAG, "⚡ Config version changed ($cachedConfigVersion -> $currentVersion), forcing refresh!")
+                cachedKeys = null // Invalidate cache
+            }
+            
+            // Check if cache is still valid (only if version hasn't changed)
             cachedKeys?.let { cache ->
-                if (System.currentTimeMillis() - cache.timestamp < CACHE_DURATION_MS) {
-                    Log.d(TAG, "Using cached API keys")
+                if (System.currentTimeMillis() - cache.timestamp < CACHE_DURATION_MS && currentVersion == cachedConfigVersion) {
+                    Log.d(TAG, "Using cached API keys (version $currentVersion)")
                     return@withContext Result.success(cache)
                 }
             }
@@ -122,11 +176,12 @@ object SupabaseConfig {
             )
             
             cachedKeys = cache
+            cachedConfigVersion = currentVersion // Store the version we just fetched
             
             // Save to local cache as backup
-            saveToLocalCache(context, cache)
+            saveToLocalCache(context, cache, currentVersion)
             
-            Log.d(TAG, "✅ Successfully fetched ${freeKeys.size} free keys and ${premiumKeys.size} premium keys")
+            Log.d(TAG, "✅ Successfully fetched ${freeKeys.size} free keys and ${premiumKeys.size} premium keys (version $currentVersion)")
             
             Result.success(cache)
             
@@ -186,16 +241,17 @@ object SupabaseConfig {
     /**
      * Save keys to local encrypted storage as backup
      */
-    private fun saveToLocalCache(context: Context, cache: ApiKeysCache) {
+    private fun saveToLocalCache(context: Context, cache: ApiKeysCache, version: Int) {
         try {
             val prefs = context.getSharedPreferences("api_keys_cache", Context.MODE_PRIVATE)
             prefs.edit().apply {
                 putString("free_keys", cache.freeKeys.joinToString(","))
                 putString("premium_keys", cache.premiumKeys.joinToString(","))
                 putLong("timestamp", cache.timestamp)
+                putInt("config_version", version)
                 apply()
             }
-            Log.d(TAG, "Saved API keys to local cache")
+            Log.d(TAG, "Saved API keys to local cache (version $version)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to save local cache", e)
         }
@@ -210,9 +266,15 @@ object SupabaseConfig {
             val freeKeysStr = prefs.getString("free_keys", "") ?: ""
             val premiumKeysStr = prefs.getString("premium_keys", "") ?: ""
             val timestamp = prefs.getLong("timestamp", 0)
+            val version = prefs.getInt("config_version", -1)
             
             if (freeKeysStr.isEmpty() && premiumKeysStr.isEmpty()) {
                 return null
+            }
+            
+            // Restore cached version
+            if (version != -1) {
+                cachedConfigVersion = version
             }
             
             ApiKeysCache(
