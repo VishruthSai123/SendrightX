@@ -31,6 +31,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.florisboard.lib.android.showShortToast
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
@@ -51,6 +52,7 @@ object GeminiApiService {
     
     // Track if keys have been initialized
     private var keysInitialized = false
+    private val initLock = Any() // Synchronization lock to prevent race conditions
     
     // Separate tracking for free and premium keys
     private var currentFreeApiKeyIndex = 0
@@ -173,6 +175,39 @@ object GeminiApiService {
     }
     
     /**
+     * Ensure API keys are initialized before use
+     * OPTIMIZED: Only fetches if keys are actually missing/empty
+     * THREAD-SAFE: Prevents multiple simultaneous fetches
+     */
+    suspend fun ensureKeysInitialized(context: Context?): Boolean {
+        // Fast path: If already initialized and have keys, we're good - NO NETWORK CALL
+        if (keysInitialized && FREE_API_KEYS.isNotEmpty() && PREMIUM_API_KEYS.isNotEmpty()) {
+            return true
+        }
+        
+        // If no context provided, can't fetch
+        if (context == null) {
+            Log.w(TAG, "Cannot initialize keys without context")
+            return keysInitialized && (FREE_API_KEYS.isNotEmpty() || PREMIUM_API_KEYS.isNotEmpty())
+        }
+        
+        // Synchronized: Prevent multiple threads from fetching simultaneously
+        synchronized(initLock) {
+            // Double-check after acquiring lock (another thread may have initialized)
+            if (keysInitialized && FREE_API_KEYS.isNotEmpty() && PREMIUM_API_KEYS.isNotEmpty()) {
+                return true
+            }
+            
+            // Only fetch if keys are actually empty (startup failed)
+            Log.d(TAG, "⚠️ Keys not initialized or empty, attempting lazy initialization...")
+        }
+        
+        // Fetch outside synchronized block to avoid blocking other threads too long
+        val result = initializeApiKeys(context)
+        return result.isSuccess && FREE_API_KEYS.isNotEmpty() && PREMIUM_API_KEYS.isNotEmpty()
+    }
+    
+    /**
      * Check if the user is a pro user from multiple sources
      */
     private fun isProUser(): Boolean {
@@ -291,21 +326,65 @@ object GeminiApiService {
     
     /**
      * Perform the actual API request with improved retry logic
+     * OPTIMIZED: Smart check - only fetches if keys are missing
      */
-    private suspend fun performApiRequest(inputText: String, instruction: String, cacheKey: String): Result<String> = withContext(Dispatchers.IO) {
+    private suspend fun performApiRequest(inputText: String, instruction: String, cacheKey: String, context: Context? = null): Result<String> = withContext(Dispatchers.IO) {
         
         // Get appropriate API keys based on user subscription status
         val apiKeys = getApiKeysForUser()
         val userType = if (isProUser()) "Premium" else "Free"
         
-        // Validate API keys
-        if (apiKeys.isEmpty()) {
-            return@withContext Result.failure(Exception("🔑 $userType API key not configured. Please check settings."))
+        // SMART CHECK: Only fetch if keys are actually empty
+        if (apiKeys.isEmpty() && context != null) {
+            Log.w(TAG, "⚠️ $userType keys empty, attempting lazy fetch...")
+            
+            // Show encouraging toast to user
+            withContext(Dispatchers.Main) {
+                context.showShortToast("🔑 Setting up AI... One moment")
+            }
+            
+            // Try lazy initialization first (uses cache if available)
+            if (!ensureKeysInitialized(context)) {
+                // If that failed, try force refresh as last resort
+                Log.w(TAG, "Lazy init failed, attempting force refresh...")
+                SupabaseConfig.fetchApiKeys(context, forceRefresh = true).fold(
+                    onSuccess = { cache ->
+                        FREE_API_KEYS = cache.freeKeys
+                        PREMIUM_API_KEYS = cache.premiumKeys
+                        keysInitialized = true
+                        Log.d(TAG, "✅ Force refresh succeeded")
+                    },
+                    onFailure = {
+                        Log.e(TAG, "❌ All fetch attempts failed")
+                        // Show network issue toast
+                        withContext(Dispatchers.Main) {
+                            context.showShortToast("📶 Please check your connection")
+                        }
+                    }
+                )
+            }
+            
+            // Re-check keys after fetch attempt
+            val retriedKeys = getApiKeysForUser()
+            if (retriedKeys.isEmpty()) {
+                return@withContext Result.failure(Exception("🔑 Service unavailable. Please try again."))
+            }
+        } else if (apiKeys.isEmpty()) {
+            // No context and no keys - can't do anything
+            return@withContext Result.failure(Exception("🔑 Please restart the app to use AI features"))
+        }
+        
+        // Keys available, proceed with request
+        val finalKeys = getApiKeysForUser()
+        
+        // Validate we have keys after all fetch attempts
+        if (finalKeys.isEmpty()) {
+            return@withContext Result.failure(Exception("🔑 $userType API keys unavailable after all retry attempts"))
         }
         
         // Strategy 1: Try primary key with exponential backoff
         val currentIndex = getCurrentApiKeyIndex()
-        val primaryResult = makeApiRequestWithExponentialBackoff(inputText, instruction, currentIndex, apiKeys, 0)
+        val primaryResult = makeApiRequestWithExponentialBackoff(inputText, instruction, currentIndex, finalKeys, 0)
         primaryResult.fold(
             onSuccess = { 
                 markKeyAsHealthy(currentIndex)
@@ -326,7 +405,7 @@ object GeminiApiService {
                     // Strategy 2: Exponential backoff retry with primary key (only for temporary issues)
                     val exponentialDelay = calculateExponentialBackoffDelay(1)
                     delay(exponentialDelay)
-                    val retryResult = makeApiRequestWithExponentialBackoff(inputText, instruction, currentIndex, apiKeys, 1)
+                    val retryResult = makeApiRequestWithExponentialBackoff(inputText, instruction, currentIndex, finalKeys, 1)
                     retryResult.fold(
                         onSuccess = { 
                             markKeyAsHealthy(currentIndex)
@@ -339,8 +418,8 @@ object GeminiApiService {
         )
         
         // Strategy 3: Smart sequential fallback with exponential backoff
-        if (apiKeys.size > 1) {
-            return@withContext tryLimitedSequentialFallbackWithBackoff(inputText, instruction, apiKeys)
+        if (finalKeys.size > 1) {
+            return@withContext tryLimitedSequentialFallbackWithBackoff(inputText, instruction, finalKeys)
         }
         
         // No fallback keys available

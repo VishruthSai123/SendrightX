@@ -23,6 +23,10 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Handler
 import android.util.Log
 import androidx.core.os.UserManagerCompat
@@ -84,6 +88,8 @@ class SendRightApplication : Application() {
     private val mainHandler by lazy { Handler(mainLooper) }
     private val scope = CoroutineScope(Dispatchers.Default)
     val preferenceStoreLoaded = MutableStateFlow(false)
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var hasNetworkConnected = false // Track if we've seen network connection
 
     val cacheManager = lazy { CacheManager(this) }
     val clipboardManager = lazy { ClipboardManager(this) }
@@ -142,8 +148,13 @@ class SendRightApplication : Application() {
                     Log.d("SendRightApplication", "✅ API keys initialized from Supabase")
                 } catch (e: Exception) {
                     Log.e("SendRightApplication", "❌ Failed to initialize API keys", e)
+                    // Will be retried when network becomes available
                 }
             }
+            
+            // CRITICAL FIX: Monitor network state to auto-retry key fetching
+            // If initial fetch failed, retry when network comes back
+            setupNetworkMonitoring()
 
             if (!UserManagerCompat.isUserUnlocked(this)) {
                 cacheDir?.deleteContentsRecursively()
@@ -176,6 +187,62 @@ class SendRightApplication : Application() {
     }
     
     /**
+     * CRITICAL FIX: Monitor network connectivity to auto-retry API key fetching
+     * If initial fetch failed due to no network, retry when network becomes available
+     */
+    private fun setupNetworkMonitoring() {
+        try {
+            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            if (connectivityManager == null) {
+                Log.e("SendRightApplication", "ConnectivityManager not available")
+                return
+            }
+            
+            networkCallback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    super.onAvailable(network)
+                    
+                    // CRITICAL FIX: Only fetch if keys are actually missing
+                    // Don't fetch on every network change if keys already loaded
+                    scope.launch {
+                        try {
+                            val needsKeys = !GeminiApiService.ensureKeysInitialized(this@SendRightApplication)
+                            if (needsKeys) {
+                                Log.d("SendRightApplication", "📶 Network available, fetching missing API keys...")
+                                val result = GeminiApiService.initializeApiKeys(this@SendRightApplication)
+                                if (result.isSuccess) {
+                                    Log.d("SendRightApplication", "✅ API keys fetched after network reconnection")
+                                    hasNetworkConnected = true
+                                }
+                            } else {
+                                Log.d("SendRightApplication", "📶 Network available, keys already loaded")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("SendRightApplication", "❌ Failed to fetch keys after network reconnection", e)
+                        }
+                    }
+                }
+                
+                override fun onLost(network: Network) {
+                    super.onLost(network)
+                    Log.d("SendRightApplication", "📵 Network lost")
+                }
+            }
+            
+            val networkRequest = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                .build()
+            
+            connectivityManager.registerNetworkCallback(networkRequest, networkCallback!!)
+            Log.d("SendRightApplication", "✅ Network monitoring started")
+            
+        } catch (e: Exception) {
+            Log.e("SendRightApplication", "Failed to setup network monitoring", e)
+        }
+    }
+    
+    /**
      * MEMORY LEAK FIX: Clean up resources when application terminates
      * This is called when the app process is being shut down
      */
@@ -183,6 +250,17 @@ class SendRightApplication : Application() {
         super.onTerminate()
         try {
             Log.d("SendRightApplication", "Application terminating, cleaning up resources...")
+            
+            // Unregister network callback
+            networkCallback?.let {
+                try {
+                    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                    connectivityManager?.unregisterNetworkCallback(it)
+                    Log.d("SendRightApplication", "Network callback unregistered")
+                } catch (e: Exception) {
+                    Log.e("SendRightApplication", "Error unregistering network callback", e)
+                }
+            }
             
             // Destroy UserManager and its child managers (BillingManager, SubscriptionManager)
             UserManager.getInstance().destroy()

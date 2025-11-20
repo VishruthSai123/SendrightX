@@ -235,9 +235,11 @@ fun MagicWandPanel(
     val usageTracker = remember { MagicWandUsageTracker.getInstance(context) }
     val orderedSectionTitles by usageTracker.orderedSections.collectAsState()
     
-    // Separate effect for section ordering
+    // OPTIMIZED: Only check if keys need initialization (no fetch if already loaded)
+    // This is a lightweight check - actual fetch only happens if keys are empty
     LaunchedEffect(Unit) {
         usageTracker.refreshOrderedSections()
+        // Keys will be auto-fetched by ensureKeysInitialized in performApiRequest if needed
     }
     
     // State management - reactive to Pro status changes
@@ -932,16 +934,19 @@ suspend fun handleMagicWandButtonClick(
             // Show more specific error messages for better user experience
             when {
                 errorMessage.contains("timeout") || errorMessage.contains("slow") -> {
-                    context.showShortToast("⏱️ Service timeout. Trying backup server...")
+                    context.showShortToast("⏱️ Server busy. Retry soon")
                 }
                 errorMessage.contains("All API keys failed") -> {
-                    context.showShortToast("🔄 Switching to backup server...")
+                    context.showShortToast("🔄 Switching server...")
                 }
                 errorMessage.contains("network") || errorMessage.contains("connection") -> {
-                    context.showShortToast("📶 Please check your internet connection")
+                    context.showShortToast("📶 Check your internet")
+                }
+                errorMessage.contains("Setting up AI") -> {
+                    return // Already shown setup toast
                 }
                 else -> {
-                    context.showShortToast(errorMessage)
+                    context.showShortToast("❌ Retry in a moment")
                 }
             }
         }

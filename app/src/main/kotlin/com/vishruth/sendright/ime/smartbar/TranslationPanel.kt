@@ -673,16 +673,19 @@ suspend fun handleTranslationButtonClick(
             // Show more specific error messages for better user experience
             when {
                 errorMessage.contains("timeout") || errorMessage.contains("slow") -> {
-                    context.showShortToast("⏱️ Service timeout. Trying backup server...")
+                    context.showShortToast("⏱️ Server busy. Retry soon")
                 }
                 errorMessage.contains("All API keys failed") -> {
-                    context.showShortToast("🔄 Switching to backup server...")
+                    context.showShortToast("🔄 Switching server...")
                 }
                 errorMessage.contains("network") || errorMessage.contains("connection") -> {
-                    context.showShortToast("📶 Please check your internet connection")
+                    context.showShortToast("📶 Check your internet")
+                }
+                errorMessage.contains("Setting up AI") -> {
+                    return // Already shown setup toast
                 }
                 else -> {
-                    context.showShortToast(errorMessage)
+                    context.showShortToast("❌ Retry in a moment")
                 }
             }
         }

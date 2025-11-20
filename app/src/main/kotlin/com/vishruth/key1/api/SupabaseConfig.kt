@@ -57,7 +57,11 @@ object SupabaseConfig {
     private var cachedModels: AiModelsCache? = null
     private var cachedConfigVersion: Int = -1 // Track config version for cache invalidation
     private var lastFetchTime = 0L
+    private var lastFailedFetchTime = 0L // Track when last fetch failed
+    private var consecutiveFailures = 0 // Track consecutive failures
     private const val CACHE_DURATION_MS = 600_000L // 10 minutes cache (reduced from 1 hour for faster updates)
+    private const val RETRY_AFTER_FAILURE_MS = 30_000L // Retry after 30 seconds if previous fetch failed
+    private const val MAX_CONSECUTIVE_FAILURES = 3 // Max failures before backing off more
     
     @Serializable
     data class ApiKeyEntry(
@@ -95,6 +99,31 @@ object SupabaseConfig {
         val models: Map<String, String>, // model_key -> model_name
         val timestamp: Long
     )
+    
+    /**
+     * Check if we should attempt to fetch keys (handles retry logic after failures)
+     */
+    private fun shouldAttemptFetch(): Boolean {
+        val now = System.currentTimeMillis()
+        
+        // If we have valid cache, don't need to fetch
+        cachedKeys?.let { cache ->
+            if (now - cache.timestamp < CACHE_DURATION_MS) {
+                return false
+            }
+        }
+        
+        // If last fetch failed recently, use exponential backoff
+        if (consecutiveFailures > 0) {
+            val backoffTime = RETRY_AFTER_FAILURE_MS * (1 shl minOf(consecutiveFailures - 1, 4)) // 30s, 60s, 2m, 4m, 8m max
+            if (now - lastFailedFetchTime < backoffTime) {
+                Log.d(TAG, "Skipping fetch due to recent failure (backoff: ${backoffTime/1000}s, failures: $consecutiveFailures)")
+                return false
+            }
+        }
+        
+        return true
+    }
     
     /**
      * Fetch current config version from Supabase
@@ -136,23 +165,41 @@ object SupabaseConfig {
      * Fetch API keys from Supabase
      * This is called on app launch and periodically refreshed
      * Now includes version-based cache invalidation for instant updates
+     * IMPROVED: Handles network failures gracefully with retry logic
      */
-    suspend fun fetchApiKeys(context: Context): Result<ApiKeysCache> = withContext(Dispatchers.IO) {
+    suspend fun fetchApiKeys(context: Context, forceRefresh: Boolean = false): Result<ApiKeysCache> = withContext(Dispatchers.IO) {
         try {
+            // Skip fetch if we shouldn't attempt (recent failure backoff) unless forced
+            if (!forceRefresh && !shouldAttemptFetch()) {
+                cachedKeys?.let {
+                    Log.d(TAG, "Using cached keys (skipping fetch due to backoff)")
+                    return@withContext Result.success(it)
+                }
+            }
+            
             // Check current version from Supabase
             val currentVersion = fetchConfigVersion()
             
             // If version changed, invalidate cache immediately
-            if (currentVersion != cachedConfigVersion && cachedConfigVersion != -1) {
-                Log.d(TAG, "⚡ Config version changed ($cachedConfigVersion -> $currentVersion), forcing refresh!")
+            // CRITICAL: Also invalidate if currentVersion is valid but cachedVersion was -1
+            // This ensures first successful version check after failures invalidates old cache
+            if (currentVersion > 0 && currentVersion != cachedConfigVersion) {
+                if (cachedConfigVersion == -1) {
+                    Log.d(TAG, "⚡ First successful version fetch ($currentVersion), will use fresh keys")
+                } else {
+                    Log.d(TAG, "⚡ Config version changed ($cachedConfigVersion -> $currentVersion), forcing refresh!")
+                }
                 cachedKeys = null // Invalidate cache
             }
             
-            // Check if cache is still valid (only if version hasn't changed)
-            cachedKeys?.let { cache ->
-                if (System.currentTimeMillis() - cache.timestamp < CACHE_DURATION_MS && currentVersion == cachedConfigVersion) {
-                    Log.d(TAG, "Using cached API keys (version $currentVersion)")
-                    return@withContext Result.success(cache)
+            // Check if cache is still valid (only if version hasn't changed) and not forcing refresh
+            if (!forceRefresh) {
+                cachedKeys?.let { cache ->
+                    if (System.currentTimeMillis() - cache.timestamp < CACHE_DURATION_MS && currentVersion == cachedConfigVersion) {
+                        Log.d(TAG, "Using cached API keys (version $currentVersion)")
+                        consecutiveFailures = 0 // Reset failure count on cache hit
+                        return@withContext Result.success(cache)
+                    }
                 }
             }
             
@@ -166,6 +213,8 @@ object SupabaseConfig {
             
             if (freeKeys.isEmpty() && premiumKeys.isEmpty()) {
                 Log.e(TAG, "No API keys found in Supabase!")
+                consecutiveFailures++
+                lastFailedFetchTime = System.currentTimeMillis()
                 return@withContext Result.failure(Exception("No API keys configured"))
             }
             
@@ -177,6 +226,7 @@ object SupabaseConfig {
             
             cachedKeys = cache
             cachedConfigVersion = currentVersion // Store the version we just fetched
+            consecutiveFailures = 0 // Reset failure count on success
             
             // Save to local cache as backup
             saveToLocalCache(context, cache, currentVersion)
@@ -187,10 +237,12 @@ object SupabaseConfig {
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Failed to fetch API keys from Supabase", e)
+            consecutiveFailures++
+            lastFailedFetchTime = System.currentTimeMillis()
             
             // Fallback to local cache
             loadFromLocalCache(context)?.let {
-                Log.w(TAG, "Using backup local cache")
+                Log.w(TAG, "Using backup local cache after fetch failure")
                 return@withContext Result.success(it)
             }
             
