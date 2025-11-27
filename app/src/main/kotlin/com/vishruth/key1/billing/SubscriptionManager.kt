@@ -245,8 +245,36 @@ class SubscriptionManager(
             
             Log.d(TAG, "Checking subscription status... (forceRefresh: $forceRefresh)")
             
-            // Always check Google Play first to get real-time status
-            val hasActiveSubscription = billingManager.hasActiveSubscription()
+            // CRITICAL FIX: Retry subscription check with error handling
+            var hasActiveSubscription = false // Initialize with default
+            var checkAttempts = 0
+            val maxAttempts = 2
+            
+            while (checkAttempts < maxAttempts) {
+                try {
+                    // Always check Google Play first to get real-time status
+                    hasActiveSubscription = billingManager.hasActiveSubscription()
+                    Log.d(TAG, "✅ Google Play subscription check succeeded: $hasActiveSubscription")
+                    break // Success, exit retry loop
+                    
+                } catch (e: Exception) {
+                    checkAttempts++
+                    Log.e(TAG, "❌ Subscription check failed (attempt $checkAttempts/$maxAttempts)", e)
+                    
+                    if (checkAttempts < maxAttempts) {
+                        delay(2000) // Wait before retry
+                        continue
+                    } else {
+                        // All attempts failed - use local cache to avoid losing subscription
+                        Log.e(TAG, "All subscription check attempts failed, using local cache")
+                        val localState = billingManager.getSubscriptionState()
+                        Log.w(TAG, "⚠️ Using cached subscription state: $localState (FALLBACK MODE)")
+                        hasActiveSubscription = localState
+                        break
+                    }
+                }
+            }
+            
             val localSubscriptionState = billingManager.getSubscriptionState()
             
             Log.d(TAG, "Google Play subscription: $hasActiveSubscription")

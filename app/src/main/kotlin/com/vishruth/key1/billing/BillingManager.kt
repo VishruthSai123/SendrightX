@@ -120,8 +120,20 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             }
             
             override fun onBillingServiceDisconnected() {
-                Log.w(TAG, "Billing service disconnected")
+                Log.w(TAG, "⚠️ Billing service disconnected - attempting automatic reconnection...")
                 _connectionState.value = ConnectionState.DISCONNECTED
+                
+                // CRITICAL FIX: Automatically reconnect when service disconnects
+                // This prevents permanent subscription loss due to Google Play crashes/updates
+                billingScope.launch {
+                    // Wait a bit before reconnecting (avoid hammering the service)
+                    delay(2000)
+                    
+                    if (!isDestroyed) {
+                        Log.d(TAG, "Attempting to reconnect billing service...")
+                        connectToBillingService()
+                    }
+                }
             }
         })
     }
@@ -508,7 +520,10 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             // Migrate old data if exists (one-time migration)
             SecurePreferences.migrateToEncrypted(context, "MyAppPrefs", "billing_prefs")
             
-            prefs.edit().putBoolean("is_premium_user", isPremium).apply()
+            prefs.edit()
+                .putBoolean("is_premium_user", isPremium)
+                .putLong("last_validation_time", System.currentTimeMillis()) // Track when validated
+                .apply()
             Log.d(TAG, "Subscription state saved securely: isPremium = $isPremium")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to save subscription state", e)
@@ -527,7 +542,27 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             // SECURITY FIX: Read from encrypted preferences
             val prefs = SecurePreferences.getEncryptedPreferences(context, "billing_prefs")
             val isPremium = prefs.getBoolean("is_premium_user", false)
-            Log.d(TAG, "Retrieved subscription state securely: isPremium = $isPremium")
+            val lastValidation = prefs.getLong("last_validation_time", 0L)
+            
+            // CRITICAL: Don't trust premium cache if not validated in last 24 hours
+            val cacheAge = System.currentTimeMillis() - lastValidation
+            if (isPremium) {
+                val hoursSinceValidation = cacheAge / 3600_000L
+                
+                // Cache expiration: 24 hours for premium status
+                if (hoursSinceValidation > 24) {
+                    Log.w(TAG, "🔒 Premium cache unverified for $hoursSinceValidation hours (>${24}h limit) - requiring fresh validation")
+                    Log.w(TAG, "   Denying premium access until network validation succeeds")
+                    return false  // SECURITY: Don't trust old cache for premium
+                }
+                
+                // Warn if approaching expiration (>12 hours)
+                if (hoursSinceValidation > 12) {
+                    Log.w(TAG, "⚠️ Premium cache aging (${hoursSinceValidation}h old, expires at 24h) - needs revalidation soon")
+                }
+            }
+            
+            Log.d(TAG, "Retrieved subscription state securely: isPremium = $isPremium (last validated ${cacheAge / 1000}s ago)")
             isPremium
         } catch (e: Exception) {
             Log.e(TAG, "Failed to retrieve subscription state", e)
@@ -719,16 +754,44 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
         return try {
             Log.d(TAG, "🔍 Checking subscription status with Google Play...")
             
-            // Always verify with Google Play Billing first for real-time status
-            if (!billingClient.isReady) {
-                Log.w(TAG, "Billing client not ready, attempting to connect...")
-                // Try to reconnect if not ready
-                setupBillingClient()
-                delay(1000) // Give some time for connection
-                
+            // CRITICAL FIX: Retry logic with exponential backoff
+            // Prevents temporary network issues from causing permanent subscription loss
+            var retryCount = 0
+            val maxRetries = 3
+            
+            while (retryCount < maxRetries) {
+                // Always verify with Google Play Billing first for real-time status
                 if (!billingClient.isReady) {
-                    Log.w(TAG, "Billing client still not ready, using local state as fallback")
-                    return getSubscriptionState()
+                    Log.w(TAG, "Billing client not ready (attempt ${retryCount + 1}/$maxRetries), attempting to connect...")
+                    
+                    // Try to reconnect if not ready
+                    setupBillingClient()
+                    
+                    // Exponential backoff: 2s, 4s, 8s
+                    val delayMs = (1000L * (1 shl retryCount + 1))
+                    delay(delayMs)
+                    
+                    if (!billingClient.isReady) {
+                        retryCount++
+                        if (retryCount < maxRetries) {
+                            Log.w(TAG, "Billing client not ready, retrying in ${delayMs}ms...")
+                            continue
+                        } else {
+                            Log.e(TAG, "❌ Billing client failed after $maxRetries attempts, using local cache")
+                            // SECURITY: Validate cache to prevent false premium from corruption
+                            val cachedState = getSubscriptionState()
+                            if (cachedState) {
+                                Log.w(TAG, "⚠️ Cache shows premium but billing client unavailable - trusting cache with caution")
+                                // Note: Periodic checks will validate this within 2 minutes
+                            }
+                            return cachedState
+                        }
+                    } else {
+                        Log.d(TAG, "✅ Billing client connected on retry attempt ${retryCount + 1}")
+                        break
+                    }
+                } else {
+                    break // Client is ready
                 }
             }
             
@@ -738,13 +801,28 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 .build()
             
             val result = billingClient.queryPurchasesAsync(params)
+            
+            // CRITICAL FIX: Check for query errors
+            if (result.billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+                Log.e(TAG, "❌ Purchase query failed: ${result.billingResult.debugMessage}")
+                Log.e(TAG, "Response code: ${result.billingResult.responseCode}")
+                
+                // If query failed, don't immediately return false - use local cache
+                Log.w(TAG, "Using local cache due to query failure")
+                val cachedState = getSubscriptionState()
+                if (cachedState) {
+                    Log.w(TAG, "⚠️ Returning premium from cache - will revalidate on next successful check")
+                }
+                return cachedState
+            }
+            
             val hasActivePurchase = result.purchasesList.any { purchase ->
                 purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
                 purchase.products.contains(PRODUCT_ID_PRO_MONTHLY) &&
                 purchase.isAcknowledged
             }
             
-            Log.d(TAG, "Google Play subscription check result: $hasActivePurchase")
+            Log.d(TAG, "✅ Google Play subscription check result: $hasActivePurchase (${result.purchasesList.size} purchases found)")
             
             // Get local state for comparison
             val localSubscriptionState = getSubscriptionState()
@@ -771,7 +849,12 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
         } catch (e: Exception) {
             Log.e(TAG, "Error checking subscription status, falling back to local state", e)
             // Fallback to local state only if Google Play check completely fails
-            getSubscriptionState()
+            val cachedState = getSubscriptionState()
+            if (cachedState) {
+                Log.w(TAG, "⚠️ Exception occurred but cache shows premium - trusting cache temporarily")
+                Log.w(TAG, "   Periodic check will revalidate within 2 minutes")
+            }
+            cachedState
         }
     }
     
