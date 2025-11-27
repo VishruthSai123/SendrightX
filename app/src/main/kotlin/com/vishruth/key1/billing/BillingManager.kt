@@ -10,6 +10,7 @@ import android.content.Context
 import android.util.Log
 import com.android.billingclient.api.*
 import com.vishruth.key1.user.UserManager
+import com.vishruth.key1.BuildConfig
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
@@ -606,20 +607,24 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     
     /**
      * Update subscription managers with new status
+     * CRITICAL: Updates SubscriptionManager's StateFlows so UI reflects changes immediately
      */
     private suspend fun updateSubscriptionManagers(isPremium: Boolean) {
         try {
-            // Get UserManager instance and update subscription status
             val userManager = UserManager.getInstance()
-            val newStatus = if (isPremium) "pro" else "free"
-            // Note: Removed Firebase integration - subscription status is now managed locally
-            Log.d(TAG, "Local subscription status updated to: $newStatus")
+            val subscriptionManager = userManager.getSubscriptionManager()
             
-            // if (result.isSuccess) {
-            //     Log.d(TAG, "UserManager updated with subscription status: $newStatus")
-            // } else {
-            //     Log.e(TAG, "Failed to update UserManager: ${result.exceptionOrNull()?.message}")
-            // }
+            if (subscriptionManager != null) {
+                // CRITICAL FIX: Force SubscriptionManager to refresh and update its StateFlows
+                // This ensures UI immediately reflects subscription changes after purchase/validation
+                subscriptionManager.forceRefreshSubscriptionStatus()
+                Log.d(TAG, "✅ SubscriptionManager StateFlows updated immediately - UI will reflect premium status")
+            } else {
+                Log.w(TAG, "⚠️ SubscriptionManager not available - UI update delayed until next check")
+            }
+            
+            val newStatus = if (isPremium) "pro" else "free"
+            Log.d(TAG, "Local subscription status updated to: $newStatus")
         } catch (e: Exception) {
             Log.e(TAG, "Error updating subscription managers", e)
         }
@@ -879,6 +884,15 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 Log.w(TAG, "🔄 Subscription state mismatch detected!")
                 Log.w(TAG, "   Google Play: $hasActivePurchase")
                 Log.w(TAG, "   Local cache: $localSubscriptionState")
+                
+                // DEBUG BUILD PROTECTION: Don't aggressively revoke premium in debug/test builds
+                // Emulator test purchases are unstable and may disappear
+                if (!hasActivePurchase && localSubscriptionState && BuildConfig.DEBUG) {
+                    Log.w(TAG, "⚠️ DEBUG BUILD: Keeping cached premium status despite Google Play mismatch")
+                    Log.w(TAG, "   (Test purchases in emulator are not persistent)")
+                    return hasActivePurchase  // In debug, trust Google Play for upgrades, but keep cache for downgrades
+                }
+                
                 Log.w(TAG, "   Updating local cache to match Google Play...")
                 
                 saveSubscriptionState(hasActivePurchase)
