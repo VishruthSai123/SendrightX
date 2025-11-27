@@ -64,7 +64,10 @@ class SubscriptionManager(
         // SECURITY FIX: Migrate old plain preferences to encrypted storage
         SecurePreferences.migrateToEncrypted(context, PREFS_NAME, PREFS_NAME)
         
-        loadState()
+        // Load state in coroutine since it's now suspend (thread-safe)
+        managerScope.launch {
+            loadState()
+        }
         
         // Monitor purchase updates and immediately check subscription status
         managerScope.launch {
@@ -155,13 +158,13 @@ class SubscriptionManager(
     /**
      * Load subscription state from SharedPreferences and BillingManager
      */
-    private fun loadState() {
+    private suspend fun loadState() {
         // Load from preferences first
         _aiActionsUsed.value = prefs.getInt(KEY_AI_ACTIONS_USED, 0)
         _currentAiUsageCount.value = _aiActionsUsed.value
         val prefsProStatus = prefs.getBoolean(KEY_PRO_STATUS, false)
         
-        // Also check BillingManager's local state
+        // Also check BillingManager's local state (now thread-safe)
         val billingProStatus = billingManager.getSubscriptionState()
         
         // Use the most recent state (preference billing manager local state)
@@ -252,8 +255,8 @@ class SubscriptionManager(
             
             while (checkAttempts < maxAttempts) {
                 try {
-                    // Always check Google Play first to get real-time status
-                    hasActiveSubscription = billingManager.hasActiveSubscription()
+                    // Check Google Play - force check if periodic, otherwise debounced
+                    hasActiveSubscription = billingManager.hasActiveSubscription(forceCheck = forceRefresh)
                     Log.d(TAG, "✅ Google Play subscription check succeeded: $hasActiveSubscription")
                     break // Success, exit retry loop
                     
@@ -280,30 +283,8 @@ class SubscriptionManager(
             Log.d(TAG, "Google Play subscription: $hasActiveSubscription")
             Log.d(TAG, "Local subscription state: $localSubscriptionState")
             
-            // If Google Play says no active subscription, immediately clear local cache
-            if (!hasActiveSubscription && localSubscriptionState) {
-                Log.w(TAG, "🔥 SUBSCRIPTION EXPIRED - Google Play shows no subscription but local cache shows active!")
-                Log.w(TAG, "🧹 Immediately clearing subscription cache and revoking access")
-                
-                // Force clear the cache
-                billingManager.saveSubscriptionState(false)
-                prefs.edit().putBoolean(KEY_PRO_STATUS, false).apply()
-                
-                // Update to free status immediately  
-                _isPro.value = false
-                _isProUser.value = false
-                updateRemainingActions()
-                
-                try {
-                    val userManager = UserManager.getInstance()
-                    Log.d(TAG, "Subscription revoked - user downgraded to free")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error updating user manager on subscription expiry", e)
-                }
-                
-                Log.d(TAG, "✅ Subscription cache cleared successfully")
-                return
-            }
+            // REMOVED DUPLICATE: BillingManager.hasActiveSubscription() already handles expiry detection
+            // and updates the cache. We just use the result here.
             
             // Use Google Play as the authoritative source when available
             val actualSubscriptionState = if (forceRefresh) {
@@ -415,8 +396,8 @@ class SubscriptionManager(
             // Small delay to let purchase processing complete
             delay(1500)
             
-            // Then check full subscription status
-            checkSubscriptionStatus()
+            // Then check full subscription status with FORCE refresh (bypasses debouncing)
+            checkSubscriptionStatusInternal(forceRefresh = true)
             
             Log.d(TAG, "Force refresh completed")
         } catch (e: Exception) {

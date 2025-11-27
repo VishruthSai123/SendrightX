@@ -12,6 +12,8 @@ import com.android.billingclient.api.*
 import com.vishruth.key1.user.UserManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Simple BillingManager for SendRight Pro subscription management
@@ -35,6 +37,13 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     // MEMORY LEAK FIX: Added SupervisorJob to allow proper cancellation without affecting parent scope
     private val billingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     
+    // THREAD SAFETY: Mutex to protect subscription state from race conditions
+    private val subscriptionStateMutex = Mutex()
+    
+    // DEBOUNCING: Prevent excessive API calls
+    private var lastSubscriptionCheckTime = 0L
+    private val MIN_CHECK_INTERVAL_MS = 30_000L  // 30 seconds minimum between checks
+    
     // MEMORY LEAK FIX: Track if destroyed to prevent operations after cleanup
     private var isDestroyed = false
 
@@ -44,6 +53,9 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     
     private val _products = MutableStateFlow<List<ProductDetails>>(emptyList())
     val products: StateFlow<List<ProductDetails>> = _products.asStateFlow()
+    
+    private val _isProductsLoading = MutableStateFlow(false)
+    val isProductsLoading: StateFlow<Boolean> = _isProductsLoading.asStateFlow()
     
     private val _purchaseUpdates = MutableSharedFlow<Result<Purchase>>()
     val purchaseUpdates: SharedFlow<Result<Purchase>> = _purchaseUpdates.asSharedFlow()
@@ -146,6 +158,8 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
         Log.d(TAG, "Querying subscription products...")
         Log.d(TAG, "Looking for product ID: $PRODUCT_ID_PRO_MONTHLY")
         
+        _isProductsLoading.value = true  // Start loading
+        
         val productList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(PRODUCT_ID_PRO_MONTHLY)
@@ -157,10 +171,20 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
             .setProductList(productList)
             .build()
         
+        // Timeout protection: Clear loading after 10 seconds if no response
+        billingScope.launch {
+            delay(10_000L)
+            if (_isProductsLoading.value) {
+                Log.w(TAG, "⚠️ Product query timeout after 10 seconds")
+                _isProductsLoading.value = false
+            }
+        }
+        
         billingClient.queryProductDetailsAsync(params) { billingResult: BillingResult, productDetailsResult: QueryProductDetailsResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 val products = productDetailsResult.productDetailsList ?: emptyList()
                 _products.value = products
+                _isProductsLoading.value = false  // Stop loading on success
                 Log.d(TAG, "Products queried successfully: ${products.size} products")
                 
                 if (products.isEmpty()) {
@@ -201,6 +225,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 Log.e(TAG, "❌ Product query failed: ${billingResult.debugMessage}")
                 Log.e(TAG, "❌ Response code: ${billingResult.responseCode}")
                 _products.value = emptyList()
+                _isProductsLoading.value = false  // CRITICAL: Stop loading on failure!
                 
                 // Common error explanations
                 when (billingResult.responseCode) {
@@ -509,24 +534,27 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
      * 
      * SECURITY FIX: Now uses encrypted SharedPreferences to protect subscription state
      * from tampering on rooted devices or with physical access.
+     * THREAD SAFETY: Uses mutex to prevent race conditions from concurrent saves
      * 
      * Based on reference: saveSubscriptionState function
      */
-    fun saveSubscriptionState(isPremium: Boolean) {
-        try {
-            // SECURITY FIX: Use encrypted preferences instead of plain storage
-            val prefs = SecurePreferences.getEncryptedPreferences(context, "billing_prefs")
-            
-            // Migrate old data if exists (one-time migration)
-            SecurePreferences.migrateToEncrypted(context, "MyAppPrefs", "billing_prefs")
-            
-            prefs.edit()
-                .putBoolean("is_premium_user", isPremium)
-                .putLong("last_validation_time", System.currentTimeMillis()) // Track when validated
-                .apply()
-            Log.d(TAG, "Subscription state saved securely: isPremium = $isPremium")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to save subscription state", e)
+    suspend fun saveSubscriptionState(isPremium: Boolean) {
+        subscriptionStateMutex.withLock {
+            try {
+                // SECURITY FIX: Use encrypted preferences instead of plain storage
+                val prefs = SecurePreferences.getEncryptedPreferences(context, "billing_prefs")
+                
+                // Migrate old data if exists (one-time migration)
+                SecurePreferences.migrateToEncrypted(context, "MyAppPrefs", "billing_prefs")
+                
+                prefs.edit()
+                    .putBoolean("is_premium_user", isPremium)
+                    .putLong("last_validation_time", System.currentTimeMillis()) // Track when validated
+                    .commit()  // Use commit() instead of apply() for immediate, synchronous write
+                Log.d(TAG, "Subscription state saved securely: isPremium = $isPremium")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to save subscription state", e)
+            }
         }
     }
     
@@ -534,39 +562,45 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
      * Get subscription state from SharedPreferences
      * 
      * SECURITY FIX: Now reads from encrypted SharedPreferences
+     * THREAD SAFETY: Uses mutex to prevent race conditions from concurrent reads
+     * 
+     * @param allowExpiredCache If true, returns cache even if expired (used during retry window)
      * 
      * Based on reference: getSubscriptionState function
      */
-    fun getSubscriptionState(): Boolean {
-        return try {
-            // SECURITY FIX: Read from encrypted preferences
-            val prefs = SecurePreferences.getEncryptedPreferences(context, "billing_prefs")
-            val isPremium = prefs.getBoolean("is_premium_user", false)
-            val lastValidation = prefs.getLong("last_validation_time", 0L)
-            
-            // CRITICAL: Don't trust premium cache if not validated in last 24 hours
-            val cacheAge = System.currentTimeMillis() - lastValidation
-            if (isPremium) {
-                val hoursSinceValidation = cacheAge / 3600_000L
+    suspend fun getSubscriptionState(allowExpiredCache: Boolean = false): Boolean {
+        return subscriptionStateMutex.withLock {
+            try {
+                // SECURITY FIX: Read from encrypted preferences
+                val prefs = SecurePreferences.getEncryptedPreferences(context, "billing_prefs")
+                val isPremium = prefs.getBoolean("is_premium_user", false)
+                val lastValidation = prefs.getLong("last_validation_time", 0L)
                 
-                // Cache expiration: 24 hours for premium status
-                if (hoursSinceValidation > 24) {
-                    Log.w(TAG, "🔒 Premium cache unverified for $hoursSinceValidation hours (>${24}h limit) - requiring fresh validation")
-                    Log.w(TAG, "   Denying premium access until network validation succeeds")
-                    return false  // SECURITY: Don't trust old cache for premium
+                // CRITICAL: Don't trust premium cache if not validated in last 24 hours
+                val cacheAge = System.currentTimeMillis() - lastValidation
+                if (isPremium) {
+                    val hoursSinceValidation = cacheAge / 3600_000L
+                    
+                    // Cache expiration: 24 hours for premium status
+                    // BUT: Allow grace period if explicitly requested (during retry window)
+                    if (hoursSinceValidation > 24 && !allowExpiredCache) {
+                        Log.w(TAG, "🔒 Premium cache unverified for $hoursSinceValidation hours (>${24}h limit) - requiring fresh validation")
+                        Log.w(TAG, "   Denying premium access until network validation succeeds")
+                        return@withLock false  // SECURITY: Don't trust old cache for premium
+                    }
+                    
+                    // Warn if approaching expiration (>12 hours)
+                    if (hoursSinceValidation > 12) {
+                        Log.w(TAG, "⚠️ Premium cache aging (${hoursSinceValidation}h old, expires at 24h) - needs revalidation soon")
+                    }
                 }
                 
-                // Warn if approaching expiration (>12 hours)
-                if (hoursSinceValidation > 12) {
-                    Log.w(TAG, "⚠️ Premium cache aging (${hoursSinceValidation}h old, expires at 24h) - needs revalidation soon")
-                }
+                Log.d(TAG, "Retrieved subscription state securely: isPremium = $isPremium (last validated ${cacheAge / 1000}s ago)")
+                isPremium
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to retrieve subscription state", e)
+                false // Safe default
             }
-            
-            Log.d(TAG, "Retrieved subscription state securely: isPremium = $isPremium (last validated ${cacheAge / 1000}s ago)")
-            isPremium
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to retrieve subscription state", e)
-            false // Safe default
         }
     }
     
@@ -749,9 +783,21 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
     /**
      * Check if user has an active subscription with Google Play verification
      * Queries Google Play directly for authoritative subscription status
+     * 
+     * @param forceCheck If true, bypasses debouncing and always checks
      */
-    suspend fun hasActiveSubscription(): Boolean {
+    suspend fun hasActiveSubscription(forceCheck: Boolean = false): Boolean {
         return try {
+            // DEBOUNCING: Prevent excessive API calls
+            val currentTime = System.currentTimeMillis()
+            val timeSinceLastCheck = currentTime - lastSubscriptionCheckTime
+            
+            if (!forceCheck && timeSinceLastCheck < MIN_CHECK_INTERVAL_MS) {
+                Log.d(TAG, "⏱️ Debounced: Subscription checked ${timeSinceLastCheck / 1000}s ago, using cached state")
+                return getSubscriptionState(allowExpiredCache = true)
+            }
+            
+            lastSubscriptionCheckTime = currentTime
             Log.d(TAG, "🔍 Checking subscription status with Google Play...")
             
             // CRITICAL FIX: Retry logic with exponential backoff
@@ -779,10 +825,11 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                         } else {
                             Log.e(TAG, "❌ Billing client failed after $maxRetries attempts, using local cache")
                             // SECURITY: Validate cache to prevent false premium from corruption
-                            val cachedState = getSubscriptionState()
+                            // BUT allow expired cache during retry window (grace period)
+                            val cachedState = getSubscriptionState(allowExpiredCache = true)
                             if (cachedState) {
-                                Log.w(TAG, "⚠️ Cache shows premium but billing client unavailable - trusting cache with caution")
-                                // Note: Periodic checks will validate this within 2 minutes
+                                Log.w(TAG, "⚠️ Cache shows premium but billing client unavailable - trusting cache with grace period")
+                                Log.w(TAG, "   Periodic checks will validate this within 2 minutes")
                             }
                             return cachedState
                         }
@@ -809,7 +856,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
                 
                 // If query failed, don't immediately return false - use local cache
                 Log.w(TAG, "Using local cache due to query failure")
-                val cachedState = getSubscriptionState()
+                val cachedState = getSubscriptionState(allowExpiredCache = true)  // Grace period during errors
                 if (cachedState) {
                     Log.w(TAG, "⚠️ Returning premium from cache - will revalidate on next successful check")
                 }
@@ -849,7 +896,7 @@ class BillingManager(private val context: Context) : PurchasesUpdatedListener {
         } catch (e: Exception) {
             Log.e(TAG, "Error checking subscription status, falling back to local state", e)
             // Fallback to local state only if Google Play check completely fails
-            val cachedState = getSubscriptionState()
+            val cachedState = getSubscriptionState(allowExpiredCache = true)  // Grace period during errors
             if (cachedState) {
                 Log.w(TAG, "⚠️ Exception occurred but cache shows premium - trusting cache temporarily")
                 Log.w(TAG, "   Periodic check will revalidate within 2 minutes")
