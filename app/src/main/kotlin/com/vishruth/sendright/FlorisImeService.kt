@@ -119,7 +119,10 @@ import com.vishruth.key1.lib.util.debugSummarize
 import com.vishruth.key1.lib.util.launchActivity
 import dev.patrickgold.jetpref.datastore.model.observeAsState
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.florisboard.lib.android.AndroidInternalR
 import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.isOrientationLandscape
@@ -285,6 +288,20 @@ class FlorisImeService : LifecycleInputMethodService() {
         super.onCreate()
         FlorisImeServiceReference = WeakReference(this)
         WindowCompat.setDecorFitsSystemWindows(window.window!!, false)
+        
+        // SUBSCRIPTION FIX: Validate subscription when keyboard service starts
+        // This ensures premium status is current when keyboard first opens
+        GlobalScope.launch(Dispatchers.Main) {
+            try {
+                val userManager = com.vishruth.key1.user.UserManager.getInstance()
+                val subscriptionManager = userManager.getSubscriptionManager()
+                subscriptionManager?.checkSubscriptionStatus()
+                android.util.Log.d("FlorisImeService", "Subscription validated on keyboard service start")
+            } catch (e: Exception) {
+                android.util.Log.w("FlorisImeService", "Error validating subscription on service start", e)
+            }
+        }
+        
         subtypeManager.activeSubtypeFlow.collectIn(lifecycleScope) { subtype ->
             val config = Configuration(resources.configuration)
             if (prefs.localization.displayKeyboardLabelsInSubtypeLanguage.get()) {
@@ -382,6 +399,21 @@ class FlorisImeService : LifecycleInputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         flogInfo { "restarting=$restarting info=${info?.debugSummarize()}" }
         super.onStartInputView(info, restarting)
+        
+        // SUBSCRIPTION FIX: Lightweight check when keyboard opens
+        // Only validates if cache might be stale (not on every keystroke)
+        if (!restarting) {
+            GlobalScope.launch(Dispatchers.Main) {
+                try {
+                    val userManager = com.vishruth.key1.user.UserManager.getInstance()
+                    val subscriptionManager = userManager.getSubscriptionManager()
+                    // Silent check - only logs if there's a state change
+                    subscriptionManager?.checkSubscriptionStatus()
+                } catch (e: Exception) {
+                    // Silently fail - don't interrupt keyboard opening
+                }
+            }
+        }
         
         // Auto-close action result panel when keyboard input view starts/refreshes
         // Skip auto-close if undo/redo is in progress
