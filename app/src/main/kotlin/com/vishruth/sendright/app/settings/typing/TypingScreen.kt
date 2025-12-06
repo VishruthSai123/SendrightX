@@ -84,6 +84,12 @@ fun TypingScreen() = FlorisScreen {
                 enabledIf = { prefs.suggestion.enabled isEqualTo true },
             )
             SwitchPreference(
+                prefs.suggestion.ignoreFlagNoSuggestions,
+                title = "Force suggestions in all apps",
+                summary = "Show suggestions even when apps disable them (Instagram, Google Search, etc.). Password fields are still protected.",
+                enabledIf = { prefs.suggestion.enabled isEqualTo true },
+            )
+            SwitchPreference(
                 prefs.suggestion.api30InlineSuggestionsEnabled,
                 title = stringRes(R.string.pref__suggestion__api30_inline_suggestions_enabled__label),
                 summary = stringRes(R.string.pref__suggestion__api30_inline_suggestions_enabled__summary),

@@ -776,6 +776,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "suggestion__force_incognito_mode_from_dynamic",
             default = false,
         )
+        // Force suggestions even when apps disable them (Instagram, Google Search, etc.)
+        // This overrides TYPE_TEXT_FLAG_NO_SUGGESTIONS but still respects password fields
+        val ignoreFlagNoSuggestions = boolean(
+            key = "suggestion__ignore_flag_no_suggestions",
+            default = true,
+        )
     }
 
     val theme = Theme()

@@ -122,9 +122,11 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
                 // 2. Not a password field
                 // 3. Not a sensitive field that explicitly disables suggestions
                 // 4. Not an auto-complete field (like passwords/forms)
+                // Note: flagTextNoSuggestions can be overridden by user preference for apps like Instagram/Google Search
+                val respectNoSuggestionsFlag = !prefs.suggestion.ignoreFlagNoSuggestions.get()
                 val isSafeForSuggestions = activeState.keyVariation != KeyVariation.PASSWORD &&
                     !isSensitiveInputField(editorInfo.inputAttributes) &&
-                    !editorInfo.inputAttributes.flagTextNoSuggestions
+                    (!editorInfo.inputAttributes.flagTextNoSuggestions || !respectNoSuggestionsFlag)
                 
                 isSafeForSuggestions && prefs.suggestion.enabled.get()
             }
@@ -151,9 +153,11 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     override fun determineComposingEnabled(): Boolean {
         // Use the same security logic as isComposingEnabled
         // Only enable composing for safe input fields
+        // Note: flagTextNoSuggestions can be overridden by user preference for apps like Instagram/Google Search
+        val respectNoSuggestionsFlag = !prefs.suggestion.ignoreFlagNoSuggestions.get()
         val isSafeForSuggestions = activeState.keyVariation != KeyVariation.PASSWORD &&
             !isSensitiveInputField(activeInfo.inputAttributes) &&
-            !activeInfo.inputAttributes.flagTextNoSuggestions
+            (!activeInfo.inputAttributes.flagTextNoSuggestions || !respectNoSuggestionsFlag)
             
         return isSafeForSuggestions && 
                (nlpManager.isSuggestionOn() && prefs.suggestion.enabled.get())
@@ -164,8 +168,13 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     }
 
     override fun shouldDetermineComposingRegion(editorInfo: FlorisEditorInfo): Boolean {
-        return super.shouldDetermineComposingRegion(editorInfo) &&
-            (phantomSpace.isInactive || phantomSpace.showComposingRegion)
+        // Override parent to respect ignoreFlagNoSuggestions preference
+        // Parent checks: editorInfo.isRichInputEditor && !editorInfo.inputAttributes.flagTextNoSuggestions
+        // We modify to allow flagTextNoSuggestions to be overridden
+        val respectNoSuggestionsFlag = !prefs.suggestion.ignoreFlagNoSuggestions.get()
+        val baseCheck = editorInfo.isRichInputEditor && 
+            (!editorInfo.inputAttributes.flagTextNoSuggestions || !respectNoSuggestionsFlag)
+        return baseCheck && (phantomSpace.isInactive || phantomSpace.showComposingRegion)
     }
 
     /**
@@ -765,16 +774,21 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     /**
      * Determines if the input field is sensitive and should not store suggestions
      * for security and privacy reasons.
+     * 
+     * Note: This does NOT check flagTextNoSuggestions because that flag is used by
+     * apps like Instagram and Google Search to disable suggestions, but the user
+     * can override it with the ignoreFlagNoSuggestions preference. The flag check
+     * is handled separately in isComposingEnabled/determineComposingEnabled.
      */
     private fun isSensitiveInputField(inputAttributes: InputAttributes): Boolean {
         return when (inputAttributes.variation) {
-            // Password fields - any type of password input
+            // Password fields - any type of password input (ALWAYS blocked, no override)
             InputAttributes.Variation.PASSWORD,
             InputAttributes.Variation.VISIBLE_PASSWORD,
             InputAttributes.Variation.WEB_PASSWORD,
             -> true
             
-            // Personal information that shouldn't be learned
+            // Personal information that shouldn't be learned (ALWAYS blocked, no override)
             InputAttributes.Variation.PERSON_NAME,
             InputAttributes.Variation.EMAIL_ADDRESS,
             InputAttributes.Variation.WEB_EMAIL_ADDRESS,
@@ -782,15 +796,14 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
             InputAttributes.Variation.PHONETIC,
             -> true
             
-            // Allow search fields even if they have NO_SUGGESTIONS flag
+            // Allow search/filter fields
             InputAttributes.Variation.FILTER -> false
             
-            // Other fields - check flags
+            // Other fields - only check auto-complete flag (for password managers)
+            // flagTextNoSuggestions is NOT checked here - it's handled by the override logic
             else -> {
                 // Check if auto-complete is enabled (typically for passwords/forms)
-                inputAttributes.flagTextAutoComplete ||
-                // Check if the field explicitly disables suggestions  
-                inputAttributes.flagTextNoSuggestions
+                inputAttributes.flagTextAutoComplete
             }
         }
     }
